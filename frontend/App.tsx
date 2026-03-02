@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { styles } from './src/styles/app.styles';
 
@@ -170,6 +171,7 @@ export default function App() {
   }
 
   return (
+    <SafeAreaProvider>
     <View style={styles.container}>
       <StatusBar style="dark" />
       <Text style={styles.title}>LedgerWise</Text>
@@ -206,7 +208,8 @@ export default function App() {
 
       {Platform.OS !== 'web' && (
         <Modal visible={showWebView} animationType="slide" onRequestClose={() => setShowWebView(false)}>
-          <View style={styles.modalContainer}>
+          <SafeAreaProvider>
+          <SafeAreaView style={styles.modalContainer}>
             <Pressable style={styles.closeButton} onPress={() => setShowWebView(false)}>
               <Text style={styles.closeButtonText}>Cancel</Text>
             </Pressable>
@@ -217,9 +220,11 @@ export default function App() {
               originWhitelist={['*']}
               style={styles.webView}
             />
-          </View>
+          </SafeAreaView>
+          </SafeAreaProvider>
         </Modal>
       )}
     </View>
+    </SafeAreaProvider>
   );
 }
