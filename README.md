@@ -27,21 +27,13 @@ A personal finance app that connects to real bank accounts and shows your transa
 
 - Python 3.11+
 - Node.js 18+
-- A [Teller](https://teller.io) account with sandbox credentials (App ID + certificate files)
+- Teller credentials (App ID + certificate files) — ask the project owner
 
-### Quick start (recommended)
+### 1. Set up credentials
 
-A `Makefile` at the root handles setup and startup automatically:
-
-```bash
-make install   # first-time setup: creates Python venv + installs all deps
-make backend   # start the FastAPI server (auto-creates venv if missing)
-make frontend  # start the Expo dev server
-```
-
-### Manual setup
-
-#### Backend
+Place the Teller certificate files in `backend/certs/`:
+- `backend/certs/certificate.pem`
+- `backend/certs/private_key.pem`
 
 Create `backend/.env`:
 
@@ -52,23 +44,6 @@ TELLER_ENV=sandbox
 CORS_ORIGINS=["http://localhost:8081"]
 ```
 
-Place your Teller certificate files in `backend/certs/` (`certificate.pem` and `private_key.pem`), then:
-
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000 --host 0.0.0.0
-# API docs at http://localhost:8000/docs
-```
-
-> Each time you open a new terminal you'll need to re-run `source venv/bin/activate` from the `backend/` directory before starting the server.
-
-> **`--host 0.0.0.0`** makes the server reachable on your local network (required for testing on a physical phone). Without it, the server only accepts connections from your own machine.
-
-#### Frontend (web)
-
 Create `frontend/.env`:
 
 ```
@@ -76,26 +51,35 @@ EXPO_PUBLIC_API_URL=http://localhost:8000
 EXPO_PUBLIC_TELLER_APP_ID=your_teller_app_id_here
 ```
 
-Then:
+### 2. Install dependencies
 
 ```bash
-cd frontend
-npm install
-npx expo start --web
-# Opens at http://localhost:8081
+make install
 ```
 
-#### Frontend (iOS simulator)
+### 3. Run
 
 ```bash
-cd frontend
-npx expo start
+make backend   # start the FastAPI server
+make frontend  # start the Expo dev server
+```
+
+That's it — backend runs on `http://localhost:8000`, frontend on `http://localhost:8081`.
+
+---
+
+### Platform-specific notes
+
+#### iOS simulator
+
+```bash
+make frontend
 # Press 'i' to open in iOS simulator
 ```
 
 > **iOS simulator tip:** Go to **I/O → Keyboard → disable "Connect Hardware Keyboard"** in the Simulator menu bar, otherwise typing in the Teller Connect login form will cause the page to refresh.
 
-### Frontend (physical phone)
+#### Physical phone
 
 Your phone can't reach `localhost` — you need to use your Mac's local network IP instead.
 
