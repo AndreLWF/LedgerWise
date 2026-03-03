@@ -13,7 +13,10 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { styles } from './src/styles/app.styles';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API_URL =
+  Platform.OS === 'web'
+    ? 'http://localhost:8000'
+    : (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000');
 const TELLER_APP_ID = process.env.EXPO_PUBLIC_TELLER_APP_ID ?? '';
 
 interface Transaction {
