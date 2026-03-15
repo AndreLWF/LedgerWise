@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 
 from app.config import settings
 from app.models import Transaction
+from app.schemas import TransactionResponse
 
 TELLER_BASE_URL = "https://api.teller.io"
 
@@ -57,7 +58,7 @@ def get_all_transactions(access_token: str) -> list[dict[str, Any]]:
     return all_transactions
 
 
-async def get_transactions_from_db(db: AsyncSession) -> list[dict[str, Any]]:
+async def get_transactions_from_db(db: AsyncSession) -> list[TransactionResponse]:
     """Fetch all transactions from the database, joined with account info."""
     result = await db.execute(
         select(Transaction)
@@ -66,13 +67,19 @@ async def get_transactions_from_db(db: AsyncSession) -> list[dict[str, Any]]:
     )
     rows = result.scalars().all()
 
-    return [
-        {
-            "id": str(txn.teller_transaction_id),
-            "date": txn.date.isoformat(),
-            "description": txn.description,
-            "amount": str(txn.amount),
-            "account_name": txn.account.account_name or "Unknown",
-        }
-        for txn in rows
-    ]
+    results: list[TransactionResponse] = []
+    for txn in rows:
+        category = (txn.category or "General").title()
+        amount = txn.amount
+        # Refunds are money coming back — show as positive
+        if category == "Refund":
+            amount = abs(amount)
+        results.append(TransactionResponse(
+            id=str(txn.teller_transaction_id),
+            date=txn.date.isoformat(),
+            description=txn.description,
+            amount=str(amount),
+            account_name=txn.account.account_name or "Unknown",
+            category=category,
+        ))
+    return results

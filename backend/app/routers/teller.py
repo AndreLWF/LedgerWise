@@ -1,21 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
+from app.schemas import TokenRequest, TransactionResponse
 from app.services import teller as teller_service
 
 router = APIRouter(prefix="/teller", tags=["teller"])
 
 
-class TokenRequest(BaseModel):
-    access_token: str
-
-
-@router.post("/transactions")
+@router.post("/transactions", response_model=list[TransactionResponse])
 async def fetch_transactions(
     body: TokenRequest, db: AsyncSession = Depends(get_db)
-) -> list[dict]:
+) -> list[TransactionResponse]:
     # TODO: re-enable live Teller data when ready
     # try:
     #     return teller_service.get_all_transactions(body.access_token)

@@ -55,49 +55,6 @@ export const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 40,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 8,
-    ...Platform.select({
-      web: { boxShadow: '0px 2px 4px rgba(0,0,0,0.04)' },
-      default: {
-        shadowColor: '#000',
-        shadowOpacity: 0.04,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 1,
-      },
-    }),
-  },
-  rowLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  description: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#0f172a',
-  },
-  meta: {
-    fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 2,
-  },
-  amount: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  debit: {
-    color: '#dc2626',
-  },
-  credit: {
-    color: '#16a34a',
-  },
   modalContainer: {
     flex: 1,
     backgroundColor: '#fff',
@@ -112,5 +69,40 @@ export const styles = StyleSheet.create({
   },
   webView: {
     flex: 1,
+  },
+  tabStrip: {
+    flexDirection: 'row',
+    backgroundColor: '#e2e8f0',
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: 16,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  tabActive: {
+    backgroundColor: '#fff',
+    ...Platform.select({
+      web: { boxShadow: '0px 1px 3px rgba(0,0,0,0.1)' },
+      default: {
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: 2,
+      },
+    }),
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748b',
+  },
+  tabTextActive: {
+    color: '#0f172a',
+    fontWeight: '600',
   },
 });
