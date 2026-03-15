@@ -2,187 +2,153 @@
 
 ## Project Overview
 
-This is a full-stack fintech application that connects to real bank accounts, allowing users to view transactions, balances, and manage their financial data. The app targets a small friends & family user base initially (5–50 users) with architecture designed to scale to production.
+Full-stack fintech app connecting to real bank accounts for transaction viewing, balances, and spending analysis. React Native Web frontend (Expo) + FastAPI backend + Supabase (PostgreSQL). Targets friends & family initially (5–50 users), designed to scale.
 
-**Current phase: Iteration 1 complete, DB infrastructure set up.** Basic Teller bank linking and transaction viewing works on both web and iOS simulator. Database layer is in place (SQLAlchemy models, Alembic migrations, Supabase connection) but no auth yet. The teller router currently serves mock Robinhood data; the real Teller service code is ready but commented out.
+**Current state:** Teller bank linking, transaction list, and spending summary work on web and iOS simulator. Database layer in place (SQLAlchemy + Alembic + Supabase). No auth yet. Teller router serves mock data; real Teller service code is ready but commented out.
 
 ## Development Phases
 
 ### Phase 1 — Web App (CURRENT)
-- React Native Web app hosted on Vercel
-- FastAPI backend on Railway
-- Teller sandbox integration → transition to production (100 free connections)
-- Core features: bank linking, transaction viewing, balance dashboard
-- Target users: friends & family (5–50 people)
+**Iteration 1 (done):** Teller Connect → transaction list on web + iOS. DB models + migrations + Supabase connection.
+**Iteration 1.5 (done):** Spending summary with category breakdown. Frontend decomposed into components, hooks, and feature modules.
+**Iteration 2 (next):** Supabase auth middleware, re-enable live Teller data, Expo Router migration, persist enrolled tokens.
 
-**Iteration 1 (done):** Teller Connect → transaction list, works on web and iOS. DB models (User, Account, Transaction) + Alembic migrations + async Supabase connection set up. Mock Robinhood data pipeline for testing.
-**Iteration 2 (next):** Add Supabase auth middleware, re-enable live Teller data, Pydantic response schemas, Expo Router migration, persist enrolled tokens.
-
-### Phase 2 — Mobile Expansion (FUTURE)
-- Build iOS app from the same Expo codebase (no rewrite needed)
-- Submit to App Store via EAS Build
-- Add mobile-specific features: push notifications, biometric auth, widgets
-- Evaluate Android support based on demand
+### Phase 2 — Mobile (FUTURE)
+Build iOS app from same Expo codebase via EAS Build. Push notifications, biometric auth, widgets. Evaluate Android.
 
 ### Phase 3 — Scale (FUTURE)
-- Migrate from Teller to Plaid if > 100 connections needed
-- Add background job processing (Celery + Redis)
-- Upgrade to paid tiers as needed
-- Add Cloudflare in front of API for caching + DDoS protection
+Migrate Teller → Plaid if > 100 connections. Add Celery + Redis for background jobs. Cloudflare for caching + DDoS.
+
+## Code Organization & Best Practices
+
+These rules apply to all new code and refactors.
+
+### No God Files
+- No file should try to do everything. When a file is getting large or handling multiple concerns, extract.
+- `App.tsx` is the composition root — wires hooks + components, minimal logic.
+
+### Frontend Components
+- **One component per file.** Never define multiple components in one file.
+- **Components are single units.** Render ONE thing. Need multiple instances (e.g. 4 summary chips)? The component renders one, the parent creates 4. Need variants (e.g. a refund accordion)? Use a `variant` prop.
+- **Composition at the parent/screen level.** The screen component (e.g. `SpendingSummary.tsx`) decides what to render, how many, and in what order. Sub-components don't compose sibling sub-components.
+- **Screen-level components** → feature root (e.g. `src/spending/SpendingSummary.tsx`)
+- **Reusable UI components** → `src/components/`
+- **Feature sub-components** → `src/spending/components/`
+- Extract only when it improves readability, enables reuse, or the parent is too long.
+- **CRITICAL:** Use only React Native primitives (`View`, `Text`, `Pressable`, `ScrollView`, etc.). Never HTML elements. This ensures mobile compatibility.
+
+### Feature Modules
+- Group related code by feature (e.g. `src/spending/`).
+- Barrel export (`index.ts`) for the public API. Keep internals private.
+
+### Custom Hooks
+- Extract stateful logic into `src/hooks/`. One responsibility per hook.
+
+### Styles
+- Co-located style files in `src/styles/` (e.g. `app.styles.ts`, `spending.styles.ts`).
+- `StyleSheet.create()` always — no inline style objects.
+
+### Backend Layering
+- **Router → Service → Model** — strict call hierarchy, never skip layers.
+- Routers: HTTP only (parsing, formatting, error mapping). No business logic.
+- Services: Business logic, external APIs, data orchestration.
+- Models: SQLAlchemy table definitions. No logic.
+- Schemas: Pydantic request/response validation, one file per domain.
+
+### Helpers & Types
+- Extract to `src/utils/` or `app/utils/` when **reused across files**. Inline is fine for one-off logic.
+- Name utility files by domain (`categoryColors.ts`), not generic (`helpers.ts`).
+- Shared TypeScript interfaces → `src/types/`, one file per domain. Keep single-use types in the component file.
+- Prefer `interface` over `type`. Never use `any`.
+
+### General
+- Prefer readable functions with clear names over clever one-liners.
+- Follow existing codebase patterns. Don't invent new structures.
+- Comments explain **why**, not **what**.
 
 ## Tech Stack
 
-### Frontend — React Native Web (Expo)
-- **Framework:** React Native with Expo SDK, running on both web and iOS simulator
-- **Hosting:** Vercel (free tier)
-- **Routing:** Single `App.tsx` for now (Iteration 1). Will migrate to Expo Router in Iteration 2.
-- **State Management:** React hooks for now; migrate to Zustand if complexity grows
-- **API Client:** `fetch` in `App.tsx` for now; will move to `/frontend/src/api/` in Iteration 2
-- **Styling:** StyleSheet API (no Tailwind/NativeWind unless explicitly added). Styles live in `frontend/src/styles/` and are imported into their screen/component file (e.g. `app.styles.ts` → imported in `App.tsx`).
-- **Teller Connect (web):** JS widget injected via `document.createElement('script')` in a `useEffect`
-- **Teller Connect (mobile):** WebView inside a Modal, HTML page auto-opens the widget, communicates back via `postMessage`
-- **Important:** All UI components must use React Native primitives (`View`, `Text`, `Pressable`, etc.) — not HTML elements like `div` or `span`.
+| Layer | Technology | Notes |
+|-------|-----------|-------|
+| Frontend | React Native + Expo SDK | Web + iOS from one codebase |
+| Hosting (web) | Vercel | Free tier |
+| Routing | `App.tsx` (Iteration 1) | Expo Router in Iteration 2 |
+| State | React hooks + custom hooks | Zustand if complexity grows |
+| API Client | `src/api/client.ts` | All backend calls centralized |
+| Styling | StyleSheet API | Co-located in `src/styles/` |
+| Backend | FastAPI + Uvicorn | Python 3.11+, pip |
+| Hosting (API) | Railway | Free tier ($5/mo credit) |
+| Database | Supabase (PostgreSQL) | SQLAlchemy 2.0 async + Alembic |
+| Banking API | Teller | httpx mTLS, sandbox → production |
+| Cache | Upstash Redis | **PLANNED** — cache-aside pattern |
+| File Storage | Cloudflare R2 | **PLANNED** — receipts, exports |
 
-### Backend — FastAPI (Python)
-- **Framework:** FastAPI with Uvicorn (ASGI)
-- **Hosting:** Railway (free tier, $5/month credit)
-- **Python Version:** 3.11+
-- **Package Manager:** pip with `requirements.txt` (migrate to Poetry if dependency complexity grows)
-- **API Style:** RESTful JSON endpoints under `/api/v1/`
-- **Validation:** Pydantic v2 models for all request/response schemas
-- **Background Tasks:** FastAPI background tasks for now; migrate to Celery + Redis if needed
-- **Note:** The backend is platform-agnostic. It serves JSON over HTTPS and does not care whether the client is a web browser or a mobile app. No changes will be needed in Phase 2.
-
-### Database — Supabase (PostgreSQL)
-- **ORM:** SQLAlchemy 2.0 with async support (asyncpg driver)
-- **Migrations:** Alembic
-- **Auth:** Supabase Auth (JWT tokens validated in FastAPI middleware)
-- **Row-Level Security:** Enabled on all user-facing tables
-- **Connection:** Async connection pool via Supabase's connection string
-
-### Cache — Upstash Redis
-- **Client:** `redis-py` with HTTP mode (or `upstash-redis` Python SDK)
-- **Usage:** Dashboard caching (5-min TTL), rate limiting, session data
-- **Pattern:** Cache-aside (check cache → if miss, query DB → store in cache → return)
-
-### File Storage — Cloudflare R2
-- **SDK:** `boto3` with S3-compatible endpoint
-- **Usage:** Receipt images, PDF exports, CSV transaction exports
-- **Pattern:** Pre-signed URLs generated by backend, frontend uploads directly to R2
-
-### Banking API — Teller
-- **SDK:** Direct HTTP calls via `httpx` (no official Python SDK)
-- **Auth:** Certificate-based mTLS authentication
-- **Usage:** Account linking, balance checks, transaction pulls
-- **Rate Limits:** Free tier has undocumented rate limits; cache aggressively
-- **Environments:** Sandbox (fake data, free) → Production (real banks, 100 free connections)
+Backend is platform-agnostic (JSON over HTTPS) — no changes needed for mobile.
 
 ## Project Structure
 
-Files marked `*` exist now. Everything else is planned for future iterations.
+Files marked `*` exist now. Unmarked files are planned for future iterations.
 
 ```
 /
-├── CLAUDE.md
-├── README.md
+├── CLAUDE.md                  *
 ├── Makefile                   * make backend, make frontend, make install
-├── .gitignore                 *
-├── backend/                   *
+├── backend/
 │   ├── app/
 │   │   ├── main.py            * FastAPI app, CORS config
 │   │   ├── config.py          * pydantic-settings env config
-│   │   ├── dependencies.py    * Async SQLAlchemy engine + session (get_db)
+│   │   ├── dependencies.py    * Async SQLAlchemy engine + get_db
 │   │   ├── middleware/
 │   │   │   ├── auth.py          JWT validation middleware
 │   │   │   └── rate_limit.py    Redis-based rate limiter
-│   │   ├── models/            *
-│   │   │   ├── __init__.py    * Exports all models
-│   │   │   ├── base.py        * DeclarativeBase
-│   │   │   ├── user.py        * User model (UUID, email, name, timestamps)
-│   │   │   ├── account.py     * Account model (Teller fields, user FK)
-│   │   │   └── transaction.py * Transaction model (full schema, account FK)
-│   │   ├── schemas/
-│   │   │   ├── user.py          Pydantic request/response schemas
-│   │   │   ├── account.py
-│   │   │   └── transaction.py
-│   │   ├── routers/
-│   │   │   ├── teller.py      * POST /api/v1/teller/transactions (currently mock data)
+│   │   ├── models/            * User, Account, Transaction
+│   │   ├── schemas/           * spending.py, transaction.py
+│   │   ├── routers/           * teller.py, spending.py
 │   │   │   ├── auth.py          /api/v1/auth/*
 │   │   │   ├── accounts.py      /api/v1/accounts/*
 │   │   │   ├── transactions.py  /api/v1/transactions/*
 │   │   │   └── dashboard.py     /api/v1/dashboard/*
-│   │   ├── services/
-│   │   │   ├── teller.py      * httpx mTLS client for Teller API
+│   │   ├── services/          * teller.py, spending.py
 │   │   │   ├── cache.py         Redis cache helpers
 │   │   │   └── storage.py       R2 file upload helpers
 │   │   └── utils/
 │   │       ├── encryption.py    Encrypt/decrypt Teller tokens at rest
 │   │       └── errors.py        Standardized error responses
 │   ├── alembic/               * Database migrations
-│   │   └── versions/          * Contains initial migration
-│   ├── alembic.ini            * Alembic config
-│   ├── scripts/               *
-│   │   └── import_robinhood.py * Upserts mock data from robinhood_data.json into Supabase
-│   ├── robinhood_data.json    * Mock Robinhood transaction data for testing
-│   ├── tests/
 │   ├── certs/                 * Teller mTLS certs (gitignored)
-│   │   ├── certificate.pem    * Teller certificate
-│   │   └── private_key.pem    * Teller private key
 │   ├── requirements.txt       *
-│   ├── .env                   * Local env (gitignored)
-│   ├── .env.example
-│   ├── Dockerfile
-│   └── railway.toml
-├── frontend/                  * Single codebase for web + iOS/Android
-│   ├── App.tsx                * Single-screen app (Iteration 1)
+│   └── tests/
+├── frontend/
+│   ├── App.tsx                * Composition root
 │   ├── index.ts               * Expo entry point
-│   ├── app/                     Expo Router screens (added in Iteration 2)
-│   │   ├── (tabs)/
-│   │   │   ├── index.tsx        Dashboard / home
-│   │   │   ├── transactions.tsx
-│   │   │   ├── accounts.tsx
-│   │   │   └── settings.tsx
-│   │   ├── auth/
-│   │   │   ├── login.tsx
-│   │   │   └── signup.tsx
+│   ├── app/                     Expo Router screens (Iteration 2)
+│   │   ├── (tabs)/              Dashboard, transactions, accounts, settings
+│   │   ├── auth/                Login, signup
 │   │   └── _layout.tsx          Root layout
-│   ├── src/
-│   │   ├── api/                 API client and endpoint functions
-│   │   ├── components/          Reusable UI components
-│   │   ├── hooks/               Custom React hooks
-│   │   ├── contexts/            React Context providers (auth, theme)
-│   │   ├── styles/            * StyleSheet files (one per screen/component)
-│   │   │   └── app.styles.ts  * Styles for App.tsx
-│   │   ├── utils/               Formatters, helpers
-│   │   └── types/               TypeScript type definitions
-│   ├── assets/                *
-│   ├── app.json               * Expo config
-│   ├── package.json           *
-│   ├── tsconfig.json          *
-│   ├── .env                   * Local env (gitignored)
-│   ├── .env.example
-│   └── eas.json                 EAS Build config (used in Phase 2)
-└── .github/
-    └── workflows/               CI/CD (lint, test, deploy)
+│   └── src/
+│       ├── api/client.ts      * Centralized API client
+│       ├── components/        * TransactionRow, TellerModal
+│       ├── hooks/             * useTellerConnect, useTransactions
+│       ├── spending/          * Feature module (SpendingSummary + sub-components)
+│       ├── styles/            * app, spending, transactionRow
+│       ├── types/             * transaction.ts, spending.ts
+│       ├── utils/             * categoryColors.ts
+│       └── contexts/            React Context providers (auth, theme)
 ```
-
-> **Note on the `/frontend` directory:** One codebase for all platforms. In Iteration 1 it runs as a web app and iOS simulator via Expo. When Phase 2 begins, the same code builds to a native iOS app via EAS Build — no rewrite needed. Always use React Native primitives (`View`, `Text`, `Pressable`, etc.), never HTML elements (`div`, `span`, etc.).
 
 ## Key Architecture Decisions
 
-1. **Monorepo:** Backend and frontend live in one repo for simplicity. No need for Turborepo/Nx at this scale.
-2. **React Native Web from day one:** Even though Phase 1 is web-only, we use React Native components (not HTML) so the codebase is mobile-ready. Expo + React Native Web compiles RN components to HTML/CSS automatically.
-3. **API-first:** The frontend is a thin client. All business logic lives in FastAPI. Both web and future iOS app call the same API — no backend changes needed in Phase 2.
-4. **Teller tokens encrypted at rest:** Access tokens for bank connections are AES-encrypted before storing in Supabase. The encryption key lives in environment variables, never in code.
-5. **Cache-aside pattern:** Redis is optional — if Redis is down, the app still works (just slower). Never make Redis a hard dependency.
-6. **No GraphQL:** REST is simpler for this scale. If query complexity grows, consider adding GraphQL later.
-7. **Router → Service → Model layering:** Routers handle HTTP concerns only (request validation, response formatting, error mapping). Services contain business logic, external API calls, and data orchestration. Models are SQLAlchemy table mappings with no logic. The flow is always Router → Service → Model/DB.
+1. **Monorepo** — backend + frontend in one repo. No Turborepo/Nx needed at this scale.
+2. **React Native Web from day one** — RN primitives compile to HTML/CSS via Expo. Mobile-ready without rewrite.
+3. **API-first** — frontend is a thin client. All business logic in FastAPI.
+4. **Teller tokens encrypted at rest** — AES-encrypted in DB. Key in env vars, never in code.
+5. **Cache-aside** — Redis is optional. App works without it (just slower).
 
 ## Environment Variables
 
 Backend (`backend/.env`):
 ```
-# Active now
+# Active
 TELLER_CERT_PATH=certs/certificate.pem
 TELLER_KEY_PATH=certs/private_key.pem
 TELLER_ENV=sandbox
@@ -204,109 +170,64 @@ JWT_SECRET=            # For validating Supabase JWTs
 
 Frontend (`frontend/.env`):
 ```
-# Active now
 EXPO_PUBLIC_API_URL=http://localhost:8000
-EXPO_PUBLIC_TELLER_APP_ID=   # Teller application ID
+EXPO_PUBLIC_TELLER_APP_ID=
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
-
-# Planned (Iteration 2+)
-# (none currently)
 ```
 
-## Conventions & Style
+## Conventions
 
-### Python (Backend)
-- **Formatting:** Black (line length 88)
-- **Linting:** Ruff
-- **Type hints:** Required on all function signatures
-- **Async:** Use `async def` for all route handlers and DB queries
-- **Naming:** snake_case for functions/variables, PascalCase for classes/models
-- **Error handling:** Never return raw exceptions. Use `HTTPException` with standardized error schemas from `utils/errors.py`
+### Python
+- Black (88 char), Ruff, type hints required, `async def` for all routes + DB queries
+- snake_case for functions/variables, PascalCase for classes
+- `HTTPException` with standardized schemas — never raw exceptions
 
-### TypeScript (Frontend)
-- **Formatting:** Prettier
-- **Linting:** ESLint with Expo config
-- **Components:** Functional components with hooks only (no class components)
-- **Naming:** camelCase for functions/variables, PascalCase for components
-- **Types:** Prefer interfaces over type aliases. No `any` — use `unknown` if truly needed
-- **CRITICAL:** Use only React Native components (`View`, `Text`, `Pressable`, `ScrollView`, `TextInput`, etc.). Never use HTML elements directly. This ensures Phase 2 mobile compatibility.
+### TypeScript
+- Prettier, ESLint (Expo config), functional components only
+- camelCase for functions/variables, PascalCase for components/files
+- Barrel exports for feature modules, direct imports otherwise
 
 ### Git
-- **Branch naming:** `feature/description`, `fix/description`, `chore/description`
-- **Commits:** Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`)
-- **PR flow:** Feature branch → PR → merge to `main`
+- Branch: `feature/`, `fix/`, `chore/`
+- Conventional commits: `feat:`, `fix:`, `docs:`, `chore:`
+- Feature branch → PR → merge to `main`
 
 ## Common Tasks
 
-### Quick start (Makefile)
 ```bash
-make install    # Install backend + frontend dependencies
-make backend    # Run backend (activates venv, starts uvicorn)
-make frontend   # Run frontend (starts Expo web)
-```
+make install       # Install all dependencies
+make backend       # Start FastAPI (auto-creates venv)
+make frontend      # Start Expo
 
-### Run backend locally
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000 --host 0.0.0.0
-# API docs at http://localhost:8000/docs
-# --host 0.0.0.0 is needed for physical device testing
-```
+# Manual alternatives
+cd backend && uvicorn app.main:app --reload --port 8000 --host 0.0.0.0
+cd frontend && npx expo start --web        # Web at localhost:8081
+cd frontend && npx expo start              # Press 'i' for iOS simulator
 
-### Run frontend locally (web — Phase 1)
-```bash
-cd frontend
-npm install
-npx expo start --web
-# Opens in browser at http://localhost:8081
+# Database
+cd backend && alembic upgrade head
+cd backend && alembic revision --autogenerate -m "description"
+
 # After editing .env, restart with: npx expo start --web --clear
 ```
 
-### Run frontend on iOS simulator
-```bash
-cd frontend
-npx expo start
-# Press 'i' for iOS simulator
-# Note: in Simulator go to I/O → Keyboard → disable "Connect Hardware Keyboard"
-# otherwise typing in WebViews (e.g. Teller Connect) will cause page refreshes
-```
+**Deploy:** Push to `main` → Railway (backend) and Vercel (frontend) auto-deploy.
 
-### Run database migrations
-```bash
-cd backend
-alembic upgrade head          # Apply migrations
-alembic revision --autogenerate -m "description"  # Create migration
-```
-
-### Import mock data into Supabase
-```bash
-cd backend
-python -m scripts.import_robinhood
-# Upserts robinhood_data.json into DB (creates test user test@ledgerwise.dev)
-```
-
-### Deploy
-- **Backend:** Push to `main` → Railway auto-deploys
-- **Web frontend:** Push to `main` → Vercel auto-deploys
-- **iOS (Phase 2):** Run `eas build --platform ios` → submit to App Store
-
-## Security Notes
+## Security
 
 - **Never log or expose Teller access tokens** — they grant direct bank access
-- **All Teller tokens are encrypted at rest** in the database
-- **Supabase RLS is mandatory** — every table must have row-level policies
-- **API rate limiting is enforced** via Redis — prevents abuse of Teller's rate limits
-- **HTTPS only** — Railway and Vercel both enforce this by default
-- **CORS is restricted** to known frontend domains in FastAPI middleware
+- **Teller tokens encrypted at rest** (AES) in Supabase
+- **HTTPS only** — enforced by Railway + Vercel
+- **CORS restricted** to known frontend domains
+- **Planned:** Supabase RLS on all user tables, Redis-based rate limiting
 
-## Scaling Path (When You Outgrow Free Tiers)
+## Scaling Path
 
-1. **Railway free tier runs out** → Upgrade to $5/mo hobby plan (or switch to Render/Fly.io)
-2. **Need more than 100 bank connections** → Contact Teller for paid plan (or migrate to Plaid)
-3. **Database grows past 500MB** → Upgrade Supabase to Pro ($25/mo)
-4. **Need background job processing** → Add Celery workers with Redis as broker
-5. **High traffic** → Add Cloudflare in front of Railway API for caching + DDoS protection
-6. **Ready for mobile (Phase 2)** → Run `eas build --platform ios`, no code rewrite needed
-7. **Need push notifications** → Add Expo Push Notifications (free) or Firebase Cloud Messaging
+1. Railway free tier → $5/mo hobby plan (or Render/Fly.io)
+2. \>100 bank connections → paid Teller plan (or migrate to Plaid)
+3. Database >500MB → Supabase Pro ($25/mo)
+4. Background jobs → Celery + Redis
+5. High traffic → Cloudflare caching + DDoS protection
+6. Mobile → `eas build --platform ios`, no code rewrite
+7. Push notifications → Expo Push Notifications or FCM
