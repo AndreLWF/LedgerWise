@@ -9,5 +9,10 @@ class Settings(BaseSettings):
     teller_env: str = "sandbox"
     cors_origins: list[str] = ["http://localhost:8081"]
 
+    # Supabase
+    database_url: str = ""
+    supabase_url: str = ""
+    supabase_key: str = ""
+
 
 settings = Settings()
