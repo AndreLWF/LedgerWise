@@ -4,15 +4,15 @@
 
 Full-stack fintech app connecting to real bank accounts for transaction viewing, balances, and spending analysis. React Native Web frontend (Expo) + FastAPI backend + Supabase (PostgreSQL). Targets friends & family initially (5–50 users), designed to scale.
 
-**Current state:** Teller bank linking, transaction list, and spending summary work on web and iOS (Expo Go). Google OAuth via Supabase Auth works on both web and native iOS. Database layer in place (SQLAlchemy + Alembic + Supabase). Teller router serves mock data; real Teller service code is ready but commented out.
+**Current state:** Teller bank linking, transaction list, and spending summary work on web and iOS (Expo Go). Google OAuth via Supabase Auth works on both web and native iOS. Database layer in place (SQLAlchemy + Alembic + Supabase). Auth middleware guards teller + spending routes (user-scoped queries). GET endpoints fetch accounts and transactions by authenticated user. POST `/teller/transactions` still available for enrollment (uses DB fallback). Real Teller service code is ready but commented out.
 
 ## Development Phases
 
 ### Phase 1 — Web App (CURRENT)
 **Iteration 1 (done):** Teller Connect → transaction list on web + iOS. DB models + migrations + Supabase connection.
 **Iteration 1.5 (done):** Spending summary with category breakdown. Frontend decomposed into components, hooks, and feature modules.
-**Iteration 1.75 (done):** Google OAuth sign-in via Supabase Auth. Web uses `signInWithOAuth` redirect flow; native iOS uses `expo-auth-session` + `signInWithIdToken` (bypasses Supabase redirect, which doesn't work in Expo Go). Backend JWT validation middleware via JWKS (guards `/api/v1/me`; not yet applied to all routes).
-**Iteration 2 (next):** Apply auth middleware to all routes, re-enable live Teller data, Expo Router migration, persist enrolled tokens, native session persistence (AsyncStorage).
+**Iteration 1.75 (done):** Google OAuth sign-in via Supabase Auth. Web uses `signInWithOAuth` redirect flow; native iOS uses `expo-auth-session` + `signInWithIdToken` (bypasses Supabase redirect, which doesn't work in Expo Go). Backend JWT validation middleware via JWKS. Auth applied to teller + spending routes with user-scoped DB queries. Accounts-first data loading flow (fetch accounts → fetch transactions + spending in parallel). CategoryAccordion animated with expand/collapse and refund variant. `Account` type + `AccountResponse` schema added.
+**Iteration 2 (next):** Re-enable live Teller data, Expo Router migration, persist enrolled tokens, native session persistence (AsyncStorage).
 
 ### Phase 2 — Mobile (FUTURE)
 Build iOS app from same Expo codebase via EAS Build. Push notifications, biometric auth, widgets. Evaluate Android.
@@ -134,7 +134,7 @@ Files marked `*` exist now. Unmarked files are planned for future iterations.
 │       ├── hooks/             * useTellerConnect, useTransactions
 │       ├── spending/          * Feature module (SpendingSummary + sub-components)
 │       ├── styles/            * app, spending, transactionRow, auth
-│       ├── types/             * transaction.ts, spending.ts
+│       ├── types/             * transaction.ts, spending.ts, account.ts
 │       ├── utils/             * categoryColors.ts
 │       └── contexts/          * AuthContext (Google OAuth + Supabase session)
 ```
@@ -239,7 +239,7 @@ cd backend && alembic revision --autogenerate -m "description"
 - **HTTPS only** — enforced by Railway + Vercel
 - **CORS restricted** to known frontend domains
 - **Google OAuth client IDs are public** — they are not secrets (validated server-side by Google)
-- **Backend JWT validation** — JWKS-based (`middleware/auth.py`), currently guards `/api/v1/me`. Iteration 2 will apply to all routes.
+- **Backend JWT validation** — JWKS-based (`middleware/auth.py`), guards teller + spending routes. All user-facing GET endpoints are user-scoped via `get_current_user_id` dependency.
 - **Planned:** Supabase RLS on all user tables, Redis-based rate limiting
 
 ## Scaling Path

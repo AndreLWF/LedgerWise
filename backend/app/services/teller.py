@@ -92,7 +92,7 @@ async def get_user_transactions(
     return _map_transactions(rows)
 
 
-def _map_transactions(rows) -> list[TransactionResponse]:
+def _map_transactions(rows: list[Transaction]) -> list[TransactionResponse]:
     """Convert Transaction ORM rows to response models."""
     results: list[TransactionResponse] = []
     for txn in rows:
