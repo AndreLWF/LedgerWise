@@ -22,20 +22,22 @@ import { authStyles } from './src/styles/auth.styles';
 function MainApp() {
   const [activeTab, setActiveTab] = useState<'transactions' | 'spending'>('transactions');
   const [tellerError, setTellerError] = useState<string | null>(null);
-  const { signOut } = useAuth();
+  const { session, signOut } = useAuth();
+
+  const token = session?.access_token ?? null;
 
   const {
     transactions, loading, error: fetchError,
-    connected, summaryData, summaryLoading, loadData,
-  } = useTransactions();
+    hasAccounts, summaryData, summaryLoading, refresh,
+  } = useTransactions(token);
 
   const {
     showWebView, tellerSource,
     openTellerConnect, handleWebViewMessage, closeWebView,
   } = useTellerConnect(
-    (accessToken) => {
+    () => {
       setTellerError(null);
-      void loadData(accessToken);
+      refresh();
     },
     setTellerError,
   );
@@ -53,7 +55,7 @@ function MainApp() {
         </Pressable>
       </View>
 
-      {!connected && (
+      {!hasAccounts && !loading && (
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
           onPress={openTellerConnect}
@@ -65,7 +67,7 @@ function MainApp() {
       {loading && <ActivityIndicator style={styles.spinner} size="large" color="#2563eb" />}
       {error && <Text style={styles.error}>{error}</Text>}
 
-      {connected && transactions.length === 0 && !loading && (
+      {hasAccounts && transactions.length === 0 && !loading && (
         <Text style={styles.empty}>No transactions found.</Text>
       )}
 
@@ -109,6 +111,15 @@ function MainApp() {
             />
           )}
         </>
+      )}
+
+      {hasAccounts && (
+        <Pressable
+          style={({ pressed }) => [styles.addAccountButton, pressed && styles.buttonPressed]}
+          onPress={openTellerConnect}
+        >
+          <Text style={styles.addAccountText}>+ Add Account</Text>
+        </Pressable>
       )}
 
       {Platform.OS !== 'web' && (

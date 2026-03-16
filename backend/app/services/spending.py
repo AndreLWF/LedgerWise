@@ -3,7 +3,7 @@
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Transaction
+from app.models import Account, Transaction
 from app.schemas import CategoryResponse, SpendingSummaryResponse
 
 
@@ -27,15 +27,22 @@ def _spending_filter():
     return func.lower(func.coalesce(Transaction.category, "")).notin_(excluded)
 
 
-async def _query_category_totals(db: AsyncSession, category_label, spending_filter):
+async def _query_category_totals(
+    db: AsyncSession, category_label, spending_filter, user_id: str | None = None
+):
     """Query spending totals grouped by category. Tries debits first, falls back to all."""
-    stmt = (
-        select(
-            category_label.label("category"),
-            func.sum(func.abs(Transaction.amount)).label("total"),
-            func.count().label("count"),
+    base = select(
+        category_label.label("category"),
+        func.sum(func.abs(Transaction.amount)).label("total"),
+        func.count().label("count"),
+    )
+    if user_id:
+        base = base.join(Account, Transaction.account_id == Account.id).where(
+            Account.user_id == user_id
         )
-        .where(Transaction.amount < 0, spending_filter)
+
+    stmt = (
+        base.where(Transaction.amount < 0, spending_filter)
         .group_by(category_label)
         .order_by(func.sum(func.abs(Transaction.amount)).desc())
     )
@@ -44,13 +51,17 @@ async def _query_category_totals(db: AsyncSession, category_label, spending_filt
 
     # Fallback: if no negative amounts, use all transactions
     if not rows:
-        stmt = (
-            select(
-                category_label.label("category"),
-                func.sum(func.abs(Transaction.amount)).label("total"),
-                func.count().label("count"),
+        base2 = select(
+            category_label.label("category"),
+            func.sum(func.abs(Transaction.amount)).label("total"),
+            func.count().label("count"),
+        )
+        if user_id:
+            base2 = base2.join(Account, Transaction.account_id == Account.id).where(
+                Account.user_id == user_id
             )
-            .where(spending_filter)
+        stmt = (
+            base2.where(spending_filter)
             .group_by(category_label)
             .order_by(func.sum(func.abs(Transaction.amount)).desc())
         )
@@ -60,13 +71,20 @@ async def _query_category_totals(db: AsyncSession, category_label, spending_filt
     return rows
 
 
-async def _query_refund_totals(db: AsyncSession) -> tuple[float, int]:
+async def _query_refund_totals(
+    db: AsyncSession, user_id: str | None = None
+) -> tuple[float, int]:
     """Query aggregate refund total and count."""
     refund_filter = func.lower(func.coalesce(Transaction.category, "")) == "refund"
-    stmt = select(
+    base = select(
         func.sum(func.abs(Transaction.amount)).label("total"),
         func.count().label("count"),
-    ).where(refund_filter)
+    )
+    if user_id:
+        base = base.join(Account, Transaction.account_id == Account.id).where(
+            Account.user_id == user_id
+        )
+    stmt = base.where(refund_filter)
     result = await db.execute(stmt)
     row = result.one()
     return round(float(row.total or 0), 2), row.count or 0
@@ -98,10 +116,14 @@ def _build_categories(
     return categories, uncategorized_count, uncategorized_pct
 
 
-async def get_spending_summary(db: AsyncSession) -> SpendingSummaryResponse:
-    """Aggregate spending data by category across all transactions."""
+async def get_spending_summary(
+    db: AsyncSession, user_id: str | None = None
+) -> SpendingSummaryResponse:
+    """Aggregate spending data by category, optionally scoped to a user."""
     category_label = _build_category_label()
-    rows = await _query_category_totals(db, category_label, _spending_filter())
+    rows = await _query_category_totals(
+        db, category_label, _spending_filter(), user_id
+    )
 
     total_spent = sum(float(r.total) for r in rows)
     transaction_count = sum(r.count for r in rows)
@@ -109,7 +131,7 @@ async def get_spending_summary(db: AsyncSession) -> SpendingSummaryResponse:
     categories, uncategorized_count, uncategorized_pct = _build_categories(
         rows, total_spent
     )
-    refund_total, refund_count = await _query_refund_totals(db)
+    refund_total, refund_count = await _query_refund_totals(db, user_id)
 
     return SpendingSummaryResponse(
         total_spent=round(total_spent, 2),

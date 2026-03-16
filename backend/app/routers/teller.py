@@ -2,10 +2,40 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
-from app.schemas import TokenRequest, TransactionResponse
+from app.middleware.auth import get_current_user_id
+from app.schemas import AccountResponse, TokenRequest, TransactionResponse
 from app.services import teller as teller_service
 
 router = APIRouter(prefix="/teller", tags=["teller"])
+
+
+@router.get("/accounts", response_model=list[AccountResponse])
+async def get_my_accounts(
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> list[AccountResponse]:
+    """Return all bank accounts linked to the authenticated user."""
+    accounts = await teller_service.get_user_accounts(db, user_id)
+    return [
+        AccountResponse(
+            id=str(acct.id),
+            teller_account_id=acct.teller_account_id,
+            institution_name=acct.institution_name,
+            account_name=acct.account_name,
+            account_type=acct.account_type,
+            account_subtype=acct.account_subtype,
+        )
+        for acct in accounts
+    ]
+
+
+@router.get("/transactions", response_model=list[TransactionResponse])
+async def get_my_transactions(
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> list[TransactionResponse]:
+    """Return transactions for the authenticated user's accounts."""
+    return await teller_service.get_user_transactions(db, user_id)
 
 
 @router.post("/transactions", response_model=list[TransactionResponse])

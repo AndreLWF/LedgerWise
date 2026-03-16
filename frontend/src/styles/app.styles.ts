@@ -111,4 +111,16 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  addAccountButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  addAccountText: {
+    color: '#2563eb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

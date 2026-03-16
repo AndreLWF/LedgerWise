@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.config import settings
-from app.models import Transaction
+from app.models import Account, Transaction
 from app.schemas import TransactionResponse
 
 TELLER_BASE_URL = "https://api.teller.io"
@@ -66,12 +66,38 @@ async def get_transactions_from_db(db: AsyncSession) -> list[TransactionResponse
         .order_by(Transaction.date.desc())
     )
     rows = result.scalars().all()
+    return _map_transactions(rows)
 
+
+async def get_user_accounts(db: AsyncSession, user_id: str) -> list[Account]:
+    """Fetch all accounts belonging to a user."""
+    result = await db.execute(
+        select(Account).where(Account.user_id == user_id)
+    )
+    return list(result.scalars().all())
+
+
+async def get_user_transactions(
+    db: AsyncSession, user_id: str
+) -> list[TransactionResponse]:
+    """Fetch transactions for a specific user, joined with account info."""
+    result = await db.execute(
+        select(Transaction)
+        .join(Account)
+        .where(Account.user_id == user_id)
+        .options(joinedload(Transaction.account))
+        .order_by(Transaction.date.desc())
+    )
+    rows = result.scalars().all()
+    return _map_transactions(rows)
+
+
+def _map_transactions(rows) -> list[TransactionResponse]:
+    """Convert Transaction ORM rows to response models."""
     results: list[TransactionResponse] = []
     for txn in rows:
         category = (txn.category or "General").title()
         amount = txn.amount
-        # Refunds are money coming back — show as positive
         if category == "Refund":
             amount = abs(amount)
         results.append(TransactionResponse(

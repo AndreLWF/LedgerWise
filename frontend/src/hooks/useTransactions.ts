@@ -1,54 +1,108 @@
-import { useCallback, useState } from 'react';
-import { fetchTransactions as apiFetchTransactions, fetchSpendingSummary } from '../api/client';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  fetchAccounts,
+  fetchTransactions,
+  fetchSpendingSummary,
+} from '../api/client';
+import type { Account } from '../types/account';
 import type { SpendingSummaryData } from '../types/spending';
 import type { Transaction } from '../types/transaction';
 
 interface UseTransactionsReturn {
   transactions: Transaction[];
+  accounts: Account[];
   loading: boolean;
   error: string | null;
-  connected: boolean;
+  hasAccounts: boolean;
   summaryData: SpendingSummaryData | null;
   summaryLoading: boolean;
-  loadData: (accessToken: string) => Promise<void>;
+  refresh: () => void;
 }
 
-export function useTransactions(): UseTransactionsReturn {
+export function useTransactions(token: string | null): UseTransactionsReturn {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [connected, setConnected] = useState(false);
+  const [hasAccounts, setHasAccounts] = useState(false);
   const [summaryData, setSummaryData] = useState<SpendingSummaryData | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const loadData = useCallback(async (accessToken: string) => {
-    setLoading(true);
-    setSummaryLoading(true);
-    setError(null);
-
-    try {
-      const [txns, summary] = await Promise.allSettled([
-        apiFetchTransactions(accessToken),
-        fetchSpendingSummary(),
-      ]);
-
-      if (txns.status === 'fulfilled') {
-        setTransactions(txns.value);
-        setConnected(true);
-      } else {
-        setError(txns.reason instanceof Error ? txns.reason.message : 'Failed to load transactions');
-      }
-
-      if (summary.status === 'fulfilled') {
-        setSummaryData(summary.value);
-      } else {
-        console.warn('Failed to load spending summary:', summary.reason);
-      }
-    } finally {
-      setLoading(false);
-      setSummaryLoading(false);
-    }
+  const refresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
   }, []);
 
-  return { transactions, loading, error, connected, summaryData, summaryLoading, loadData };
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    async function load() {
+      try {
+        const accts = await fetchAccounts(token!);
+        if (cancelled) return;
+
+        setAccounts(accts);
+        setHasAccounts(accts.length > 0);
+
+        if (accts.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        setSummaryLoading(true);
+        const [txns, summary] = await Promise.allSettled([
+          fetchTransactions(token!),
+          fetchSpendingSummary(token!),
+        ]);
+        if (cancelled) return;
+
+        if (txns.status === 'fulfilled') {
+          setTransactions(txns.value);
+        } else {
+          setError(
+            txns.reason instanceof Error
+              ? txns.reason.message
+              : 'Failed to load transactions',
+          );
+        }
+
+        if (summary.status === 'fulfilled') {
+          setSummaryData(summary.value);
+        } else {
+          console.warn('Failed to load spending summary:', summary.reason);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : 'Failed to load accounts',
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setSummaryLoading(false);
+        }
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [token, refreshKey]);
+
+  return {
+    transactions,
+    accounts,
+    loading,
+    error,
+    hasAccounts,
+    summaryData,
+    summaryLoading,
+    refresh,
+  };
 }

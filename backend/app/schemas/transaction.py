@@ -12,3 +12,12 @@ class TransactionResponse(BaseModel):
     amount: str
     account_name: str
     category: str
+
+
+class AccountResponse(BaseModel):
+    id: str
+    teller_account_id: str
+    institution_name: str | None
+    account_name: str | None
+    account_type: str | None
+    account_subtype: str | None

@@ -56,7 +56,7 @@ interface UseTellerConnectReturn {
 }
 
 export function useTellerConnect(
-  onSuccess: (accessToken: string) => void,
+  onSuccess: () => void,
   onError: (message: string) => void,
 ): UseTellerConnectReturn {
   const [showWebView, setShowWebView] = useState(false);
@@ -95,7 +95,7 @@ export function useTellerConnect(
         const connect = window.TellerConnect.setup({
           applicationId: TELLER_APP_ID,
           environment: 'sandbox',
-          onSuccess: (enrollment) => onSuccessRef.current(enrollment.accessToken),
+          onSuccess: () => onSuccessRef.current(),
         });
         connect.open();
       } catch (err) {
@@ -111,7 +111,7 @@ export function useTellerConnect(
       const msg = JSON.parse(event.nativeEvent.data) as { type: string; accessToken?: string };
       if (msg.type === 'success' && msg.accessToken) {
         setShowWebView(false);
-        onSuccessRef.current(msg.accessToken);
+        onSuccessRef.current();
       } else if (msg.type === 'exit') {
         setShowWebView(false);
       }

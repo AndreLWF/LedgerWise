@@ -1,24 +1,9 @@
-import { useState } from 'react';
-import {
-  LayoutAnimation,
-  Platform,
-  Pressable,
-  Text,
-  UIManager,
-  View,
-} from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { Animated, Pressable, Text, View } from 'react-native';
 import { spendingStyles as styles } from '../../styles/spending.styles';
 import type { SpendingSummaryData } from '../../types/spending';
 import type { Transaction } from '../../types/transaction';
 import { getCategoryColor } from '../../utils/categoryColors';
-
-// Enable LayoutAnimation on Android
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 interface CategoryAccordionProps {
   data: SpendingSummaryData;
@@ -31,13 +16,48 @@ export default function CategoryAccordion({
   transactions,
   variant = 'default',
 }: CategoryAccordionProps) {
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(),
+  );
+  const fadeAnims = useRef<Record<string, Animated.Value>>({});
   const isRefund = variant === 'refund';
 
-  function toggleCategory(name: string) {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedCategory((prev) => (prev === name ? null : name));
+  function getFadeAnim(name: string): Animated.Value {
+    if (!fadeAnims.current[name]) {
+      fadeAnims.current[name] = new Animated.Value(0);
+    }
+    return fadeAnims.current[name];
   }
+
+  const toggleCategory = useCallback((name: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      const anim = getFadeAnim(name);
+      if (next.has(name)) {
+        Animated.timing(anim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }).start(() => {
+          setExpandedCategories((curr) => {
+            const updated = new Set(curr);
+            updated.delete(name);
+            return updated;
+          });
+        });
+        return prev; // don't remove yet — wait for animation
+      } else {
+        next.add(name);
+        anim.setValue(0);
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+        return next;
+      }
+    });
+  }, []);
 
   function getTransactionsForCategory(categoryName: string): Transaction[] {
     return transactions.filter((t) => {
@@ -49,7 +69,7 @@ export default function CategoryAccordion({
   const content = (
     <View style={styles.categoriesContainer}>
       {data.categories.map((cat, i) => {
-        const isExpanded = expandedCategory === cat.name;
+        const isExpanded = expandedCategories.has(cat.name);
         const isUncategorized = !isRefund && cat.name === 'General';
         const color = isRefund ? '#22c55e' : getCategoryColor(cat.name, i);
         const categoryTransactions = isExpanded
@@ -87,31 +107,34 @@ export default function CategoryAccordion({
               </View>
             </Pressable>
 
-            {isExpanded &&
-              categoryTransactions.map((txn) => {
-                const amt = parseFloat(txn.amount);
-                const isPositive = amt > 0;
-                return (
-                  <View key={txn.id} style={styles.expandedTxn}>
-                    <View style={styles.expandedTxnLeft}>
-                      <Text style={styles.expandedTxnDesc} numberOfLines={1}>
-                        {txn.description}
-                      </Text>
-                      <Text style={styles.expandedTxnMeta}>
-                        {txn.date} · {txn.account_name}
+            {isExpanded && (
+              <Animated.View style={{ opacity: getFadeAnim(cat.name) }}>
+                {categoryTransactions.map((txn) => {
+                  const amt = parseFloat(txn.amount);
+                  const isPositive = amt > 0;
+                  return (
+                    <View key={txn.id} style={styles.expandedTxn}>
+                      <View style={styles.expandedTxnLeft}>
+                        <Text style={styles.expandedTxnDesc} numberOfLines={1}>
+                          {txn.description}
+                        </Text>
+                        <Text style={styles.expandedTxnMeta}>
+                          {txn.date} · {txn.account_name}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.expandedTxnAmount,
+                          (isPositive || isRefund) && styles.expandedTxnRefund,
+                        ]}
+                      >
+                        {isPositive || isRefund ? '+' : ''}${Math.abs(amt).toFixed(2)}
                       </Text>
                     </View>
-                    <Text
-                      style={[
-                        styles.expandedTxnAmount,
-                        (isPositive || isRefund) && styles.expandedTxnRefund,
-                      ]}
-                    >
-                      {isPositive || isRefund ? '+' : ''}${Math.abs(amt).toFixed(2)}
-                    </Text>
-                  </View>
-                );
-              })}
+                  );
+                })}
+              </Animated.View>
+            )}
           </View>
         );
       })}
