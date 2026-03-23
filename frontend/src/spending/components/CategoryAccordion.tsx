@@ -60,6 +60,15 @@ export default function CategoryAccordion({
   }, []);
 
   function getTransactionsForCategory(categoryName: string): Transaction[] {
+    if (isRefund) {
+      const paymentPattern = /pymt|payment/i;
+      return transactions.filter((t) => {
+        const amt = parseFloat(t.amount);
+        const isCategoryRefund = t.category?.toLowerCase() === 'refund';
+        const isNegativeNonPayment = amt < 0 && !paymentPattern.test(t.description);
+        return isCategoryRefund || isNegativeNonPayment;
+      });
+    }
     return transactions.filter((t) => {
       const txnCategory = t.category || 'General';
       return txnCategory === categoryName;

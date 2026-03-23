@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
@@ -38,14 +38,14 @@ async def get_my_transactions(
     return await teller_service.get_user_transactions(db, user_id)
 
 
-@router.post("/transactions", response_model=list[TransactionResponse])
-async def fetch_transactions(
-    body: TokenRequest, db: AsyncSession = Depends(get_db)
-) -> list[TransactionResponse]:
-    # TODO: re-enable live Teller data when ready
-    # try:
-    #     return teller_service.get_all_transactions(body.access_token)
-    # except Exception as exc:
-    #     raise HTTPException(status_code=502, detail=str(exc)) from exc
-
-    return await teller_service.get_transactions_from_db(db)
+@router.post("/enroll", response_model=list[AccountResponse])
+async def enroll(
+    body: TokenRequest,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> list[AccountResponse]:
+    """Connect a bank via Teller: pull accounts + transactions and save to DB."""
+    try:
+        return await teller_service.enroll_accounts(db, user_id, body.access_token)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

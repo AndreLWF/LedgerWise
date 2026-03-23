@@ -21,10 +21,18 @@ def _build_category_label():
     )
 
 
+def _is_payment():
+    """SQL expression that detects CC payments by description keywords."""
+    desc_lower = func.lower(func.coalesce(Transaction.description, ""))
+    return desc_lower.like("%pymt%") | desc_lower.like("%payment%")
+
+
 def _spending_filter():
     """SQL filter that excludes payments and refunds from spending totals."""
     excluded = ["payment", "refund"]
-    return func.lower(func.coalesce(Transaction.category, "")).notin_(excluded)
+    category_ok = func.lower(func.coalesce(Transaction.category, "")).notin_(excluded)
+    not_payment = ~_is_payment()
+    return category_ok & not_payment
 
 
 async def _query_category_totals(
@@ -33,7 +41,7 @@ async def _query_category_totals(
     """Query spending totals grouped by category. Tries debits first, falls back to all."""
     base = select(
         category_label.label("category"),
-        func.sum(func.abs(Transaction.amount)).label("total"),
+        func.sum(Transaction.amount).label("total"),
         func.count().label("count"),
     )
     if user_id:
@@ -42,31 +50,12 @@ async def _query_category_totals(
         )
 
     stmt = (
-        base.where(Transaction.amount < 0, spending_filter)
+        base.where(Transaction.amount > 0, spending_filter)
         .group_by(category_label)
-        .order_by(func.sum(func.abs(Transaction.amount)).desc())
+        .order_by(func.sum(Transaction.amount).desc())
     )
     result = await db.execute(stmt)
     rows = result.all()
-
-    # Fallback: if no negative amounts, use all transactions
-    if not rows:
-        base2 = select(
-            category_label.label("category"),
-            func.sum(func.abs(Transaction.amount)).label("total"),
-            func.count().label("count"),
-        )
-        if user_id:
-            base2 = base2.join(Account, Transaction.account_id == Account.id).where(
-                Account.user_id == user_id
-            )
-        stmt = (
-            base2.where(spending_filter)
-            .group_by(category_label)
-            .order_by(func.sum(func.abs(Transaction.amount)).desc())
-        )
-        result = await db.execute(stmt)
-        rows = result.all()
 
     return rows
 
@@ -74,8 +63,11 @@ async def _query_category_totals(
 async def _query_refund_totals(
     db: AsyncSession, user_id: str | None = None
 ) -> tuple[float, int]:
-    """Query aggregate refund total and count."""
-    refund_filter = func.lower(func.coalesce(Transaction.category, "")) == "refund"
+    """Query aggregate refund total and count (negative amounts that aren't CC payments)."""
+    refund_by_category = func.lower(func.coalesce(Transaction.category, "")) == "refund"
+    refund_by_amount = (Transaction.amount < 0) & ~_is_payment()
+    refund_filter = refund_by_category | refund_by_amount
+
     base = select(
         func.sum(func.abs(Transaction.amount)).label("total"),
         func.count().label("count"),

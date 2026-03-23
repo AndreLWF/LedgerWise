@@ -1,14 +1,17 @@
 import base64
+from datetime import date as date_type
+from decimal import Decimal
 from typing import Any
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.config import settings
 from app.models import Account, Transaction
-from app.schemas import TransactionResponse
+from app.schemas import AccountResponse, TransactionResponse
 
 TELLER_BASE_URL = "https://api.teller.io"
 
@@ -109,3 +112,69 @@ def _map_transactions(rows: list[Transaction]) -> list[TransactionResponse]:
             category=category,
         ))
     return results
+
+
+async def enroll_accounts(
+    db: AsyncSession, user_id: str, access_token: str
+) -> list[AccountResponse]:
+    """Pull accounts and transactions from Teller API and persist to DB."""
+    teller_accounts = get_accounts(access_token)
+
+    saved_accounts: list[AccountResponse] = []
+
+    for acct in teller_accounts:
+        stmt = pg_insert(Account).values(
+            teller_account_id=acct["id"],
+            user_id=user_id,
+            teller_access_token=access_token,
+            institution_name=acct.get("institution", {}).get("name"),
+            account_name=acct.get("name"),
+            account_type=acct.get("type"),
+            account_subtype=acct.get("subtype"),
+        ).on_conflict_do_update(
+            index_elements=["teller_account_id"],
+            set_={
+                "teller_access_token": access_token,
+                "institution_name": acct.get("institution", {}).get("name"),
+                "account_name": acct.get("name"),
+                "updated_at": func.now(),
+            },
+        ).returning(Account.id, Account.teller_account_id)
+
+        result = await db.execute(stmt)
+        row = result.fetchone()
+        account_db_id = row.id
+
+        saved_accounts.append(AccountResponse(
+            id=str(account_db_id),
+            teller_account_id=acct["id"],
+            institution_name=acct.get("institution", {}).get("name"),
+            account_name=acct.get("name"),
+            account_type=acct.get("type"),
+            account_subtype=acct.get("subtype"),
+        ))
+
+        teller_txns = get_transactions(access_token, acct["id"])
+        for txn in teller_txns:
+            txn_stmt = pg_insert(Transaction).values(
+                account_id=account_db_id,
+                teller_transaction_id=txn["id"],
+                amount=Decimal(txn["amount"]),
+                date=date_type.fromisoformat(txn["date"]),
+                description=txn.get("description", ""),
+                category=txn.get("details", {}).get("category"),
+                merchant_name=txn.get("merchant_name"),
+                status=txn.get("status", "posted"),
+            ).on_conflict_do_update(
+                index_elements=["teller_transaction_id"],
+                set_={
+                    "amount": Decimal(txn["amount"]),
+                    "description": txn.get("description", ""),
+                    "category": txn.get("details", {}).get("category"),
+                    "status": txn.get("status", "posted"),
+                },
+            )
+            await db.execute(txn_stmt)
+
+    await db.commit()
+    return saved_accounts

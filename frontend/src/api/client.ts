@@ -39,12 +39,15 @@ export async function fetchSpendingSummary(token: string): Promise<SpendingSumma
   return res.json() as Promise<SpendingSummaryData>;
 }
 
-export async function enrollTransactions(accessToken: string): Promise<Transaction[]> {
-  const res = await fetch(`${API_URL}/api/v1/teller/transactions`, {
+export async function enrollAccount(
+  token: string,
+  tellerAccessToken: string,
+): Promise<Account[]> {
+  const res = await fetch(`${API_URL}/api/v1/teller/enroll`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ access_token: accessToken }),
+    headers: authHeaders(token),
+    body: JSON.stringify({ access_token: tellerAccessToken }),
   });
   if (!res.ok) throw new Error(`Server error: ${res.status}`);
-  return res.json() as Promise<Transaction[]>;
+  return res.json() as Promise<Account[]>;
 }

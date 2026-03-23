@@ -13,6 +13,7 @@ import TransactionRow from './src/components/TransactionRow';
 import TellerModal from './src/components/TellerModal';
 import LoginScreen from './src/components/LoginScreen';
 import SpendingSummary from './src/spending';
+import { enrollAccount } from './src/api/client';
 import { useTellerConnect } from './src/hooks/useTellerConnect';
 import { useTransactions } from './src/hooks/useTransactions';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
@@ -35,9 +36,16 @@ function MainApp() {
     showWebView, tellerSource,
     openTellerConnect, handleWebViewMessage, closeWebView,
   } = useTellerConnect(
-    () => {
+    async (accessToken: string) => {
       setTellerError(null);
-      refresh();
+      try {
+        await enrollAccount(token!, accessToken);
+        refresh();
+      } catch (err) {
+        setTellerError(
+          err instanceof Error ? err.message : 'Failed to enroll account',
+        );
+      }
     },
     setTellerError,
   );

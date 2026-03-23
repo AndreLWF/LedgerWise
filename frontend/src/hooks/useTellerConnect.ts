@@ -29,7 +29,7 @@ function buildTellerHtml(appId: string): string {
   window.onload = function() {
     var connect = TellerConnect.setup({
       applicationId: '${appId}',
-      environment: 'sandbox',
+      environment: 'development',
       onSuccess: function(enrollment) {
         window.ReactNativeWebView.postMessage(JSON.stringify({
           type: 'success',
@@ -56,7 +56,7 @@ interface UseTellerConnectReturn {
 }
 
 export function useTellerConnect(
-  onSuccess: () => void,
+  onSuccess: (accessToken: string) => void,
   onError: (message: string) => void,
 ): UseTellerConnectReturn {
   const [showWebView, setShowWebView] = useState(false);
@@ -94,8 +94,8 @@ export function useTellerConnect(
       try {
         const connect = window.TellerConnect.setup({
           applicationId: TELLER_APP_ID,
-          environment: 'sandbox',
-          onSuccess: () => onSuccessRef.current(),
+          environment: 'development',
+          onSuccess: (enrollment) => onSuccessRef.current(enrollment.accessToken),
         });
         connect.open();
       } catch (err) {
@@ -111,7 +111,7 @@ export function useTellerConnect(
       const msg = JSON.parse(event.nativeEvent.data) as { type: string; accessToken?: string };
       if (msg.type === 'success' && msg.accessToken) {
         setShowWebView(false);
-        onSuccessRef.current();
+        onSuccessRef.current(msg.accessToken);
       } else if (msg.type === 'exit') {
         setShowWebView(false);
       }
