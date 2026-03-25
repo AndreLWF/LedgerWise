@@ -162,6 +162,11 @@ async def enroll_accounts(
         ))
 
         teller_txns = await get_transactions(access_token, acct["id"])
+        logger.info(
+            "TELLER_TXNS account=%s count=%d",
+            acct["id"],
+            len(teller_txns),
+        )
         for txn in teller_txns:
             txn_stmt = pg_insert(Transaction).values(
                 account_id=account_db_id,
