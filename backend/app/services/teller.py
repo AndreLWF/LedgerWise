@@ -173,7 +173,7 @@ async def enroll_accounts(
                 merchant_name=txn.get("merchant_name"),
                 status=txn.get("status", "posted"),
             ).on_conflict_do_update(
-                index_elements=["teller_transaction_id"],
+                constraint="uq_transaction_per_account",
                 set_={
                     "amount": Decimal(txn["amount"]),
                     "description": txn.get("description", ""),
