@@ -1,6 +1,5 @@
-import { Dimensions, Platform, StyleSheet } from 'react-native';
-
-const isNarrow = Dimensions.get('window').width < 600;
+import { Platform, StyleSheet } from 'react-native';
+import { isNarrow } from '../utils/responsive';
 
 export const dashboardLayoutStyles = StyleSheet.create({
   root: {

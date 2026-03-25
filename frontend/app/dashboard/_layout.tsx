@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Redirect, Slot, usePathname, useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { TransactionDataProvider } from '../../src/contexts/TransactionDataContext';
 import LedgerWiseLogo from '../../src/components/LedgerWiseLogo';
 import { dashboardLayoutStyles as styles } from '../../src/styles/dashboardLayout.styles';
 
@@ -26,13 +28,20 @@ export default function DashboardLayout() {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
+  // On web, useWindowDimensions can return a stale/default width during SSR.
+  // Default to mobile layout until the client has mounted and measured.
+  const [mounted, setMounted] = useState(Platform.OS !== 'web');
+  useEffect(() => { setMounted(true); }, []);
+
   if (!session) {
     return <Redirect href="/login" />;
   }
 
-  const showSidebar = width >= SIDEBAR_BREAKPOINT;
+  const showSidebar = mounted && width >= SIDEBAR_BREAKPOINT;
+  const token = session.access_token ?? null;
 
   return (
+    <TransactionDataProvider token={token}>
     <View style={styles.root}>
       {/* Header */}
       <View style={styles.header}>
@@ -123,5 +132,6 @@ export default function DashboardLayout() {
         </View>
       )}
     </View>
+    </TransactionDataProvider>
   );
 }

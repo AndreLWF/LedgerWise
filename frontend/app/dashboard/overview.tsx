@@ -1,14 +1,12 @@
 import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { useTransactions } from '../../src/hooks/useTransactions';
+import { useTransactionData, useDataSlice } from '../../src/contexts/TransactionDataContext';
 import SummaryChip from '../../src/spending/components/SummaryChip';
 import { overviewStyles as styles } from '../../src/styles/overview.styles';
 
 export default function OverviewScreen() {
-  const { session } = useAuth();
-  const token = session?.access_token ?? null;
-  const { summaryData, summaryLoading, hasAccounts } = useTransactions(token);
+  const { hasAccounts, accountsLoading } = useTransactionData();
+  const { summaryData } = useDataSlice();
 
   const topCategory = summaryData?.categories[0];
 
@@ -71,7 +69,7 @@ export default function OverviewScreen() {
         </>
       )}
 
-      {!hasAccounts && !summaryLoading && (
+      {!hasAccounts && !accountsLoading && (
         <View style={styles.placeholderCard}>
           <View style={styles.placeholderIconContainer}>
             <Ionicons name="trending-up" size={32} color="#6366F1" />

@@ -1,6 +1,5 @@
-import { Dimensions, StyleSheet } from 'react-native';
-
-const isNarrow = Dimensions.get('window').width < 600;
+import { StyleSheet } from 'react-native';
+import { isNarrow } from '../utils/responsive';
 
 export const spendingScreenStyles = StyleSheet.create({
   container: {

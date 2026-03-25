@@ -1,6 +1,6 @@
-import { Dimensions, Platform, StyleSheet } from 'react-native';
-
-const isNarrow = Dimensions.get('window').width < 600;
+import { Platform, StyleSheet } from 'react-native';
+import { isNarrow } from '../utils/responsive';
+import { pageHeaderDefs } from './shared.styles';
 
 export const overviewStyles = StyleSheet.create({
   container: {
@@ -11,20 +11,7 @@ export const overviewStyles = StyleSheet.create({
     paddingTop: isNarrow ? 16 : 24,
     paddingBottom: 40,
   },
-  pageHeader: {
-    marginBottom: isNarrow ? 16 : 24,
-  },
-  pageTitle: {
-    fontSize: isNarrow ? 22 : 28,
-    fontWeight: '600',
-    color: '#0A0A0A',
-    letterSpacing: -0.5,
-    marginBottom: 4,
-  },
-  pageSubtitle: {
-    fontSize: isNarrow ? 13 : 15,
-    color: '#737373',
-  },
+  ...pageHeaderDefs,
 
   statsGrid: {
     flexDirection: 'row',

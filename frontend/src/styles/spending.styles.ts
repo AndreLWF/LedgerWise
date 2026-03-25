@@ -1,6 +1,6 @@
-import { Dimensions, Platform, StyleSheet } from 'react-native';
-
-const isNarrow = Dimensions.get('window').width < 600;
+import { Platform, StyleSheet } from 'react-native';
+import { isNarrow } from '../utils/responsive';
+import { pageHeaderDefs } from './shared.styles';
 
 export const spendingStyles = StyleSheet.create({
   container: {
@@ -18,10 +18,15 @@ export const spendingStyles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
   },
-  periodRow: {
+  ...pageHeaderDefs,
+  pageHeaderRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginBottom: isNarrow ? 12 : 16,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: isNarrow ? 16 : 24,
+  },
+  pageHeaderLeft: {
+    flex: 1,
   },
 
   // --- Summary Cards ---

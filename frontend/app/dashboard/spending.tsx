@@ -5,8 +5,8 @@ import TellerModal from '../../src/components/TellerModal';
 import SpendingSummary from '../../src/spending';
 import { enrollAccount } from '../../src/api/client';
 import { useTellerConnect } from '../../src/hooks/useTellerConnect';
-import { useTransactions } from '../../src/hooks/useTransactions';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useTransactionData, useDataSlice } from '../../src/contexts/TransactionDataContext';
 import { spendingScreenStyles as styles } from '../../src/styles/spendingScreen.styles';
 
 export default function SpendingScreen() {
@@ -19,10 +19,8 @@ export default function SpendingScreen() {
   const token = session?.access_token ?? null;
   const dateRange = useMemo(() => periodToDateRange(selectedPeriod), [selectedPeriod]);
 
-  const {
-    transactions, loading, error: fetchError,
-    hasAccounts, summaryData, summaryLoading, refresh,
-  } = useTransactions(token, dateRange);
+  const { hasAccounts, accountsLoading, error: dataError, refresh } = useTransactionData();
+  const { transactions, summaryData, loading: sliceLoading } = useDataSlice(dateRange);
 
   const {
     showWebView, tellerSource,
@@ -42,11 +40,11 @@ export default function SpendingScreen() {
     setTellerError,
   );
 
-  const error = tellerError || fetchError;
+  const error = tellerError || dataError;
 
   return (
     <View style={styles.container}>
-      {!hasAccounts && !loading && (
+      {!hasAccounts && !accountsLoading && (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
             Connect a bank account to see your spending
@@ -60,7 +58,7 @@ export default function SpendingScreen() {
         </View>
       )}
 
-      {loading && !hasAccounts && (
+      {accountsLoading && !hasAccounts && (
         <ActivityIndicator style={styles.spinner} size="large" color="#6366F1" />
       )}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -69,7 +67,7 @@ export default function SpendingScreen() {
         <SpendingSummary
           data={summaryData}
           transactions={transactions}
-          loading={summaryLoading}
+          loading={sliceLoading}
           selectedPeriod={selectedPeriod}
           onPeriodChange={setSelectedPeriod}
         />
