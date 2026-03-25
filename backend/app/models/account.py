@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, func
+from sqlalchemy import DateTime, ForeignKey, Numeric, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -10,6 +10,9 @@ from app.models.base import Base
 
 class Account(Base):
     __tablename__ = "accounts"
+    __table_args__ = (
+        UniqueConstraint("teller_account_id", "user_id", name="uq_account_per_user"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -18,7 +21,7 @@ class Account(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     teller_account_id: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False
+        String(255), nullable=False
     )
     teller_access_token: Mapped[str] = mapped_column(String(512), nullable=False)
     institution_name: Mapped[str | None] = mapped_column(String(255))

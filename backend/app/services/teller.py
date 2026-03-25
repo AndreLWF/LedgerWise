@@ -139,7 +139,7 @@ async def enroll_accounts(
             account_type=acct.get("type"),
             account_subtype=acct.get("subtype"),
         ).on_conflict_do_update(
-            index_elements=["teller_account_id"],
+            constraint="uq_account_per_user",
             set_={
                 "teller_access_token": encrypted_token,
                 "institution_name": acct.get("institution", {}).get("name"),

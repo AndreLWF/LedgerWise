@@ -56,19 +56,31 @@ async def enroll(
     try:
         return await teller_service.enroll_accounts(db, user_id, body.access_token)
     except HTTPStatusError:
-        logger.warning("Teller API error during enrollment for user=%s", user_id)
+        logger.warning(
+            "Teller API error during enrollment for user=%s",
+            user_id,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=502,
             detail="Bank connection failed. Please try again later.",
         )
     except ValueError:
-        logger.warning("Invalid data during enrollment for user=%s", user_id)
+        logger.warning(
+            "Invalid data during enrollment for user=%s",
+            user_id,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=400,
             detail="Invalid enrollment data.",
         )
     except Exception:
-        logger.warning("Unexpected enrollment error for user=%s", user_id)
+        logger.warning(
+            "Unexpected enrollment error for user=%s",
+            user_id,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=502,
             detail="Bank connection failed. Please try again later.",
