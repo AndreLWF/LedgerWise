@@ -30,6 +30,9 @@ export const dashboardLayoutStyles = StyleSheet.create({
     color: '#0A0A0A',
     letterSpacing: -0.2,
   },
+  headerTitleMobile: {
+    fontSize: 16,
+  },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',

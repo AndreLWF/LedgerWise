@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  clearApiCache,
   fetchAccounts,
   fetchTransactions,
   fetchSpendingSummary,
@@ -40,6 +41,7 @@ export function useTransactions(
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refresh = useCallback(() => {
+    clearApiCache();
     setRefreshKey((k) => k + 1);
   }, []);
 

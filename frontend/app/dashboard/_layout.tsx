@@ -38,7 +38,7 @@ export default function DashboardLayout() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <LedgerWiseLogo size={showSidebar ? 32 : 26} />
-          {showSidebar && <Text style={styles.headerTitle}>LedgerWise</Text>}
+          <Text style={[styles.headerTitle, !showSidebar && styles.headerTitleMobile]}>LedgerWise</Text>
         </View>
         <Pressable
           style={(state) => [

@@ -4,6 +4,39 @@ import type { Transaction } from '../types/transaction';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 
+/** Default cache TTL in milliseconds (5 minutes). */
+const CACHE_TTL = 5 * 60 * 1000;
+
+// --- In-memory response cache ---
+
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+const cache = new Map<string, CacheEntry<unknown>>();
+
+function getCached<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function setCache<T>(key: string, data: T, ttl = CACHE_TTL): void {
+  cache.set(key, { data, expiresAt: Date.now() + ttl });
+}
+
+/** Clear all cached responses. Call after mutations (enroll, etc.). */
+export function clearApiCache(): void {
+  cache.clear();
+}
+
+// --- Error types ---
+
 /** Thrown when the server returns 401 — signals the session has expired. */
 export class UnauthorizedError extends Error {
   constructor() {
@@ -11,6 +44,8 @@ export class UnauthorizedError extends Error {
     this.name = 'UnauthorizedError';
   }
 }
+
+// --- Helpers ---
 
 function authHeaders(token: string): Record<string, string> {
   return {
@@ -25,11 +60,21 @@ async function handleResponse<T>(res: Response): Promise<T> {
   throw new Error(`Server error: ${res.status}`);
 }
 
+async function cachedGet<T>(url: string, token: string): Promise<T> {
+  const cacheKey = url;
+  const cached = getCached<T>(cacheKey);
+  if (cached) return cached;
+
+  const res = await fetch(url, { headers: authHeaders(token) });
+  const data = await handleResponse<T>(res);
+  setCache(cacheKey, data);
+  return data;
+}
+
+// --- API functions ---
+
 export async function fetchAccounts(token: string): Promise<Account[]> {
-  const res = await fetch(`${API_URL}/api/v1/teller/accounts`, {
-    headers: authHeaders(token),
-  });
-  return handleResponse<Account[]>(res);
+  return cachedGet<Account[]>(`${API_URL}/api/v1/teller/accounts`, token);
 }
 
 export async function fetchTransactions(
@@ -41,11 +86,10 @@ export async function fetchTransactions(
   if (startDate) params.set('start_date', startDate);
   if (endDate) params.set('end_date', endDate);
   const qs = params.toString();
-  const res = await fetch(
+  return cachedGet<Transaction[]>(
     `${API_URL}/api/v1/teller/transactions${qs ? `?${qs}` : ''}`,
-    { headers: authHeaders(token) },
+    token,
   );
-  return handleResponse<Transaction[]>(res);
 }
 
 export async function fetchSpendingSummary(
@@ -57,11 +101,10 @@ export async function fetchSpendingSummary(
   if (startDate) params.set('start_date', startDate);
   if (endDate) params.set('end_date', endDate);
   const qs = params.toString();
-  const res = await fetch(
+  return cachedGet<SpendingSummaryData>(
     `${API_URL}/api/v1/spending/summary${qs ? `?${qs}` : ''}`,
-    { headers: authHeaders(token) },
+    token,
   );
-  return handleResponse<SpendingSummaryData>(res);
 }
 
 export async function enrollAccount(
@@ -73,5 +116,7 @@ export async function enrollAccount(
     headers: authHeaders(token),
     body: JSON.stringify({ access_token: tellerAccessToken }),
   });
-  return handleResponse<Account[]>(res);
+  const data = await handleResponse<Account[]>(res);
+  clearApiCache();
+  return data;
 }
