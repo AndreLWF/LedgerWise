@@ -61,7 +61,13 @@ function MainApp() {
           <LedgerWiseLogo size={32} />
           <Text style={styles.title}>LedgerWise</Text>
         </View>
-        <Pressable style={styles.signOutButton} onPress={signOut}>
+        <Pressable
+          style={(state) => [
+            styles.signOutButton,
+            (state as unknown as { hovered: boolean }).hovered && styles.signOutButtonHovered,
+          ]}
+          onPress={signOut}
+        >
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
       </View>

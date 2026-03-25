@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 export const spendingStyles = StyleSheet.create({
   container: {
@@ -159,6 +159,19 @@ export const spendingStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
     backgroundColor: '#ffffff',
+  },
+  categoryRowHovered: {
+    backgroundColor: '#F9FAFB',
+    ...Platform.select({
+      web: { boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)' },
+      default: {
+        shadowColor: '#000',
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 2,
+      },
+    }),
   },
   uncategorizedRow: {
     backgroundColor: '#FFFBEB',

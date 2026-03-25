@@ -157,6 +157,19 @@ export const authStyles = StyleSheet.create({
     borderColor: '#E5E5E5',
     backgroundColor: '#FFFFFF',
   },
+  googleButtonHovered: {
+    borderColor: '#C7C8D1',
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 12px rgba(99, 102, 241, 0.12)' },
+      default: {
+        shadowColor: '#6366F1',
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 3,
+      },
+    }),
+  },
   googleButtonPressed: {
     borderColor: '#6366F1',
     backgroundColor: '#F8F9FF',

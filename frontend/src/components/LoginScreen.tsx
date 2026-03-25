@@ -42,9 +42,10 @@ export default function LoginScreen() {
 
           {/* Google Sign In Button */}
           <Pressable
-            style={({ pressed }) => [
+            style={(state) => [
               authStyles.googleButton,
-              pressed && authStyles.googleButtonPressed,
+              (state as unknown as { hovered: boolean }).hovered && authStyles.googleButtonHovered,
+              state.pressed && authStyles.googleButtonPressed,
             ]}
             onPress={signInWithGoogle}
           >

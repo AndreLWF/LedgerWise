@@ -95,11 +95,12 @@ export default function CategoryAccordion({
         return (
           <View key={cat.name}>
             <Pressable
-              style={[
+              style={(state) => [
                 styles.categoryRow,
                 isUncategorized && styles.uncategorizedRow,
                 isRefund && styles.refundRow,
                 i === sorted.length - 1 && !isExpanded && { borderBottomWidth: 0 },
+                (state as unknown as { hovered: boolean }).hovered && styles.categoryRowHovered,
               ]}
               onPress={() => toggleCategory(cat.name)}
             >
