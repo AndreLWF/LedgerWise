@@ -1,10 +1,12 @@
-import { StyleSheet } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+
+const isNarrow = Dimensions.get('window').width < 600;
 
 export const spendingScreenStyles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: isNarrow ? 16 : 24,
+    paddingTop: isNarrow ? 16 : 24,
   },
   emptyContainer: {
     alignItems: 'center',

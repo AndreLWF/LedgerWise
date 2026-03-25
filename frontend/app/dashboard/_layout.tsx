@@ -1,5 +1,5 @@
 import { Redirect, Slot, usePathname, useRouter } from 'expo-router';
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Dimensions, Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import LedgerWiseLogo from '../../src/components/LedgerWiseLogo';
@@ -18,24 +18,27 @@ const navItems: NavItem[] = [
   { name: 'Settings', path: '/dashboard/settings', icon: 'settings-outline' },
 ];
 
+const SIDEBAR_BREAKPOINT = 768;
+
 export default function DashboardLayout() {
   const { session, signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const { width } = useWindowDimensions();
 
   if (!session) {
     return <Redirect href="/login" />;
   }
 
-  const isWeb = Platform.OS === 'web';
+  const showSidebar = width >= SIDEBAR_BREAKPOINT;
 
   return (
     <View style={styles.root}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <LedgerWiseLogo size={32} />
-          <Text style={styles.headerTitle}>LedgerWise</Text>
+          <LedgerWiseLogo size={showSidebar ? 32 : 26} />
+          {showSidebar && <Text style={styles.headerTitle}>LedgerWise</Text>}
         </View>
         <Pressable
           style={(state) => [
@@ -44,14 +47,14 @@ export default function DashboardLayout() {
           ]}
           onPress={signOut}
         >
-          <Ionicons name="log-out-outline" size={16} color="#525252" />
-          <Text style={styles.signOutText}>Sign Out</Text>
+          <Ionicons name="log-out-outline" size={showSidebar ? 16 : 18} color="#525252" />
+          {showSidebar && <Text style={styles.signOutText}>Sign Out</Text>}
         </Pressable>
       </View>
 
       <View style={styles.body}>
-        {/* Sidebar (web only) */}
-        {isWeb && (
+        {/* Sidebar (wide screens only) */}
+        {showSidebar && (
           <View style={styles.sidebar}>
             <ScrollView style={styles.sidebarNav} showsVerticalScrollIndicator={false}>
               {navItems.map((item) => {
@@ -95,8 +98,8 @@ export default function DashboardLayout() {
         </View>
       </View>
 
-      {/* Bottom tabs (mobile only) */}
-      {!isWeb && (
+      {/* Bottom tabs (narrow screens) */}
+      {!showSidebar && (
         <View style={styles.bottomBar}>
           {navItems.map((item) => {
             const isActive = pathname === item.path || pathname.startsWith(item.path + '/');

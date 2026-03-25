@@ -1,4 +1,6 @@
-import { Platform, StyleSheet } from 'react-native';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
+
+const isNarrow = Dimensions.get('window').width < 600;
 
 export const spendingStyles = StyleSheet.create({
   container: {
@@ -19,24 +21,25 @@ export const spendingStyles = StyleSheet.create({
   periodRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 16,
+    marginBottom: isNarrow ? 12 : 16,
   },
 
   // --- Summary Cards ---
   summaryStrip: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 20,
+    gap: isNarrow ? 8 : 12,
+    marginBottom: isNarrow ? 12 : 20,
   },
   summaryCard: {
-    flex: 1,
-    minWidth: 150,
+    flexBasis: isNarrow ? '47%' : 'auto',
+    flexGrow: 1,
+    minWidth: isNarrow ? 0 : 150,
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E5E5',
-    padding: 20,
+    padding: isNarrow ? 14 : 20,
   },
   uncategorizedCard: {
     backgroundColor: '#FFFBEB',
@@ -44,28 +47,28 @@ export const spendingStyles = StyleSheet.create({
     borderColor: '#F59E0B',
   },
   cardIconContainer: {
-    width: 40,
-    height: 40,
+    width: isNarrow ? 32 : 40,
+    height: isNarrow ? 32 : 40,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: isNarrow ? 8 : 12,
   },
   cardValue: {
-    fontSize: 28,
+    fontSize: isNarrow ? 20 : 28,
     fontWeight: '600',
     color: '#0A0A0A',
     letterSpacing: -0.5,
     marginBottom: 2,
   },
   cardValueSmall: {
-    fontSize: 17,
+    fontSize: isNarrow ? 14 : 17,
   },
   uncategorizedValue: {
     color: '#92400E',
   },
   cardSub: {
-    fontSize: 13,
+    fontSize: isNarrow ? 11 : 13,
     color: '#737373',
   },
   uncategorizedSub: {
@@ -79,8 +82,8 @@ export const spendingStyles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E5E5',
-    padding: 24,
-    marginBottom: 20,
+    padding: isNarrow ? 16 : 24,
+    marginBottom: isNarrow ? 12 : 20,
   },
   proportionBarTitle: {
     fontSize: 15,
@@ -90,11 +93,11 @@ export const spendingStyles = StyleSheet.create({
   },
   proportionBar: {
     flexDirection: 'row',
-    height: 40,
+    height: isNarrow ? 28 : 40,
     borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: '#E5E5E5',
-    marginBottom: 16,
+    marginBottom: isNarrow ? 12 : 16,
   },
   proportionSegment: {
     height: '100%' as unknown as number,
@@ -115,8 +118,8 @@ export const spendingStyles = StyleSheet.create({
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '45%' as unknown as number,
-    minWidth: 140,
+    width: isNarrow ? '100%' as unknown as number : '45%' as unknown as number,
+    minWidth: isNarrow ? 0 : 140,
   },
   legendDot: {
     width: 12,
@@ -145,8 +148,8 @@ export const spendingStyles = StyleSheet.create({
     marginBottom: 20,
   },
   categoriesSectionHeader: {
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingHorizontal: isNarrow ? 16 : 24,
+    paddingVertical: isNarrow ? 14 : 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
@@ -162,8 +165,8 @@ export const spendingStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: isNarrow ? 14 : 24,
+    paddingVertical: isNarrow ? 12 : 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
     backgroundColor: '#ffffff',

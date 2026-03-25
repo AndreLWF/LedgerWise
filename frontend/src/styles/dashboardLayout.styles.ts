@@ -1,4 +1,6 @@
-import { Platform, StyleSheet } from 'react-native';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
+
+const isNarrow = Dimensions.get('window').width < 600;
 
 export const dashboardLayoutStyles = StyleSheet.create({
   root: {
@@ -11,8 +13,8 @@ export const dashboardLayoutStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: isNarrow ? 16 : 24,
+    paddingVertical: isNarrow ? 12 : 16,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
@@ -120,7 +122,7 @@ export const dashboardLayoutStyles = StyleSheet.create({
     flex: 1,
   },
 
-  // --- Bottom Bar (mobile) ---
+  // --- Bottom Bar (narrow screens) ---
   bottomBar: {
     flexDirection: 'row',
     backgroundColor: '#ffffff',

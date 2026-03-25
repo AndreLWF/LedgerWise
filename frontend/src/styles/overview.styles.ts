@@ -1,34 +1,36 @@
-import { Platform, StyleSheet } from 'react-native';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
+
+const isNarrow = Dimensions.get('window').width < 600;
 
 export const overviewStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: isNarrow ? 16 : 24,
+    paddingTop: isNarrow ? 16 : 24,
     paddingBottom: 40,
   },
   pageHeader: {
-    marginBottom: 24,
+    marginBottom: isNarrow ? 16 : 24,
   },
   pageTitle: {
-    fontSize: 28,
+    fontSize: isNarrow ? 22 : 28,
     fontWeight: '600',
     color: '#0A0A0A',
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   pageSubtitle: {
-    fontSize: 15,
+    fontSize: isNarrow ? 13 : 15,
     color: '#737373',
   },
 
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 24,
+    gap: isNarrow ? 8 : 12,
+    marginBottom: isNarrow ? 16 : 24,
   },
 
   // Alert card
@@ -81,7 +83,7 @@ export const overviewStyles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E5E5E5',
-    padding: 48,
+    padding: isNarrow ? 28 : 48,
     alignItems: 'center',
     ...Platform.select({
       web: { boxShadow: '0px 1px 3px rgba(0,0,0,0.06)' },
