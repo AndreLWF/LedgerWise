@@ -1,5 +1,5 @@
 import { Redirect, Slot, usePathname, useRouter } from 'expo-router';
-import { Dimensions, Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import LedgerWiseLogo from '../../src/components/LedgerWiseLogo';
