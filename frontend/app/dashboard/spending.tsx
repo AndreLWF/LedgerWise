@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 import { type TimePeriod, periodToDateRange } from '../../src/components/TimePeriodSelector';
 import TellerModal from '../../src/components/TellerModal';
-import SpendingSummary from '../../src/spending';
+import { SpendingSummary } from '../../src/spending';
 import { enrollAccount } from '../../src/api/client';
 import { useTellerConnect } from '../../src/hooks/useTellerConnect';
 import { useAuth } from '../../src/contexts/AuthContext';

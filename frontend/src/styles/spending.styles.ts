@@ -318,8 +318,6 @@ export const spendingStyles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#22c55e',
   },
-  refundRow: {
-  },
   refundTotal: {
     color: '#22c55e',
   },

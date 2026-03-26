@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Text, View } from 'react-native';
 import type { Transaction } from '../types/transaction';
-import { styles } from '../styles/transactionRow.styles';
+import { transactionRowStyles as styles } from '../styles/transactionRow.styles';
 
 interface TransactionRowProps {
   transaction: Transaction;

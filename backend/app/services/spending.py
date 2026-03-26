@@ -1,9 +1,12 @@
 """Spending summary aggregation service."""
 
 from datetime import date
+from typing import Any
 
 from sqlalchemy import case, func, select
+from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import BinaryExpression, ClauseElement
 
 from app.models import Account, Transaction
 from app.schemas import CategoryResponse, SpendingSummaryResponse
@@ -14,7 +17,7 @@ def _title_case(s: str) -> str:
     return " ".join(w.capitalize() for w in s.split())
 
 
-def _build_category_label():
+def _build_category_label() -> ClauseElement:
     """SQL expression that normalizes null/empty categories to 'General'."""
     return case(
         (Transaction.category.is_(None), "General"),
@@ -23,13 +26,13 @@ def _build_category_label():
     )
 
 
-def _is_payment():
+def _is_payment() -> BinaryExpression[Any]:
     """SQL expression that detects CC payments by description keywords."""
     desc_lower = func.lower(func.coalesce(Transaction.description, ""))
     return desc_lower.like("%pymt%") | desc_lower.like("%payment%")
 
 
-def _spending_filter():
+def _spending_filter() -> ClauseElement:
     """SQL filter that excludes payments and refunds from spending totals."""
     excluded = ["payment", "refund"]
     category_ok = func.lower(func.coalesce(Transaction.category, "")).notin_(excluded)
@@ -39,12 +42,12 @@ def _spending_filter():
 
 async def _query_category_totals(
     db: AsyncSession,
-    category_label,
-    spending_filter,
+    category_label: ClauseElement,
+    spending_filter: ClauseElement,
     user_id: str,
     start_date: date | None = None,
     end_date: date | None = None,
-):
+) -> list[Row[Any]]:
     """Query spending totals grouped by category, scoped to a user."""
     base = (
         select(
@@ -104,7 +107,7 @@ async def _query_refund_totals(
 
 
 def _build_categories(
-    rows, total_spent: float
+    rows: list[Row[Any]], total_spent: float
 ) -> tuple[list[CategoryResponse], int, float]:
     """Build category list and extract uncategorized stats."""
     categories: list[CategoryResponse] = []

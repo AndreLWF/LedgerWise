@@ -48,7 +48,7 @@ app.include_router(spending.router, prefix="/api/v1")
 
 
 @app.get("/health")
-def health() -> dict:
+def health() -> dict[str, str]:
     return {"status": "ok"}
 
 

@@ -1,6 +1,6 @@
 import { Platform, StyleSheet } from 'react-native';
 
-export const styles = StyleSheet.create({
+export const transactionRowStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -98,7 +98,6 @@ export default function CategoryAccordion({
               style={(state) => [
                 styles.categoryRow,
                 isUncategorized && styles.uncategorizedRow,
-                isRefund && styles.refundRow,
                 i === sorted.length - 1 && !isExpanded && { borderBottomWidth: 0 },
                 (state as unknown as { hovered: boolean }).hovered && styles.categoryRowHovered,
               ]}

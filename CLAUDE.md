@@ -4,7 +4,7 @@
 
 Full-stack fintech app connecting to real bank accounts for transaction viewing, balances, and spending analysis. React Native Web frontend (Expo) + FastAPI backend + Supabase (PostgreSQL). Targets friends & family initially (5–50 users), designed to scale.
 
-**Current state:** Teller bank linking, transaction list, and spending summary work on web and iOS (Expo Go). Google OAuth via Supabase Auth works on both web and native iOS. Database layer in place (SQLAlchemy + Alembic + Supabase). Auth middleware guards teller + spending routes (user-scoped queries). GET endpoints fetch accounts and transactions by authenticated user. POST `/teller/transactions` still available for enrollment (uses DB fallback). Real Teller service code is ready but commented out. **Expo Router** provides file-based routing with a sidebar nav on web and bottom tabs on mobile. **Time period selector** allows filtering transactions/spending by month, year, YTD, or all time. Backend endpoints support `start_date`/`end_date` query params for date-range filtering.
+**Current state:** Teller bank linking, transaction list, and spending summary work on web and iOS (Expo Go). Google OAuth via Supabase Auth works on both web and native iOS. Database layer in place (SQLAlchemy + Alembic + Supabase). Auth middleware guards teller + spending routes (user-scoped queries). GET endpoints fetch accounts and transactions by authenticated user. POST `/api/v1/teller/enroll` persists accounts + transactions to DB with encrypted Teller tokens. **Expo Router** provides file-based routing with a sidebar nav on web and bottom tabs on mobile. **TransactionDataContext** fetches all transactions once, then `useDataSlice()` filters by date range and computes spending summaries client-side for instant period switching. **Time period selector** allows filtering by month, year, YTD, or all time. Backend endpoints support `start_date`/`end_date` query params for server-side date-range filtering. **Overview page** shows at-a-glance stats with top category and uncategorized alerts. **In-memory API cache** (5-min TTL) reduces redundant network calls.
 
 ## Development Phases
 
@@ -13,6 +13,7 @@ Full-stack fintech app connecting to real bank accounts for transaction viewing,
 **Iteration 1.5 (done):** Spending summary with category breakdown. Frontend decomposed into components, hooks, and feature modules.
 **Iteration 1.75 (done):** Google OAuth sign-in via Supabase Auth. Web uses `signInWithOAuth` redirect flow; native iOS uses `expo-auth-session` + `signInWithIdToken` (bypasses Supabase redirect, which doesn't work in Expo Go). Backend JWT validation middleware via JWKS. Auth applied to teller + spending routes with user-scoped DB queries. Accounts-first data loading flow (fetch accounts → fetch transactions + spending in parallel). CategoryAccordion animated with expand/collapse and refund variant. `Account` type + `AccountResponse` schema added.
 **Iteration 1.9 (done):** Expo Router migration with file-based routing (`app/` directory). Dashboard layout with sidebar nav on web and bottom tabs on mobile. Pages: Overview, Spending, Analytics (placeholder), Settings (placeholder). Time period selector (month/year/YTD/all) with backend date-range filtering on spending + transaction endpoints. All inline styles extracted to StyleSheet files. Old `App.tsx` entry point removed.
+**Iteration 1.95 (done):** TransactionDataContext provider pattern — fetches all transactions once, `useDataSlice()` hook filters by date range and computes spending summaries client-side for instant period switching. In-memory API response cache (5-min TTL). Overview page with at-a-glance stats (total expenses, transaction count, top category) and uncategorized transaction alerts. Railway deployment for both backend and frontend. Security headers middleware (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy).
 **Iteration 2 (next):** Re-enable live Teller data, persist enrolled tokens, native session persistence (AsyncStorage).
 
 ### Phase 2 — Mobile (FUTURE)
@@ -76,7 +77,7 @@ These rules apply to all new code and refactors.
 | Auth | Supabase Auth + Google OAuth | expo-auth-session on native |
 | Hosting (web) | Railway | Same platform as backend |
 | Routing | Expo Router (file-based) | `app/` directory, sidebar + bottom tabs |
-| State | React hooks + custom hooks | Zustand if complexity grows |
+| State | React Context + custom hooks | TransactionDataContext + useDataSlice |
 | API Client | `src/api/client.ts` | All backend calls centralized |
 | Styling | StyleSheet API | Co-located in `src/styles/` |
 | Backend | FastAPI + Uvicorn | Python 3.11+, pip |
@@ -90,60 +91,58 @@ Backend is platform-agnostic (JSON over HTTPS) — no changes needed for mobile.
 
 ## Project Structure
 
-Files marked `*` exist now. Unmarked files are planned for future iterations.
-
 ```
 /
-├── CLAUDE.md                  *
-├── Makefile                   * make backend, make frontend, make install
+├── CLAUDE.md
+├── Makefile                      make backend, make frontend, make install
 ├── backend/
 │   ├── app/
-│   │   ├── main.py            * FastAPI app, CORS config
-│   │   ├── config.py          * pydantic-settings env config
-│   │   ├── dependencies.py    * Async SQLAlchemy engine + get_db
-│   │   ├── middleware/         *
-│   │   │   ├── auth.py        * JWKS-based JWT validation (Supabase) + issuer check
-│   │   │   └── rate_limit.py  * In-memory sliding-window rate limiter
-│   │   ├── models/            * User, Account, Transaction
-│   │   ├── schemas/           * spending.py, transaction.py
-│   │   ├── routers/           * teller.py, spending.py
-│   │   │   ├── auth.py          /api/v1/auth/*
-│   │   │   ├── accounts.py      /api/v1/accounts/*
-│   │   │   ├── transactions.py  /api/v1/transactions/*
-│   │   │   └── dashboard.py     /api/v1/dashboard/*
-│   │   ├── services/          * teller.py, spending.py
-│   │   │   ├── cache.py         Redis cache helpers
-│   │   │   └── storage.py       R2 file upload helpers
-│   │   └── utils/             *
-│   │       ├── encryption.py  * AES-GCM encrypt/decrypt for Teller tokens
-│   │       ├── logging.py     * Structured audit logging (auth, data access, enrollment)
-│   │       └── errors.py        Standardized error responses
-│   ├── alembic/               * Database migrations
-│   ├── certs/                 * Teller mTLS certs (gitignored)
-│   ├── requirements.txt       *
-│   └── tests/
+│   │   ├── main.py               FastAPI app, CORS, security headers, middleware stack
+│   │   ├── config.py             pydantic-settings env config
+│   │   ├── dependencies.py       Async SQLAlchemy engine + get_db
+│   │   ├── middleware/
+│   │   │   ├── auth.py           JWKS-based JWT validation (Supabase) + issuer check
+│   │   │   └── rate_limit.py     In-memory sliding-window rate limiter
+│   │   ├── models/               User, Account, Transaction (SQLAlchemy)
+│   │   ├── schemas/              spending.py, transaction.py (Pydantic)
+│   │   ├── routers/
+│   │   │   ├── teller.py         GET /accounts, GET /transactions, POST /enroll
+│   │   │   └── spending.py       GET /spending/summary
+│   │   ├── services/
+│   │   │   ├── teller.py         Teller API integration + DB persistence
+│   │   │   └── spending.py       Spending summary aggregation
+│   │   └── utils/
+│   │       ├── encryption.py     AES-GCM encrypt/decrypt for Teller tokens
+│   │       └── logging.py        Structured audit logging (auth, data access, enrollment)
+│   ├── alembic/                  Database migrations
+│   ├── certs/                    Teller mTLS certs (gitignored)
+│   └── requirements.txt
 ├── frontend/
-│   ├── app/                   * Expo Router screens (file-based routing)
-│   │   ├── _layout.tsx        * Root layout (SafeAreaProvider + AuthProvider)
-│   │   ├── index.tsx          * Auth gate (redirects to login or dashboard)
-│   │   ├── login.tsx          * Login screen
+│   ├── app/                      Expo Router screens (file-based routing)
+│   │   ├── _layout.tsx           Root layout (SafeAreaProvider + AuthProvider)
+│   │   ├── index.tsx             Auth gate (redirects to login or dashboard)
+│   │   ├── login.tsx             Login screen
 │   │   └── dashboard/
-│   │       ├── _layout.tsx    * Dashboard layout (sidebar on web, bottom tabs on mobile)
-│   │       ├── index.tsx      * Redirects to /dashboard/spending
-│   │       ├── overview.tsx   * Overview page (stats, alerts)
-│   │       ├── spending.tsx   * Spending page (Teller connect, time period, summary)
-│   │       ├── analytics.tsx  * Analytics page (placeholder)
-│   │       └── settings.tsx   * Settings page (placeholder)
+│   │       ├── _layout.tsx       Dashboard layout (sidebar on web, bottom tabs on mobile)
+│   │       ├── index.tsx         Redirects to /dashboard/spending
+│   │       ├── overview.tsx      Overview page (stats, alerts)
+│   │       ├── spending.tsx      Spending page (Teller connect, time period, summary)
+│   │       ├── analytics.tsx     Analytics page (placeholder)
+│   │       └── settings.tsx      Settings page (placeholder)
 │   └── src/
-│       ├── api/client.ts      * Centralized API client (date-range params supported)
-│       ├── api/supabase.ts    * Supabase client (createClient)
-│       ├── components/        * TransactionRow, TellerModal, LoginScreen, TimePeriodSelector
-│       ├── hooks/             * useTellerConnect, useTransactions (date-range aware)
-│       ├── spending/          * Feature module (SpendingSummary + sub-components)
-│       ├── styles/            * Per-screen/component StyleSheet files
-│       ├── types/             * transaction.ts, spending.ts, account.ts
-│       ├── utils/             * categoryColors.ts
-│       └── contexts/          * AuthContext (Google OAuth + Supabase session)
+│       ├── api/
+│       │   ├── client.ts         Centralized API client with in-memory cache (5-min TTL)
+│       │   └── supabase.ts       Supabase client (createClient)
+│       ├── components/           LedgerWiseLogo, GoogleIcon, LoginScreen, TellerModal, TimePeriodSelector, TransactionRow
+│       ├── contexts/
+│       │   ├── AuthContext.tsx    Google OAuth + Supabase session management
+│       │   └── TransactionDataContext.tsx  Data fetching + client-side filtering/computation
+│       ├── hooks/
+│       │   └── useTellerConnect.ts  Teller Connect widget integration
+│       ├── spending/             Feature module (SpendingSummary + sub-components)
+│       ├── styles/               Per-screen/component StyleSheet files
+│       ├── types/                transaction.ts, spending.ts, account.ts
+│       └── utils/                categoryColors.ts, responsive.ts, spendingSummary.ts
 ```
 
 ## Key Architecture Decisions
@@ -156,6 +155,8 @@ Files marked `*` exist now. Unmarked files are planned for future iterations.
 6. **Platform-aware auth** — Web uses Supabase `signInWithOAuth` (browser redirect). Native iOS uses `expo-auth-session` Google provider to get an ID token, then `signInWithIdToken` to create a Supabase session. Supabase's OAuth redirect flow doesn't work in Expo Go because `ASWebAuthenticationSession` can't intercept `exp://` scheme 302 redirects.
 7. **Expo Router with platform-aware navigation** — File-based routing in `app/` directory. Dashboard layout renders a sidebar (256px) on web and bottom tabs on mobile. Auth gate at root redirects unauthenticated users to `/login`.
 8. **Date-range filtering** — Backend endpoints accept optional `start_date`/`end_date` query params. Frontend `TimePeriodSelector` converts user-friendly periods (month/year/YTD/all) to ISO date strings via `periodToDateRange()`.
+9. **TransactionDataContext** — Provider fetches all transactions once on mount. `useDataSlice(dateRange?)` filters by date range and computes spending summaries client-side via `computeSpendingSummary()`. This enables instant period switching without additional API calls. The context is mounted in the dashboard layout so data persists across tab navigation.
+10. **In-memory API cache** — `client.ts` caches GET responses for 5 minutes (keyed by URL). `clearApiCache()` invalidates on refresh or enrollment. Eliminates redundant fetches during tab switching.
 
 ## Environment Variables
 

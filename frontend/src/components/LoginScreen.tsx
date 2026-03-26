@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { authStyles } from '../styles/auth.styles';
-import Logo from './Logo';
+import LedgerWiseLogo from './LedgerWiseLogo';
 import GoogleIcon from './GoogleIcon';
 
 export default function LoginScreen() {
@@ -26,7 +26,7 @@ export default function LoginScreen() {
           {/* Logo and Branding */}
           <View style={authStyles.brandingContainer}>
             <View style={authStyles.logoWrapper}>
-              <Logo size={64} />
+              <LedgerWiseLogo size={64} />
             </View>
             <Text style={authStyles.title}>LedgerWise</Text>
             <Text style={authStyles.subtitle}>Your finances, simplified</Text>

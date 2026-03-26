@@ -13,7 +13,7 @@ from sqlalchemy.orm import joinedload
 from app.config import settings
 from app.models import Account, Transaction
 from app.schemas import AccountResponse, TransactionResponse
-from app.utils.encryption import decrypt, encrypt
+from app.utils.encryption import encrypt
 from app.utils.logging import log_enrollment
 
 logger = logging.getLogger("ledgerwise.audit")
@@ -52,29 +52,6 @@ async def get_transactions(access_token: str, account_id: str) -> list[dict[str,
         )
         response.raise_for_status()
         return response.json()
-
-
-async def get_all_transactions(access_token: str) -> list[dict[str, Any]]:
-    accounts = await get_accounts(access_token)
-    all_transactions: list[dict[str, Any]] = []
-    for account in accounts:
-        txns = await get_transactions(access_token, account["id"])
-        for txn in txns:
-            txn["account_name"] = account.get("name", "Unknown")
-        all_transactions.extend(txns)
-    all_transactions.sort(key=lambda t: t.get("date", ""), reverse=True)
-    return all_transactions
-
-
-async def get_transactions_from_db(db: AsyncSession) -> list[TransactionResponse]:
-    """Fetch all transactions from the database, joined with account info."""
-    result = await db.execute(
-        select(Transaction)
-        .options(joinedload(Transaction.account))
-        .order_by(Transaction.date.desc())
-    )
-    rows = result.unique().scalars().all()
-    return _map_transactions(rows)
 
 
 async def get_user_accounts(db: AsyncSession, user_id: str) -> list[Account]:
@@ -172,11 +149,6 @@ async def enroll_accounts(
         ))
 
         teller_txns = await get_transactions(access_token, acct["id"])
-        logger.info(
-            "TELLER_TXNS account=%s count=%d",
-            acct["id"],
-            len(teller_txns),
-        )
         for txn in teller_txns:
             txn_stmt = pg_insert(Transaction).values(
                 account_id=account_db_id,

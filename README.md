@@ -2,7 +2,7 @@
 
 A personal finance app that connects to real bank accounts for transaction viewing, balances, and spending analysis. Built for a small friends & family user base, with an architecture designed to scale.
 
-**Stack:** React Native (Expo) · FastAPI · Supabase (PostgreSQL) · Teller API
+**Stack:** React Native (Expo SDK 54) · FastAPI · Supabase (PostgreSQL) · Teller API
 
 ---
 
@@ -10,22 +10,25 @@ A personal finance app that connects to real bank accounts for transaction viewi
 
 - **Bank linking** — Connect your bank account via [Teller](https://teller.io) (supports 10,000+ US institutions)
 - **Transaction feed** — View all transactions across linked accounts in a single feed
-- **Spending summary** — Category breakdown with proportional bars and summary chips
+- **Spending summary** — Category breakdown with proportional bars, summary chips, and expandable category detail
+- **Overview dashboard** — At-a-glance stats with top category highlight and uncategorized transaction alerts
 - **Time period filtering** — Filter transactions and spending by month, year, year-to-date, or all time
 - **Dashboard navigation** — Sidebar nav on web, bottom tabs on mobile (Overview, Spending, Analytics, Settings)
 - **Google sign-in** — OAuth authentication via Supabase Auth (works on web and iOS)
 - **Cross-platform** — Web and iOS from the same codebase via Expo Router
+- **Client-side caching** — In-memory API response cache (5-min TTL) with client-side spending computation for instant date-range filtering
 
 ## Project structure
 
 ```
 ├── backend/      FastAPI — auth, Teller proxy, spending analysis, database
 │   ├── app/
-│   │   ├── middleware/   JWT validation (Supabase JWKS)
+│   │   ├── middleware/   JWT validation (Supabase JWKS), rate limiting
 │   │   ├── models/       SQLAlchemy models (User, Account, Transaction)
-│   │   ├── routers/      API endpoints
+│   │   ├── routers/      API endpoints (teller, spending)
 │   │   ├── schemas/      Pydantic request/response validation
-│   │   └── services/     Business logic
+│   │   ├── services/     Business logic (teller, spending)
+│   │   └── utils/        Encryption, audit logging
 │   └── alembic/          Database migrations
 └── frontend/     Expo app — web + iOS
     ├── app/              Expo Router screens (file-based routing)
@@ -34,13 +37,13 @@ A personal finance app that connects to real bank accounts for transaction viewi
     │   └── dashboard/    Dashboard pages (overview, spending, analytics, settings)
     └── src/
         ├── api/          API client + Supabase client
-        ├── components/   Reusable UI (TimePeriodSelector, TellerModal, LoginScreen)
-        ├── contexts/     AuthContext (Google OAuth + Supabase session)
-        ├── hooks/        useTellerConnect, useTransactions
+        ├── components/   Reusable UI (TimePeriodSelector, TellerModal, LoginScreen, etc.)
+        ├── contexts/     AuthContext, TransactionDataContext
+        ├── hooks/        useTellerConnect
         ├── spending/     Spending summary feature module
         ├── styles/       Per-screen/component StyleSheet files
         ├── types/        Shared TypeScript interfaces
-        └── utils/        Helpers (category colors, etc.)
+        └── utils/        Category colors, responsive helpers, spending computation
 ```
 
 ---
@@ -198,6 +201,5 @@ Google OAuth is configured through three services:
 
 ## Deployment
 
-- **Backend:** [Railway](https://railway.app) — push to `main` and it auto-deploys
-- **Frontend (web):** [Vercel](https://vercel.com) — push to `main` and it auto-deploys
-- **Frontend (iOS):** EAS Build — `eas build --platform ios` (planned)
+- **Backend + Frontend (web):** [Railway](https://railway.app) -- push to `main` and both services auto-deploy
+- **Frontend (iOS):** EAS Build -- `eas build --platform ios` (planned)
