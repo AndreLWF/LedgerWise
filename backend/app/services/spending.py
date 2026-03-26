@@ -152,7 +152,7 @@ async def get_spending_summary(
     )
 
     return SpendingSummaryResponse(
-        total_spent=round(total_spent, 2),
+        total_spent=round(total_spent - refund_total, 2),
         transaction_count=transaction_count,
         category_count=len(categories),
         categories=categories,

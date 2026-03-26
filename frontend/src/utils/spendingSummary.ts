@@ -84,7 +84,7 @@ export function computeSpendingSummary(
   const general = categories.find((c) => c.name === 'General');
 
   return {
-    total_spent: Math.round(totalSpent * 100) / 100,
+    total_spent: Math.round((totalSpent - refundTotal) * 100) / 100,
     transaction_count: transactionCount,
     category_count: categories.length,
     categories,

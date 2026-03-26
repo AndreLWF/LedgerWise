@@ -73,7 +73,7 @@ async def get_transactions_from_db(db: AsyncSession) -> list[TransactionResponse
         .options(joinedload(Transaction.account))
         .order_by(Transaction.date.desc())
     )
-    rows = result.scalars().all()
+    rows = result.unique().scalars().all()
     return _map_transactions(rows)
 
 
@@ -106,7 +106,7 @@ async def get_user_transactions(
         stmt = stmt.where(Transaction.date <= end_date)
 
     result = await db.execute(stmt)
-    rows = result.scalars().all()
+    rows = result.unique().scalars().all()
     return _map_transactions(rows)
 
 
