@@ -10,6 +10,7 @@ import { useTransactionData, useDataSlice } from '../../src/contexts/Transaction
 import { spendingScreenStyles as styles } from '../../src/styles/spendingScreen.styles';
 
 export default function SpendingScreen() {
+  const [enrolling, setEnrolling] = useState(false);
   const [tellerError, setTellerError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>({
     type: 'all',
@@ -28,6 +29,7 @@ export default function SpendingScreen() {
   } = useTellerConnect(
     async (accessToken: string) => {
       setTellerError(null);
+      setEnrolling(true);
       try {
         await enrollAccount(token!, accessToken);
         refresh();
@@ -35,6 +37,8 @@ export default function SpendingScreen() {
         setTellerError(
           err instanceof Error ? err.message : 'Failed to enroll account',
         );
+      } finally {
+        setEnrolling(false);
       }
     },
     setTellerError,
@@ -44,7 +48,7 @@ export default function SpendingScreen() {
 
   return (
     <View style={styles.container}>
-      {!hasAccounts && !accountsLoading && (
+      {!hasAccounts && !accountsLoading && !enrolling && (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
             Connect a bank account to see your spending
@@ -58,8 +62,13 @@ export default function SpendingScreen() {
         </View>
       )}
 
-      {accountsLoading && !hasAccounts && (
-        <ActivityIndicator style={styles.spinner} size="large" color="#6366F1" />
+      {(accountsLoading && !hasAccounts || enrolling) && (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator style={styles.spinner} size="large" color="#6366F1" />
+          {enrolling && (
+            <Text style={styles.emptyText}>Syncing your accounts...</Text>
+          )}
+        </View>
       )}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
