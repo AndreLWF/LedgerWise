@@ -1,47 +1,89 @@
-import { Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { spendingStyles as styles } from '../../styles/spending.styles';
 import type { CategoryData } from '../../types/spending';
 import { getCategoryColor } from '../../utils/categoryColors';
+import { buildCategoryRankMap } from '../../utils/categoryRanking';
 
 interface ProportionBarProps {
   categories: CategoryData[];
 }
 
 export default function ProportionBar({ categories }: ProportionBarProps) {
-  const sorted = [...categories].sort((a, b) => b.total - a.total);
+  const sorted = useMemo(
+    () => [...categories].sort((a, b) => b.total - a.total),
+    [categories],
+  );
+
+  const rankMap = useMemo(() => buildCategoryRankMap(sorted), [sorted]);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
     <View style={styles.proportionBarContainer}>
       <Text style={styles.proportionBarTitle}>Spending by Category</Text>
 
       <View style={styles.proportionBar}>
-        {sorted.map((cat, i) => (
-          <View
-            key={cat.name}
-            style={[
-              styles.proportionSegment,
-              {
-                flex: cat.percentage,
-                backgroundColor: getCategoryColor(cat.name, categories.indexOf(cat)),
-              },
-              i === 0 && styles.proportionSegmentFirst,
-              i === sorted.length - 1 && styles.proportionSegmentLast,
-            ]}
-          />
-        ))}
+        {sorted.map((cat, i) => {
+          const color = getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0);
+          const isHovered = hoveredIndex === i;
+          const pct = Math.round(cat.percentage);
+
+          return (
+            <Pressable
+              key={cat.name}
+              onHoverIn={() => setHoveredIndex(i)}
+              onHoverOut={() => setHoveredIndex(null)}
+              onLongPress={() => setHoveredIndex(i)}
+              onPressOut={() => setHoveredIndex(null)}
+              delayLongPress={200}
+              style={[
+                styles.proportionSegment,
+                {
+                  flex: cat.percentage,
+                  backgroundColor: color,
+                },
+                i === 0 && styles.proportionSegmentFirst,
+                i === sorted.length - 1 && styles.proportionSegmentLast,
+              ]}
+            >
+              {/* Brighten overlay on hovered segment */}
+              {isHovered && (
+                <View style={styles.proportionBrightenOverlay} />
+              )}
+
+              {/* Percentage label visible on hover (only if segment is wide enough) */}
+              {isHovered && cat.percentage > 5 && (
+                <View style={styles.proportionLabel}>
+                  <Text style={styles.proportionLabelText}>{pct}%</Text>
+                </View>
+              )}
+
+              {/* Tooltip with full details */}
+              {isHovered && (
+                <View style={styles.proportionTooltip}>
+                  <Text style={styles.proportionTooltipText}>
+                    {cat.name === 'General' ? 'General / Uncategorized' : cat.name}:{' '}
+                    ${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}{' '}
+                    ({cat.percentage.toFixed(1)}%)
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
       </View>
 
       <View style={styles.legend}>
-        {sorted.map((cat) => (
+        {sorted.map((cat, i) => (
           <View key={cat.name} style={styles.legendItem}>
             <View
               style={[
                 styles.legendDot,
-                { backgroundColor: getCategoryColor(cat.name, categories.indexOf(cat)) },
+                { backgroundColor: getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0) },
               ]}
             />
             <Text style={styles.legendText} numberOfLines={1}>
-              {cat.name}
+              {cat.name === 'General' ? 'General / Uncategorized' : cat.name}
             </Text>
             <Text style={styles.legendPercentage}>
               {Math.round(cat.percentage)}%

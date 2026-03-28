@@ -1,6 +1,7 @@
 import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { overviewStyles as styles } from '../../src/styles/overview.styles';
+import { placeholderStyles as styles } from '../../src/styles/placeholder.styles';
+import { purple } from '../../src/theme';
 
 export default function AnalyticsScreen() {
   return (
@@ -16,7 +17,7 @@ export default function AnalyticsScreen() {
 
       <View style={styles.placeholderCard}>
         <View style={styles.placeholderIconContainer}>
-          <Ionicons name="bar-chart-outline" size={32} color="#6366F1" />
+          <Ionicons name="bar-chart-outline" size={32} color={purple[700]} />
         </View>
         <Text style={styles.placeholderTitle}>Advanced Analytics</Text>
         <Text style={styles.placeholderText}>

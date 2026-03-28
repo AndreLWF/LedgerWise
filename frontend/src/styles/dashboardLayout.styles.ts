@@ -1,10 +1,11 @@
 import { Platform, StyleSheet } from 'react-native';
 import { isNarrow } from '../utils/responsive';
+import { surface, text, border, purple, gold, brand, shadows, radius } from '../theme';
 
 export const dashboardLayoutStyles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: surface.bg,
   },
 
   // --- Header ---
@@ -13,10 +14,11 @@ export const dashboardLayoutStyles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: isNarrow ? 16 : 24,
-    paddingVertical: isNarrow ? 12 : 16,
-    backgroundColor: '#ffffff',
+    paddingVertical: isNarrow ? 12 : 20,
+    backgroundColor: surface.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: border.default,
+    ...shadows.sm,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -26,7 +28,7 @@ export const dashboardLayoutStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 19,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
     letterSpacing: -0.2,
   },
   headerTitleMobile: {
@@ -38,15 +40,15 @@ export const dashboardLayoutStyles = StyleSheet.create({
     gap: 8,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: radius.md,
   },
   signOutButtonHovered: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: purple[50],
   },
   signOutText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#525252',
+    color: text.secondary,
   },
 
   // --- Body ---
@@ -58,9 +60,9 @@ export const dashboardLayoutStyles = StyleSheet.create({
   // --- Sidebar (web) ---
   sidebar: {
     width: 256,
-    backgroundColor: '#ffffff',
+    backgroundColor: surface.sidebar,
     borderRightWidth: 1,
-    borderRightColor: '#E5E5E5',
+    borderRightColor: border.subtle,
     justifyContent: 'space-between',
   },
   sidebarNav: {
@@ -73,26 +75,35 @@ export const dashboardLayoutStyles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 4,
+    borderRadius: radius.md,
+    marginBottom: 6,
   },
   navItemActive: {
-    backgroundColor: '#EEF2FF',
-    ...Platform.select({
-      web: { boxShadow: '0px 1px 2px rgba(99, 102, 241, 0.08)' },
-      default: {},
-    }),
+    backgroundColor: purple[50],
+    ...shadows.sm,
   },
   navItemHovered: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: surface.card + '99',
+  },
+  navActiveIndicator: {
+    position: 'absolute',
+    left: 0,
+    top: '50%',
+    marginTop: -16,
+    width: 4,
+    height: 32,
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
+    backgroundColor: brand.primary,
+    ...shadows.purple,
   },
   navText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#737373',
+    color: text.secondary,
   },
   navTextActive: {
-    color: '#6366F1',
+    color: purple[700],
     fontWeight: '600',
   },
 
@@ -102,20 +113,21 @@ export const dashboardLayoutStyles = StyleSheet.create({
     marginBottom: 24,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#F5F3FF',
-    borderRadius: 12,
+    backgroundColor: gold[50],
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
+    borderColor: gold[200],
+    ...shadows.sm,
   },
   proTipTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#0A0A0A',
-    marginBottom: 4,
+    color: gold[900],
+    marginBottom: 2,
   },
   proTipText: {
     fontSize: 12,
-    color: '#737373',
+    color: gold[800],
     lineHeight: 18,
   },
 
@@ -127,9 +139,9 @@ export const dashboardLayoutStyles = StyleSheet.create({
   // --- Bottom Bar (narrow screens) ---
   bottomBar: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: surface.card,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: border.default,
     paddingBottom: Platform.OS === 'ios' ? 20 : 8,
     paddingTop: 8,
   },
@@ -142,10 +154,10 @@ export const dashboardLayoutStyles = StyleSheet.create({
   bottomTabText: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#A3A3A3',
+    color: text.tertiary,
   },
   bottomTabTextActive: {
-    color: '#6366F1',
+    color: brand.primary,
     fontWeight: '600',
   },
 });

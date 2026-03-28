@@ -1,9 +1,11 @@
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { spendingStyles as styles } from '../styles/spending.styles';
+import { purple, gold, brand } from '../theme';
 import type { SpendingSummaryData } from '../types/spending';
 import type { Transaction } from '../types/transaction';
 import TimePeriodSelector, {
   type TimePeriod,
+  getDisplayText,
 } from '../components/TimePeriodSelector';
 import CategoryAccordion from './components/CategoryAccordion';
 import ProportionBar from './components/ProportionBar';
@@ -16,16 +18,6 @@ interface Props {
   selectedPeriod: TimePeriod;
   onPeriodChange: (period: TimePeriod) => void;
   availableYears?: number[];
-}
-
-function periodLabel(period: TimePeriod): string {
-  if (period.type === 'alltime') return 'All time';
-  if (period.type === 'year') return `${period.year}`;
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-  return `${months[period.month!]} ${period.year}`;
 }
 
 export default function SpendingSummary({
@@ -56,7 +48,7 @@ export default function SpendingSummary({
       {loading && (
         <ActivityIndicator
           size="large"
-          color="#6366f1"
+          color={brand.primary}
           style={styles.spinner}
         />
       )}
@@ -70,24 +62,24 @@ export default function SpendingSummary({
           <View style={styles.summaryStrip}>
             <SummaryChip
               value={`$${data.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              subtitle={periodLabel(selectedPeriod)}
+              subtitle={getDisplayText(selectedPeriod)}
               icon="trending-up"
-              iconColor="#6366F1"
-              iconBgColor="#EEF2FF"
+              iconColor={purple[700]}
+              iconBgColor={purple[100]}
             />
             <SummaryChip
               value={`${data.transaction_count}`}
               subtitle={`across ${data.category_count} categories`}
               icon="receipt-outline"
-              iconColor="#10B981"
-              iconBgColor="#F0FDF4"
+              iconColor={purple[700]}
+              iconBgColor={purple[100]}
             />
             <SummaryChip
               value={topCategory.name}
               subtitle={`$${topCategory.total.toLocaleString(undefined, { minimumFractionDigits: 2 })} \u00B7 ${topCategory.percentage}% of total`}
               icon="pie-chart-outline"
-              iconColor="#F97316"
-              iconBgColor="#FFF7ED"
+              iconColor={purple[700]}
+              iconBgColor={purple[100]}
               smallValue
             />
             <SummaryChip
@@ -95,8 +87,8 @@ export default function SpendingSummary({
               subtitle="Uncategorized spending"
               variant="warning"
               icon="alert-circle-outline"
-              iconColor="#D97706"
-              iconBgColor="rgba(255,255,255,0.6)"
+              iconColor={gold[700]}
+              iconBgColor={gold[100]}
             />
           </View>
 

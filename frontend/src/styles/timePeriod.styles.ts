@@ -1,4 +1,5 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { surface, text, border, purple, gold, brand, shadows, radius, overlay } from '../theme';
 
 export const timePeriodStyles = StyleSheet.create({
   // Trigger button
@@ -8,29 +9,25 @@ export const timePeriodStyles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: surface.card,
     borderWidth: 2,
-    borderColor: '#E5E5E5',
-    borderRadius: 12,
-    ...Platform.select({
-      web: { boxShadow: '0px 1px 3px rgba(0,0,0,0.06)' },
-      default: {
-        shadowColor: '#000',
-        shadowOpacity: 0.06,
-        shadowRadius: 3,
-        shadowOffset: { width: 0, height: 1 },
-        elevation: 1,
-      },
-    }),
+    borderColor: border.default,
+    borderRadius: radius.md,
+    ...shadows.sm,
+  },
+  triggerHovered: {
+    borderColor: purple[400],
+    backgroundColor: purple[50],
+    ...shadows.purple,
   },
   triggerPressed: {
-    borderColor: '#6366F1',
-    backgroundColor: '#F8F9FF',
+    borderColor: brand.primary,
+    backgroundColor: purple[100],
   },
   triggerText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#0A0A0A',
+    color: text.primary,
   },
 
   // Modal
@@ -41,65 +38,53 @@ export const timePeriodStyles = StyleSheet.create({
   },
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: overlay.backdrop,
   },
   modalContent: {
     width: '90%',
     maxWidth: 400,
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
+    backgroundColor: surface.card,
+    borderRadius: radius.xl,
     overflow: 'hidden',
-    ...Platform.select({
-      web: { boxShadow: '0px 8px 30px rgba(0,0,0,0.18)' },
-      default: {
-        shadowColor: '#000',
-        shadowOpacity: 0.18,
-        shadowRadius: 30,
-        shadowOffset: { width: 0, height: 8 },
-        elevation: 12,
-      },
-    }),
+    ...shadows.lg,
   },
 
   // Segmented control
   segmentedControlWrapper: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: border.default,
   },
   segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
+    backgroundColor: surface.bg,
+    borderRadius: radius.md,
     padding: 4,
     gap: 4,
   },
   segmentButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: radius.md,
     alignItems: 'center',
   },
   segmentButtonActive: {
-    backgroundColor: '#6366F1',
-    ...Platform.select({
-      web: { boxShadow: '0px 2px 8px rgba(99,102,241,0.3)' },
-      default: {
-        shadowColor: '#6366F1',
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 4,
-      },
-    }),
+    backgroundColor: brand.secondary,
+    ...shadows.gold,
+  },
+  segmentButtonHovered: {
+    backgroundColor: gold[100],
   },
   segmentButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#737373',
+    color: text.tertiary,
   },
   segmentButtonTextActive: {
-    color: '#ffffff',
+    color: text.inverse,
+  },
+  segmentButtonTextHovered: {
+    color: text.primary,
   },
 
   // All time mode
@@ -110,47 +95,39 @@ export const timePeriodStyles = StyleSheet.create({
   allTimeIconWrapper: {
     width: 56,
     height: 56,
-    borderRadius: 16,
-    backgroundColor: 'rgba(99,102,241,0.1)',
+    borderRadius: radius.lg,
+    backgroundColor: purple[100],
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    ...shadows.purple,
   },
   allTimeTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
     marginBottom: 8,
   },
   allTimeSubtitle: {
     fontSize: 14,
-    color: '#737373',
+    color: text.secondary,
     marginBottom: 24,
   },
   applyButton: {
     width: '100%',
     paddingVertical: 14,
-    backgroundColor: '#6366F1',
-    borderRadius: 12,
+    backgroundColor: brand.primary,
+    borderRadius: radius.md,
     alignItems: 'center',
-    ...Platform.select({
-      web: { boxShadow: '0px 4px 12px rgba(99,102,241,0.3)' },
-      default: {
-        shadowColor: '#6366F1',
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 6,
-      },
-    }),
+    ...shadows.purple,
   },
   applyButtonPressed: {
-    backgroundColor: '#5558E3',
+    backgroundColor: purple[700],
   },
   applyButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: text.inverse,
   },
 
   // Grid container (year + month modes)
@@ -168,9 +145,12 @@ export const timePeriodStyles = StyleSheet.create({
   yearNavButton: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  yearNavButtonHovered: {
+    backgroundColor: surface.bg,
   },
   yearNavButtonDisabled: {
     opacity: 0.3,
@@ -178,16 +158,11 @@ export const timePeriodStyles = StyleSheet.create({
   yearNavText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
   },
 
-  // Grids
-  yearGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  monthGrid: {
+  // Grids (year and month share the same layout)
+  grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
@@ -198,35 +173,33 @@ export const timePeriodStyles = StyleSheet.create({
     width: '30%',
     flexGrow: 1,
     paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#F5F5F5',
+    borderRadius: radius.md,
+    backgroundColor: surface.bg,
     alignItems: 'center',
   },
+  gridItemHovered: {
+    backgroundColor: purple[100],
+  },
   gridItemActive: {
-    backgroundColor: '#6366F1',
-    ...Platform.select({
-      web: { boxShadow: '0px 4px 12px rgba(99,102,241,0.3)' },
-      default: {
-        shadowColor: '#6366F1',
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 6,
-      },
-    }),
+    backgroundColor: brand.primary,
+    ...shadows.purple,
   },
   gridItemDisabled: {
-    backgroundColor: '#FAFAFA',
+    backgroundColor: surface.bg,
+    opacity: 0.4,
   },
   gridItemText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
+  },
+  gridItemTextHovered: {
+    color: purple[700],
   },
   gridItemTextActive: {
-    color: '#ffffff',
+    color: text.inverse,
   },
   gridItemTextDisabled: {
-    color: '#D4D4D4',
+    color: text.tertiary,
   },
 });

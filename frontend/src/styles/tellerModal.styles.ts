@@ -1,16 +1,17 @@
 import { StyleSheet } from 'react-native';
+import { surface, brand, text } from '../theme';
 
 export const tellerModalStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: surface.card,
   },
   closeButton: {
     padding: 16,
     alignItems: 'flex-end',
   },
   closeButtonText: {
-    color: '#6366F1',
+    color: brand.primary,
     fontSize: 16,
   },
   webView: {

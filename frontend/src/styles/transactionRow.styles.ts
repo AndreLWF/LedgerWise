@@ -1,24 +1,18 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { surface, text, border, semantic, shadows, radius } from '../theme';
 
 export const transactionRowStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: surface.card,
     padding: 16,
-    borderRadius: 10,
+    borderRadius: radius.md,
     marginBottom: 8,
-    ...Platform.select({
-      web: { boxShadow: '0px 2px 4px rgba(0,0,0,0.04)' },
-      default: {
-        shadowColor: '#000',
-        shadowOpacity: 0.04,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 1,
-      },
-    }),
+    borderWidth: 1,
+    borderColor: border.default,
+    ...shadows.sm,
   },
   rowLeft: {
     flex: 1,
@@ -27,11 +21,12 @@ export const transactionRowStyles = StyleSheet.create({
   description: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#0f172a',
+    color: text.primary,
   },
   meta: {
     fontSize: 12,
-    color: '#94a3b8',
+    fontWeight: '500',
+    color: text.tertiary,
     marginTop: 2,
   },
   amount: {
@@ -39,9 +34,9 @@ export const transactionRowStyles = StyleSheet.create({
     fontWeight: '600',
   },
   debit: {
-    color: '#dc2626',
+    color: semantic.error,
   },
   credit: {
-    color: '#16a34a',
+    color: semantic.success,
   },
 });

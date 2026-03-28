@@ -2,6 +2,7 @@ import { Redirect } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../src/contexts/AuthContext';
 import { authGateStyles as styles } from '../src/styles/authGate.styles';
+import { brand } from '../src/theme';
 
 export default function Index() {
   const { session, loading } = useAuth();
@@ -9,7 +10,7 @@ export default function Index() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color={brand.primary} />
       </View>
     );
   }

@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { isNarrow } from '../utils/responsive';
+import { text, brand, purple, border, surface, semantic, shadows, radius } from '../theme';
 
 export const spendingScreenStyles = StyleSheet.create({
   container: {
@@ -13,20 +14,21 @@ export const spendingScreenStyles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#737373',
+    color: text.secondary,
     marginBottom: 16,
   },
   connectButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: brand.primary,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: radius.md,
+    ...shadows.purple,
   },
   connectButtonPressed: {
-    opacity: 0.8,
+    backgroundColor: purple[700],
   },
   connectButtonText: {
-    color: '#fff',
+    color: text.inverse,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -34,20 +36,36 @@ export const spendingScreenStyles = StyleSheet.create({
     marginTop: 40,
   },
   errorText: {
-    color: '#dc2626',
+    color: semantic.error,
     marginTop: 16,
     textAlign: 'center',
   },
   addAccountButton: {
     alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 16,
+    marginBottom: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: purple[200],
+    backgroundColor: surface.card,
+    ...shadows.sm,
+  },
+  addAccountButtonHovered: {
+    borderColor: purple[400],
+    backgroundColor: purple[50],
+    ...shadows.purple,
   },
   addAccountButtonPressed: {
-    opacity: 0.7,
+    borderColor: brand.primary,
+    backgroundColor: purple[100],
   },
   addAccountText: {
-    color: '#6366F1',
+    color: brand.primary,
     fontSize: 14,
     fontWeight: '600',
   },

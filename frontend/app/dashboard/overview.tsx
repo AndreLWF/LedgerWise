@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTransactionData, useDataSlice } from '../../src/contexts/TransactionDataContext';
 import SummaryChip from '../../src/spending/components/SummaryChip';
 import { overviewStyles as styles } from '../../src/styles/overview.styles';
+import { purple, gold } from '../../src/theme';
 
 export default function OverviewScreen() {
   const { hasAccounts, accountsLoading } = useTransactionData();
@@ -28,23 +29,23 @@ export default function OverviewScreen() {
               value={`$${summaryData.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               subtitle="Total Expenses"
               icon="trending-up"
-              iconColor="#6366F1"
-              iconBgColor="#EEF2FF"
+              iconColor={purple[700]}
+              iconBgColor={purple[100]}
             />
             <SummaryChip
               value={`${summaryData.transaction_count}`}
               subtitle="Transactions"
               icon="receipt-outline"
-              iconColor="#10B981"
-              iconBgColor="#F0FDF4"
+              iconColor={purple[700]}
+              iconBgColor={purple[100]}
             />
             {topCategory && (
               <SummaryChip
                 value={topCategory.name}
                 subtitle={`$${topCategory.total.toLocaleString(undefined, { minimumFractionDigits: 2 })} \u00B7 ${topCategory.percentage}% of total`}
                 icon="pie-chart-outline"
-                iconColor="#F97316"
-                iconBgColor="#FFF7ED"
+                iconColor={gold[700]}
+                iconBgColor={gold[100]}
                 smallValue
               />
             )}
@@ -53,7 +54,7 @@ export default function OverviewScreen() {
           {summaryData.uncategorized_percentage > 0 && (
             <View style={styles.alertCard}>
               <View style={styles.alertIconContainer}>
-                <Ionicons name="alert-circle-outline" size={24} color="#D97706" />
+                <Ionicons name="alert-circle-outline" size={24} color={gold[700]} />
               </View>
               <View style={styles.alertContent}>
                 <Text style={styles.alertTitle}>
@@ -72,7 +73,7 @@ export default function OverviewScreen() {
       {!hasAccounts && !accountsLoading && (
         <View style={styles.placeholderCard}>
           <View style={styles.placeholderIconContainer}>
-            <Ionicons name="trending-up" size={32} color="#6366F1" />
+            <Ionicons name="trending-up" size={32} color={purple[700]} />
           </View>
           <Text style={styles.placeholderTitle}>Connect a bank to get started</Text>
           <Text style={styles.placeholderText}>

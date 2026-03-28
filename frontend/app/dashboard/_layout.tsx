@@ -6,6 +6,8 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { TransactionDataProvider } from '../../src/contexts/TransactionDataContext';
 import LedgerWiseLogo from '../../src/components/LedgerWiseLogo';
 import { dashboardLayoutStyles as styles } from '../../src/styles/dashboardLayout.styles';
+import { text, brand } from '../../src/theme';
+import { isHovered } from '../../src/utils/pressable';
 
 interface NavItem {
   name: string;
@@ -40,6 +42,9 @@ export default function DashboardLayout() {
   const showSidebar = mounted && width >= SIDEBAR_BREAKPOINT;
   const token = session.access_token ?? null;
 
+  const isActive = (path: string) =>
+    pathname === path || pathname.startsWith(path + '/');
+
   return (
     <TransactionDataProvider token={token}>
     <View style={styles.root}>
@@ -52,12 +57,12 @@ export default function DashboardLayout() {
         <Pressable
           style={(state) => [
             styles.signOutButton,
-            (state as unknown as { hovered: boolean }).hovered && styles.signOutButtonHovered,
+            isHovered(state) && styles.signOutButtonHovered,
           ]}
           onPress={signOut}
         >
-          <Ionicons name="log-out-outline" size={showSidebar ? 16 : 18} color="#525252" />
-          {showSidebar && <Text style={styles.signOutText}>Sign Out</Text>}
+          <Ionicons name="log-out-outline" size={16} color={text.secondary} />
+          <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
       </View>
 
@@ -67,23 +72,24 @@ export default function DashboardLayout() {
           <View style={styles.sidebar}>
             <ScrollView style={styles.sidebarNav} showsVerticalScrollIndicator={false}>
               {navItems.map((item) => {
-                const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+                const active = isActive(item.path);
                 return (
                   <Pressable
                     key={item.path}
                     style={(state) => [
                       styles.navItem,
-                      isActive && styles.navItemActive,
-                      (state as unknown as { hovered: boolean }).hovered && !isActive && styles.navItemHovered,
+                      active && styles.navItemActive,
+                      isHovered(state) && !active && styles.navItemHovered,
                     ]}
                     onPress={() => router.push(item.path)}
                   >
+                    {active && <View style={styles.navActiveIndicator} />}
                     <Ionicons
                       name={item.icon}
                       size={20}
-                      color={isActive ? '#6366F1' : '#737373'}
+                      color={active ? brand.primary : text.tertiary}
                     />
-                    <Text style={[styles.navText, isActive && styles.navTextActive]}>
+                    <Text style={[styles.navText, active && styles.navTextActive]}>
                       {item.name}
                     </Text>
                   </Pressable>
@@ -111,7 +117,7 @@ export default function DashboardLayout() {
       {!showSidebar && (
         <View style={styles.bottomBar}>
           {navItems.map((item) => {
-            const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+            const active = isActive(item.path);
             return (
               <Pressable
                 key={item.path}
@@ -121,9 +127,9 @@ export default function DashboardLayout() {
                 <Ionicons
                   name={item.icon}
                   size={22}
-                  color={isActive ? '#6366F1' : '#A3A3A3'}
+                  color={active ? brand.primary : text.tertiary}
                 />
-                <Text style={[styles.bottomTabText, isActive && styles.bottomTabTextActive]}>
+                <Text style={[styles.bottomTabText, active && styles.bottomTabTextActive]}>
                   {item.name}
                 </Text>
               </Pressable>

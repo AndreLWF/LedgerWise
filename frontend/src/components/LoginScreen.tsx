@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { authStyles } from '../styles/auth.styles';
+import { isHovered } from '../utils/pressable';
 import LedgerWiseLogo from './LedgerWiseLogo';
 import GoogleIcon from './GoogleIcon';
 
@@ -44,7 +45,7 @@ export default function LoginScreen() {
           <Pressable
             style={(state) => [
               authStyles.googleButton,
-              (state as unknown as { hovered: boolean }).hovered && authStyles.googleButtonHovered,
+              isHovered(state) && authStyles.googleButtonHovered,
               state.pressed && authStyles.googleButtonPressed,
             ]}
             onPress={signInWithGoogle}

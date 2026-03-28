@@ -1,16 +1,24 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { surface, text, border, purple, brand, shadows, radius } from '../theme';
+
+// Decorative background element colors — derived from brand purple with low opacity
+const bgPurpleFaint = purple[600] + '12'; // ~7% opacity
+const bgPurpleFainter = purple[500] + '12';
+const bgPurpleSubtle = purple[600] + '0A'; // ~4% opacity
+const borderPurpleSubtle = purple[600] + '1A'; // ~10%
+const borderPurpleLighter = purple[500] + '1A';
 
 export const authStyles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: surface.bg,
   },
   scrollContent: {
     flexGrow: 1,
   },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: surface.bg,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
@@ -26,7 +34,7 @@ export const authStyles = StyleSheet.create({
     width: 384,
     height: 384,
     borderRadius: 192,
-    backgroundColor: 'rgba(99, 102, 241, 0.07)',
+    backgroundColor: bgPurpleFaint,
   },
   bgCircleBottomLeft: {
     position: 'absolute',
@@ -35,7 +43,7 @@ export const authStyles = StyleSheet.create({
     width: 384,
     height: 384,
     borderRadius: 192,
-    backgroundColor: 'rgba(139, 92, 246, 0.07)',
+    backgroundColor: bgPurpleFainter,
   },
   bgGeometric1: {
     position: 'absolute',
@@ -43,9 +51,9 @@ export const authStyles = StyleSheet.create({
     right: '15%',
     width: 128,
     height: 128,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.1)',
+    borderColor: borderPurpleSubtle,
     transform: [{ rotate: '12deg' }],
   },
   bgGeometric2: {
@@ -56,7 +64,7 @@ export const authStyles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.1)',
+    borderColor: borderPurpleLighter,
   },
   bgGeometric3: {
     position: 'absolute',
@@ -64,8 +72,8 @@ export const authStyles = StyleSheet.create({
     left: '8%',
     width: 64,
     height: 64,
-    borderRadius: 8,
-    backgroundColor: 'rgba(99, 102, 241, 0.04)',
+    borderRadius: radius.sm,
+    backgroundColor: bgPurpleSubtle,
     transform: [{ rotate: '-6deg' }],
   },
   bgGeometric4: {
@@ -75,7 +83,7 @@ export const authStyles = StyleSheet.create({
     width: 80,
     height: 80,
     borderWidth: 2,
-    borderColor: 'rgba(99, 102, 241, 0.1)',
+    borderColor: borderPurpleSubtle,
     transform: [{ rotate: '45deg' }],
   },
 
@@ -83,22 +91,13 @@ export const authStyles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    backgroundColor: surface.card,
+    borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: border.default,
     paddingHorizontal: 40,
     paddingVertical: 48,
-    ...Platform.select({
-      web: { boxShadow: '0px 4px 24px rgba(0, 0, 0, 0.08)' },
-      default: {
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 24,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 4,
-      },
-    }),
+    ...shadows.lg,
   },
 
   // Branding
@@ -112,13 +111,13 @@ export const authStyles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#0A0A0A',
+    color: text.primary,
     letterSpacing: -0.64,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: '#737373',
+    color: text.secondary,
   },
 
   // Divider
@@ -133,15 +132,15 @@ export const authStyles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: '#E5E5E5',
+    backgroundColor: border.default,
   },
   dividerTextWrapper: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: surface.card,
     paddingHorizontal: 16,
   },
   dividerText: {
     fontSize: 13,
-    color: '#A3A3A3',
+    color: text.tertiary,
   },
 
   // Google button
@@ -152,32 +151,24 @@ export const authStyles = StyleSheet.create({
     gap: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: radius.md,
     borderWidth: 2,
-    borderColor: '#E5E5E5',
-    backgroundColor: '#FFFFFF',
+    borderColor: border.default,
+    backgroundColor: surface.card,
   },
   googleButtonHovered: {
-    borderColor: '#C7C8D1',
-    ...Platform.select({
-      web: { boxShadow: '0px 4px 12px rgba(99, 102, 241, 0.12)' },
-      default: {
-        shadowColor: '#6366F1',
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 3,
-      },
-    }),
+    borderColor: purple[400],
+    backgroundColor: purple[50],
+    ...shadows.purple,
   },
   googleButtonPressed: {
-    borderColor: '#6366F1',
-    backgroundColor: '#F8F9FF',
+    borderColor: brand.primary,
+    backgroundColor: purple[50],
   },
   googleButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
   },
 
   // Footer
@@ -187,12 +178,12 @@ export const authStyles = StyleSheet.create({
   },
   footerText: {
     fontSize: 13,
-    color: '#A3A3A3',
+    color: text.tertiary,
     textAlign: 'center',
     lineHeight: 20,
   },
   footerLink: {
-    color: '#6366F1',
+    color: brand.primary,
   },
 
   // Bottom tagline
@@ -202,6 +193,6 @@ export const authStyles = StyleSheet.create({
   },
   taglineText: {
     fontSize: 13,
-    color: '#A3A3A3',
+    color: text.tertiary,
   },
 });

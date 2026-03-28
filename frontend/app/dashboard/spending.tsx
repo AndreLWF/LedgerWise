@@ -8,6 +8,8 @@ import { useTellerConnect } from '../../src/hooks/useTellerConnect';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useTransactionData, useDataSlice } from '../../src/contexts/TransactionDataContext';
 import { spendingScreenStyles as styles } from '../../src/styles/spendingScreen.styles';
+import { brand } from '../../src/theme';
+import { isHovered } from '../../src/utils/pressable';
 
 export default function SpendingScreen() {
   const [enrolling, setEnrolling] = useState(false);
@@ -74,7 +76,7 @@ export default function SpendingScreen() {
 
       {(accountsLoading && !hasAccounts || enrolling) && (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator style={styles.spinner} size="large" color="#6366F1" />
+          <ActivityIndicator style={styles.spinner} size="large" color={brand.primary} />
           {enrolling && (
             <Text style={styles.emptyText}>Syncing your accounts...</Text>
           )}
@@ -95,7 +97,11 @@ export default function SpendingScreen() {
 
       {hasAccounts && (
         <Pressable
-          style={({ pressed }) => [styles.addAccountButton, pressed && styles.addAccountButtonPressed]}
+          style={(state) => [
+            styles.addAccountButton,
+            isHovered(state) && styles.addAccountButtonHovered,
+            state.pressed && styles.addAccountButtonPressed,
+          ]}
           onPress={openTellerConnect}
         >
           <Text style={styles.addAccountText}>+ Add Account</Text>

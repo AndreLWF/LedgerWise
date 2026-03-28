@@ -1,9 +1,15 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { spendingStyles as styles } from '../../styles/spending.styles';
 import type { SpendingSummaryData } from '../../types/spending';
 import type { Transaction } from '../../types/transaction';
 import { getCategoryColor } from '../../utils/categoryColors';
+import { buildCategoryRankMap } from '../../utils/categoryRanking';
+import { text, semantic } from '../../theme';
+import { isHovered } from '../../utils/pressable';
+
+const PAYMENT_PATTERN = /pymt|payment/i;
 
 interface CategoryAccordionProps {
   data: SpendingSummaryData;
@@ -59,35 +65,38 @@ export default function CategoryAccordion({
     });
   }, []);
 
-  const paymentPattern = /pymt|payment/i;
-
   function getTransactionsForCategory(categoryName: string): Transaction[] {
     if (isRefund) {
       return transactions.filter((t) => {
         const amt = parseFloat(t.amount);
         const isCategoryRefund = t.category?.toLowerCase() === 'refund';
-        const isNegativeNonPayment = amt < 0 && !paymentPattern.test(t.description);
+        const isNegativeNonPayment = amt < 0 && !PAYMENT_PATTERN.test(t.description);
         return isCategoryRefund || isNegativeNonPayment;
       });
     }
     return transactions.filter((t) => {
       const txnCategory = t.category || 'General';
       if (txnCategory !== categoryName) return false;
-      if (paymentPattern.test(t.description)) return false;
+      if (PAYMENT_PATTERN.test(t.description)) return false;
       const amt = parseFloat(t.amount);
       if (amt < 0) return false;
       return true;
     });
   }
 
-  const sorted = [...data.categories].sort((a, b) => b.total - a.total);
+  const sorted = useMemo(
+    () => [...data.categories].sort((a, b) => b.total - a.total),
+    [data.categories],
+  );
+
+  const rankMap = useMemo(() => buildCategoryRankMap(sorted), [sorted]);
 
   const content = (
     <View style={styles.categoriesContainer}>
       {sorted.map((cat, i) => {
         const isExpanded = expandedCategories.has(cat.name);
         const isUncategorized = !isRefund && cat.name === 'General';
-        const color = isRefund ? '#22c55e' : getCategoryColor(cat.name, data.categories.indexOf(cat));
+        const color = isRefund ? semantic.success : getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0);
         const categoryTransactions = isExpanded
           ? getTransactionsForCategory(cat.name)
           : [];
@@ -99,7 +108,9 @@ export default function CategoryAccordion({
                 styles.categoryRow,
                 isUncategorized && styles.uncategorizedRow,
                 i === sorted.length - 1 && !isExpanded && { borderBottomWidth: 0 },
-                (state as unknown as { hovered: boolean }).hovered && styles.categoryRowHovered,
+                isHovered(state) && {
+                  backgroundColor: color + '14',
+                },
               ]}
               onPress={() => toggleCategory(cat.name)}
             >
@@ -122,8 +133,8 @@ export default function CategoryAccordion({
                 )}
               </View>
               <View style={styles.categoryRight}>
-                <View style={styles.countBadge}>
-                  <Text style={styles.countBadgeText}>{cat.count}</Text>
+                <View style={[styles.countBadge, isRefund && styles.countBadgeRefund]}>
+                  <Text style={[styles.countBadgeText, isRefund && styles.countBadgeTextRefund]}>{cat.count}</Text>
                 </View>
                 <Text
                   style={[
@@ -134,9 +145,11 @@ export default function CategoryAccordion({
                 >
                   {isRefund ? '+' : ''}${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </Text>
-                <Text style={styles.expandArrow}>
-                  {isExpanded ? '\u25BC' : '\u203A'}
-                </Text>
+                <Ionicons
+                  name={isExpanded ? 'chevron-down' : 'chevron-forward'}
+                  size={16}
+                  color={text.tertiary}
+                />
               </View>
             </Pressable>
 

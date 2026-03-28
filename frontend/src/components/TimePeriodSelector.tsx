@@ -3,6 +3,8 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { timePeriodStyles as styles } from '../styles/timePeriod.styles';
+import { purple, text, border } from '../theme';
+import { isHovered } from '../utils/pressable';
 
 export type TimePeriodType = 'month' | 'year' | 'alltime';
 
@@ -50,7 +52,7 @@ export function periodToDateRange(period: TimePeriod): {
   };
 }
 
-const getDisplayText = (period: TimePeriod): string => {
+export const getDisplayText = (period: TimePeriod): string => {
   if (period.type === 'alltime') return 'All time';
   if (period.type === 'year') return `${period.year}`;
   return `${MONTHS[period.month!]} ${period.year}`;
@@ -110,10 +112,14 @@ export default function TimePeriodSelector({
   return (
     <>
       <Pressable
-        style={({ pressed }) => [styles.trigger, pressed && styles.triggerPressed]}
+        style={(state) => [
+          styles.trigger,
+          isHovered(state) && styles.triggerHovered,
+          state.pressed && styles.triggerPressed,
+        ]}
         onPress={() => setIsOpen(true)}
       >
-        <Ionicons name="calendar-outline" size={16} color="#6366F1" />
+        <Ionicons name="calendar-outline" size={16} color={purple[600]} />
         <Text style={styles.triggerText}>{getDisplayText(selectedPeriod)}</Text>
       </Pressable>
 
@@ -125,25 +131,32 @@ export default function TimePeriodSelector({
               {/* Segmented Control */}
               <View style={styles.segmentedControlWrapper}>
                 <View style={styles.segmentedControl}>
-                  {(['alltime', 'year', 'month'] as const).map((mode) => (
-                    <Pressable
-                      key={mode}
-                      style={[
-                        styles.segmentButton,
-                        activeMode === mode && styles.segmentButtonActive,
-                      ]}
-                      onPress={() => setActiveMode(mode)}
-                    >
-                      <Text
-                        style={[
-                          styles.segmentButtonText,
-                          activeMode === mode && styles.segmentButtonTextActive,
+                  {(['alltime', 'year', 'month'] as const).map((mode) => {
+                    const isActive = activeMode === mode;
+                    return (
+                      <Pressable
+                        key={mode}
+                        style={(state) => [
+                          styles.segmentButton,
+                          isActive && styles.segmentButtonActive,
+                          !isActive && isHovered(state) && styles.segmentButtonHovered,
                         ]}
+                        onPress={() => setActiveMode(mode)}
                       >
-                        {mode === 'alltime' ? 'All time' : mode === 'year' ? 'Year' : 'Month'}
-                      </Text>
-                    </Pressable>
-                  ))}
+                        {(state) => (
+                          <Text
+                            style={[
+                              styles.segmentButtonText,
+                              isActive && styles.segmentButtonTextActive,
+                              !isActive && isHovered(state) && styles.segmentButtonTextHovered,
+                            ]}
+                          >
+                            {mode === 'alltime' ? 'All time' : mode === 'year' ? 'Year' : 'Month'}
+                          </Text>
+                        )}
+                      </Pressable>
+                    );
+                  })}
                 </View>
               </View>
 
@@ -151,7 +164,7 @@ export default function TimePeriodSelector({
               {activeMode === 'alltime' && (
                 <View style={styles.allTimeContainer}>
                   <View style={styles.allTimeIconWrapper}>
-                    <Ionicons name="calendar-outline" size={28} color="#6366F1" />
+                    <Ionicons name="calendar-outline" size={28} color={purple[600]} />
                   </View>
                   <Text style={styles.allTimeTitle}>All Transactions</Text>
                   <Text style={styles.allTimeSubtitle}>
@@ -172,18 +185,28 @@ export default function TimePeriodSelector({
               {/* Year Mode */}
               {activeMode === 'year' && (
                 <View style={styles.gridContainer}>
-                  <View style={styles.yearGrid}>
+                  <View style={styles.grid}>
                     {years.map((year) => {
                       const selected = selectedPeriod.type === 'year' && selectedPeriod.year === year;
                       return (
                         <Pressable
                           key={year}
-                          style={[styles.gridItem, selected && styles.gridItemActive]}
+                          style={(state) => [
+                            styles.gridItem,
+                            selected && styles.gridItemActive,
+                            !selected && isHovered(state) && styles.gridItemHovered,
+                          ]}
                           onPress={() => handleYearSelect(year)}
                         >
-                          <Text style={[styles.gridItemText, selected && styles.gridItemTextActive]}>
-                            {year}
-                          </Text>
+                          {(state) => (
+                            <Text style={[
+                              styles.gridItemText,
+                              selected && styles.gridItemTextActive,
+                              !selected && isHovered(state) && styles.gridItemTextHovered,
+                            ]}>
+                              {year}
+                            </Text>
+                          )}
                         </Pressable>
                       );
                     })}
@@ -197,9 +220,10 @@ export default function TimePeriodSelector({
                   {/* Year Navigation */}
                   <View style={styles.yearNav}>
                     <Pressable
-                      style={[
+                      style={(state) => [
                         styles.yearNavButton,
                         viewYear <= minYear && styles.yearNavButtonDisabled,
+                        !(viewYear <= minYear) && isHovered(state) && styles.yearNavButtonHovered,
                       ]}
                       onPress={() => viewYear > minYear && setViewYear(viewYear - 1)}
                       disabled={viewYear <= minYear}
@@ -207,14 +231,15 @@ export default function TimePeriodSelector({
                       <Ionicons
                         name="chevron-back"
                         size={20}
-                        color={viewYear <= minYear ? '#D4D4D4' : '#0A0A0A'}
+                        color={viewYear <= minYear ? border.default : text.primary}
                       />
                     </Pressable>
                     <Text style={styles.yearNavText}>{viewYear}</Text>
                     <Pressable
-                      style={[
+                      style={(state) => [
                         styles.yearNavButton,
                         viewYear >= currentYear && styles.yearNavButtonDisabled,
+                        !(viewYear >= currentYear) && isHovered(state) && styles.yearNavButtonHovered,
                       ]}
                       onPress={() => viewYear < currentYear && setViewYear(viewYear + 1)}
                       disabled={viewYear >= currentYear}
@@ -222,36 +247,40 @@ export default function TimePeriodSelector({
                       <Ionicons
                         name="chevron-forward"
                         size={20}
-                        color={viewYear >= currentYear ? '#D4D4D4' : '#0A0A0A'}
+                        color={viewYear >= currentYear ? border.default : text.primary}
                       />
                     </Pressable>
                   </View>
 
                   {/* Month Grid */}
-                  <View style={styles.monthGrid}>
+                  <View style={styles.grid}>
                     {MONTHS.map((month, index) => {
                       const disabled = isMonthDisabled(index);
                       const selected = isMonthSelected(index);
                       return (
                         <Pressable
                           key={month}
-                          style={[
+                          style={(state) => [
                             styles.gridItem,
                             selected && styles.gridItemActive,
                             disabled && styles.gridItemDisabled,
+                            !selected && !disabled && isHovered(state) && styles.gridItemHovered,
                           ]}
                           onPress={() => !disabled && handleMonthSelect(index)}
                           disabled={disabled}
                         >
-                          <Text
-                            style={[
-                              styles.gridItemText,
-                              selected && styles.gridItemTextActive,
-                              disabled && styles.gridItemTextDisabled,
-                            ]}
-                          >
-                            {month}
-                          </Text>
+                          {(state) => (
+                            <Text
+                              style={[
+                                styles.gridItemText,
+                                selected && styles.gridItemTextActive,
+                                disabled && styles.gridItemTextDisabled,
+                                !selected && !disabled && isHovered(state) && styles.gridItemTextHovered,
+                              ]}
+                            >
+                              {month}
+                            </Text>
+                          )}
                         </Pressable>
                       );
                     })}

@@ -1,6 +1,7 @@
 import { Platform, StyleSheet } from 'react-native';
 import { isNarrow } from '../utils/responsive';
 import { pageHeaderDefs } from './shared.styles';
+import { surface, text, border, purple, gold, semantic, shadows, radius } from '../theme';
 
 export const spendingStyles = StyleSheet.create({
   container: {
@@ -13,7 +14,7 @@ export const spendingStyles = StyleSheet.create({
     marginTop: 40,
   },
   emptyText: {
-    color: '#737373',
+    color: text.secondary,
     marginTop: 40,
     textAlign: 'center',
     fontSize: 14,
@@ -40,80 +41,126 @@ export const spendingStyles = StyleSheet.create({
     flexBasis: isNarrow ? '47%' : 'auto',
     flexGrow: 1,
     minWidth: isNarrow ? 0 : 150,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
+    backgroundColor: surface.card,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: border.default,
     padding: isNarrow ? 14 : 20,
+    ...shadows.md,
   },
   uncategorizedCard: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: gold[50],
     borderWidth: 2,
-    borderColor: '#F59E0B',
+    borderColor: gold[300],
+    ...shadows.gold,
   },
   cardIconContainer: {
     width: isNarrow ? 32 : 40,
     height: isNarrow ? 32 : 40,
-    borderRadius: 8,
+    borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: isNarrow ? 8 : 12,
   },
   cardValue: {
-    fontSize: isNarrow ? 20 : 28,
+    fontSize: isNarrow ? 20 : 32,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
     letterSpacing: -0.5,
     marginBottom: 2,
   },
   cardValueSmall: {
-    fontSize: isNarrow ? 14 : 17,
+    fontSize: isNarrow ? 14 : 19,
   },
   uncategorizedValue: {
-    color: '#92400E',
+    color: gold[900],
   },
   cardSub: {
     fontSize: isNarrow ? 11 : 13,
-    color: '#737373',
+    fontWeight: '500',
+    color: text.tertiary,
   },
   uncategorizedSub: {
-    color: '#92400E',
-    fontWeight: '500',
+    color: gold[800],
+    fontWeight: '600',
   },
 
   // --- Proportion Bar Section ---
   proportionBarContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
+    backgroundColor: surface.card,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: border.default,
     padding: isNarrow ? 16 : 24,
     marginBottom: isNarrow ? 12 : 20,
+    ...shadows.md,
   },
   proportionBarTitle: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#0A0A0A',
-    marginBottom: 16,
+    color: text.primary,
+    marginBottom: 24,
   },
   proportionBar: {
     flexDirection: 'row',
-    height: isNarrow ? 28 : 40,
-    borderRadius: 8,
+    height: isNarrow ? 32 : 48,
+    borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: '#E5E5E5',
-    marginBottom: isNarrow ? 12 : 16,
+    backgroundColor: border.default,
+    marginBottom: isNarrow ? 12 : 24,
   },
   proportionSegment: {
-    height: '100%' as unknown as number,
+    ...Platform.select({
+      web: { height: '100%' as unknown as number },
+      default: { flex: 1 },
+    }),
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
   proportionSegmentFirst: {
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
+    borderTopLeftRadius: radius.md,
+    borderBottomLeftRadius: radius.md,
   },
   proportionSegmentLast: {
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
+    borderTopRightRadius: radius.md,
+    borderBottomRightRadius: radius.md,
+  },
+  proportionBrightenOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  proportionLabel: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  proportionLabelText: {
+    color: text.inverse,
+    fontSize: 12,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  proportionTooltip: {
+    position: 'absolute',
+    ...Platform.select({
+      web: { bottom: '110%' as unknown as number },
+      default: { bottom: 40 },
+    }),
+    left: 0,
+    backgroundColor: text.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+    ...shadows.lg,
+    zIndex: 10,
+  },
+  proportionTooltipText: {
+    color: text.inverse,
+    fontSize: 12,
+    fontWeight: '500',
+    ...(Platform.OS === 'web' ? { whiteSpace: 'nowrap' } : {}),
   },
   legend: {
     flexDirection: 'row',
@@ -123,45 +170,49 @@ export const spendingStyles = StyleSheet.create({
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: isNarrow ? '100%' as unknown as number : '45%' as unknown as number,
+    ...(Platform.OS === 'web'
+      ? { width: isNarrow ? '100%' : '45%' }
+      : { width: isNarrow ? undefined : 140, flexGrow: isNarrow ? 1 : 0 }),
     minWidth: isNarrow ? 0 : 140,
   },
   legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 3,
+    width: 14,
+    height: 14,
+    borderRadius: 4,
     marginRight: 8,
   },
   legendText: {
     fontSize: 13,
-    color: '#525252',
+    fontWeight: '500',
+    color: text.secondary,
     flex: 1,
   },
   legendPercentage: {
     fontSize: 12,
-    color: '#A3A3A3',
+    color: text.tertiary,
     marginLeft: 4,
   },
 
   // --- Category List Section ---
   categoriesSection: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
+    backgroundColor: surface.card,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: border.default,
     overflow: 'hidden',
     marginBottom: 20,
+    ...shadows.md,
   },
   categoriesSectionHeader: {
     paddingHorizontal: isNarrow ? 16 : 24,
     paddingVertical: isNarrow ? 14 : 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: border.default,
   },
   categoriesSectionTitle: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
   },
   categoriesContainer: {
     paddingBottom: 0,
@@ -173,26 +224,13 @@ export const spendingStyles = StyleSheet.create({
     paddingHorizontal: isNarrow ? 14 : 24,
     paddingVertical: isNarrow ? 12 : 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-    backgroundColor: '#ffffff',
-  },
-  categoryRowHovered: {
-    backgroundColor: '#F9FAFB',
-    ...Platform.select({
-      web: { boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)' },
-      default: {
-        shadowColor: '#000',
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 2,
-      },
-    }),
+    borderBottomColor: border.default,
+    backgroundColor: surface.card,
   },
   uncategorizedRow: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: gold[50],
     borderLeftWidth: 4,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: gold[500],
   },
   categoryLeft: {
     flexDirection: 'row',
@@ -200,43 +238,51 @@ export const spendingStyles = StyleSheet.create({
     flex: 1,
   },
   categoryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     marginRight: 12,
   },
   categoryName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#0A0A0A',
+    color: text.primary,
   },
   uncategorizedName: {
     fontWeight: '600',
-    color: '#92400E',
+    color: gold[900],
   },
   reviewBadge: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 10,
-    paddingHorizontal: 8,
+    backgroundColor: gold[100],
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: gold[300],
+    paddingHorizontal: 10,
     paddingVertical: 2,
     marginLeft: 8,
   },
   reviewBadgeText: {
     fontSize: 11,
-    fontWeight: '500',
-    color: '#92400E',
+    fontWeight: '600',
+    color: gold[900],
   },
   countBadge: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: purple[100],
+    borderRadius: radius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     marginLeft: 10,
   },
   countBadgeText: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#525252',
+    fontWeight: '600',
+    color: purple[700],
+  },
+  countBadgeRefund: {
+    backgroundColor: semantic.success + '1A',
+  },
+  countBadgeTextRefund: {
+    color: semantic.success,
   },
   categoryRight: {
     flexDirection: 'row',
@@ -245,22 +291,17 @@ export const spendingStyles = StyleSheet.create({
   categoryTotal: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
     marginRight: 8,
     minWidth: 100,
     textAlign: 'right',
   },
   uncategorizedTotal: {
-    color: '#92400E',
+    color: gold[900],
   },
-  expandArrow: {
-    fontSize: 14,
-    color: '#A3A3A3',
-  },
-
   // --- Expanded Transactions ---
   expandedContainer: {
-    backgroundColor: '#FAFAFA',
+    backgroundColor: surface.bg,
     paddingHorizontal: 24,
     paddingVertical: 12,
   },
@@ -268,12 +309,12 @@ export const spendingStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: surface.card,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: border.default,
     marginBottom: 8,
   },
   expandedTxnLeft: {
@@ -283,20 +324,21 @@ export const spendingStyles = StyleSheet.create({
   expandedTxnDesc: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#0A0A0A',
+    color: text.primary,
   },
   expandedTxnMeta: {
     fontSize: 12,
-    color: '#737373',
+    fontWeight: '500',
+    color: text.tertiary,
     marginTop: 2,
   },
   expandedTxnAmount: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0A0A0A',
+    color: text.primary,
   },
   expandedTxnRefund: {
-    color: '#22c55e',
+    color: semantic.success,
   },
 
   // --- Refund Section ---
@@ -304,21 +346,21 @@ export const spendingStyles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: border.default,
   },
   refundSectionLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#22c55e',
+    color: semantic.success,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 10,
   },
   refundSectionCard: {
     borderWidth: 1.5,
-    borderColor: '#22c55e',
+    borderColor: semantic.success,
   },
   refundTotal: {
-    color: '#22c55e',
+    color: semantic.success,
   },
 });
