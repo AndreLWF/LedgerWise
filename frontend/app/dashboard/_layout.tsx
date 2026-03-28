@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Redirect, Slot, usePathname, useRouter } from 'expo-router';
 import { Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { TransactionDataProvider } from '../../src/contexts/TransactionDataContext';
@@ -29,6 +30,7 @@ export default function DashboardLayout() {
   const pathname = usePathname();
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   // On web, useWindowDimensions can return a stale/default width during SSR.
   // Default to mobile layout until the client has mounted and measured.
@@ -49,7 +51,7 @@ export default function DashboardLayout() {
     <TransactionDataProvider token={token}>
     <View style={styles.root}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + (showSidebar ? 20 : 12) }]}>
         <View style={styles.headerLeft}>
           <LedgerWiseLogo size={showSidebar ? 32 : 26} />
           <Text style={[styles.headerTitle, !showSidebar && styles.headerTitleMobile]}>LedgerWise</Text>

@@ -131,7 +131,7 @@ export default function TimePeriodSelector({
               {/* Segmented Control */}
               <View style={styles.segmentedControlWrapper}>
                 <View style={styles.segmentedControl}>
-                  {(['alltime', 'year', 'month'] as const).map((mode) => {
+                  {(['month', 'year', 'alltime'] as const).map((mode) => {
                     const isActive = activeMode === mode;
                     return (
                       <Pressable

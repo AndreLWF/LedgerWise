@@ -246,6 +246,7 @@ export const spendingStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: text.primary,
+    flexShrink: 1,
   },
   uncategorizedName: {
     fontWeight: '600',

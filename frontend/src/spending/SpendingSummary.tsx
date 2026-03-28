@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { spendingStyles as styles } from '../styles/spending.styles';
 import { purple, gold, brand } from '../theme';
@@ -31,6 +32,10 @@ export default function SpendingSummary({
 }: Props) {
   const hasData = data && data.categories.length > 0;
   const topCategory = hasData ? data.categories[0] : null;
+  const periodKey = useMemo(
+    () => `${selectedPeriod.type}-${selectedPeriod.year}-${selectedPeriod.month ?? ''}`,
+    [selectedPeriod],
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -62,7 +67,7 @@ export default function SpendingSummary({
 
       {hasData && topCategory && (
         <>
-          <StaggeredView index={1}>
+          <StaggeredView index={1} trigger={periodKey}>
             <View style={styles.summaryStrip}>
               <SummaryChip
                 value={`$${data.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -97,16 +102,16 @@ export default function SpendingSummary({
             </View>
           </StaggeredView>
 
-          <StaggeredView index={2}>
+          <StaggeredView index={2} trigger={periodKey}>
             <ProportionBar categories={data.categories} />
           </StaggeredView>
 
-          <StaggeredView index={3}>
+          <StaggeredView index={3} trigger={periodKey}>
             <CategoryAccordion data={data} transactions={transactions} />
           </StaggeredView>
 
           {data.refund_count > 0 && (
-            <StaggeredView index={4}>
+            <StaggeredView index={4} trigger={periodKey}>
               <CategoryAccordion
                 variant="refund"
                 data={{

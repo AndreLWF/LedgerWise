@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
-import { type TimePeriod, periodToDateRange } from '../../src/components/TimePeriodSelector';
+import { periodToDateRange } from '../../src/components/TimePeriodSelector';
 import TellerModal from '../../src/components/TellerModal';
 import { SpendingSummary } from '../../src/spending';
 import { enrollAccount } from '../../src/api/client';
@@ -14,16 +14,12 @@ import { isHovered } from '../../src/utils/pressable';
 export default function SpendingScreen() {
   const [enrolling, setEnrolling] = useState(false);
   const [tellerError, setTellerError] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>({
-    type: 'month',
-    month: new Date().getMonth(),
-    year: new Date().getFullYear(),
-  });
   const { session } = useAuth();
   const token = session?.access_token ?? null;
+
+  const { hasAccounts, accountsLoading, allTransactions, error: dataError, refresh, selectedPeriod, setSelectedPeriod } = useTransactionData();
   const dateRange = useMemo(() => periodToDateRange(selectedPeriod), [selectedPeriod]);
 
-  const { hasAccounts, accountsLoading, allTransactions, error: dataError, refresh } = useTransactionData();
   const { transactions, summaryData, loading: sliceLoading } = useDataSlice(dateRange);
 
   const availableYears = useMemo(() => {

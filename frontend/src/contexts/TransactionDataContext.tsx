@@ -15,9 +15,16 @@ import {
 } from '../api/client';
 import { supabase } from '../api/supabase';
 import { computeSpendingSummary } from '../utils/spendingSummary';
+import type { TimePeriod } from '../components/TimePeriodSelector';
 import type { Account } from '../types/account';
 import type { SpendingSummaryData } from '../types/spending';
 import type { Transaction } from '../types/transaction';
+
+const DEFAULT_PERIOD: TimePeriod = {
+  type: 'month',
+  month: new Date().getMonth(),
+  year: new Date().getFullYear(),
+};
 
 interface DateRange {
   startDate?: string;
@@ -32,6 +39,8 @@ interface TransactionDataContextValue {
   transactionsLoading: boolean;
   error: string | null;
   refresh: () => void;
+  selectedPeriod: TimePeriod;
+  setSelectedPeriod: (period: TimePeriod) => void;
 }
 
 const TransactionDataContext = createContext<TransactionDataContextValue | null>(null);
@@ -49,6 +58,7 @@ export function TransactionDataProvider({ token, children }: ProviderProps) {
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(DEFAULT_PERIOD);
 
   const refresh = useCallback(() => {
     clearApiCache();
@@ -123,8 +133,10 @@ export function TransactionDataProvider({ token, children }: ProviderProps) {
       transactionsLoading,
       error,
       refresh,
+      selectedPeriod,
+      setSelectedPeriod,
     }),
-    [accounts, allTransactions, hasAccounts, accountsLoading, transactionsLoading, error, refresh],
+    [accounts, allTransactions, hasAccounts, accountsLoading, transactionsLoading, error, refresh, selectedPeriod],
   );
 
   return (

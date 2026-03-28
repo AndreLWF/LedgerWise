@@ -5,6 +5,7 @@ interface StaggeredViewProps {
   index: number;
   delay?: number;
   duration?: number;
+  trigger?: string | number;
   children: React.ReactNode;
   style?: ViewStyle;
 }
@@ -13,6 +14,7 @@ export default function StaggeredView({
   index,
   delay = 80,
   duration = 400,
+  trigger,
   children,
   style,
 }: StaggeredViewProps) {
@@ -20,6 +22,8 @@ export default function StaggeredView({
   const translateY = useRef(new Animated.Value(16)).current;
 
   useEffect(() => {
+    opacity.setValue(0);
+    translateY.setValue(16);
     const staggerDelay = index * delay;
     Animated.parallel([
       Animated.timing(opacity, {
@@ -35,7 +39,7 @@ export default function StaggeredView({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [index, delay, duration, opacity, translateY]);
+  }, [index, delay, duration, trigger, opacity, translateY]);
 
   return (
     <Animated.View style={[{ opacity, transform: [{ translateY }] }, style]}>
