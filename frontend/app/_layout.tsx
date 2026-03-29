@@ -9,6 +9,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthProvider } from '../src/contexts/AuthContext';
+import { ThemeProvider } from '../src/contexts/ThemeContext';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -28,9 +29,11 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <Slot />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Slot />
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

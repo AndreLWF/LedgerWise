@@ -1,18 +1,19 @@
 import { StyleSheet } from 'react-native';
-import { surface, text, border, semantic, shadows, radius, typography } from '../theme';
+import { radius, typography } from '../theme';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
-export const transactionRowStyles = StyleSheet.create({
+export const createTransactionRowStyles = (deps: StyleDeps) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     padding: 16,
     borderRadius: radius.md,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: border.default,
-    ...shadows.sm,
+    borderColor: deps.colors.border.default,
+    ...deps.shadows.sm,
   },
   rowLeft: {
     flex: 1,
@@ -22,13 +23,13 @@ export const transactionRowStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.medium,
     fontSize: 15,
     fontWeight: '500',
-    color: text.primary,
+    color: deps.colors.text.primary,
   },
   meta: {
     fontFamily: typography.fontFamily.regular,
     fontSize: 12,
     fontWeight: '400',
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
     marginTop: 2,
   },
   amount: {
@@ -36,9 +37,9 @@ export const transactionRowStyles = StyleSheet.create({
     fontSize: 15,
   },
   debit: {
-    color: semantic.error,
+    color: deps.colors.semantic.error,
   },
   credit: {
-    color: semantic.success,
+    color: deps.colors.semantic.success,
   },
 });

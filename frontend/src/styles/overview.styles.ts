@@ -1,9 +1,10 @@
 import { StyleSheet } from 'react-native';
 import { isNarrow } from '../utils/responsive';
 import { pageHeaderDefs, placeholderDefs } from './shared.styles';
-import { surface, gold, shadows, radius, typography } from '../theme';
+import { radius, typography } from '../theme';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
-export const overviewStyles = StyleSheet.create({
+export const createOverviewStyles = (deps: StyleDeps) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -12,7 +13,7 @@ export const overviewStyles = StyleSheet.create({
     paddingTop: isNarrow ? 16 : 24,
     paddingBottom: 40,
   },
-  ...pageHeaderDefs,
+  ...pageHeaderDefs(deps),
 
   statsGrid: {
     flexDirection: 'row',
@@ -24,23 +25,23 @@ export const overviewStyles = StyleSheet.create({
   // Alert card
   alertCard: {
     flexDirection: 'row',
-    backgroundColor: gold[50],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '30' : deps.colors.gold[50],
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: gold[300],
+    borderColor: deps.colors.isDark ? deps.colors.gold[700] + '50' : deps.colors.gold[300],
     padding: 20,
     gap: 16,
     marginBottom: 24,
-    ...shadows.gold,
+    ...deps.shadows.gold,
   },
   alertIconContainer: {
     width: 48,
     height: 48,
     borderRadius: radius.md,
-    backgroundColor: surface.card + 'CC',
+    backgroundColor: deps.colors.isDark ? deps.colors.surface.elevated + 'CC' : deps.colors.surface.card + 'CC',
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.sm,
+    ...deps.shadows.sm,
   },
   alertContent: {
     flex: 1,
@@ -49,16 +50,16 @@ export const overviewStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.bold,
     fontSize: 18,
     fontWeight: '700',
-    color: gold[900],
+    color: deps.colors.isDark ? deps.colors.gold[300] : deps.colors.gold[900],
     marginBottom: 4,
   },
   alertText: {
     fontFamily: typography.fontFamily.regular,
     fontSize: 15,
-    color: gold[800],
+    color: deps.colors.isDark ? deps.colors.gold[400] : deps.colors.gold[800],
     lineHeight: 22,
   },
 
   // Placeholder (shared with Analytics, Settings)
-  ...placeholderDefs,
+  ...placeholderDefs(deps),
 });

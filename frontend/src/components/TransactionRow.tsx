@@ -1,13 +1,15 @@
 import { memo } from 'react';
 import { Text, View } from 'react-native';
 import type { Transaction } from '../types/transaction';
-import { transactionRowStyles as styles } from '../styles/transactionRow.styles';
+import { useThemeStyles } from '../hooks/useThemeStyles';
+import { createTransactionRowStyles } from '../styles/transactionRow.styles';
 
 interface TransactionRowProps {
   transaction: Transaction;
 }
 
 function TransactionRow({ transaction }: TransactionRowProps) {
+  const styles = useThemeStyles(createTransactionRowStyles);
   const amount = parseFloat(transaction.amount);
   const isDebit = amount < 0;
   return (

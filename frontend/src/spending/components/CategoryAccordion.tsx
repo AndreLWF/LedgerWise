@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { spendingStyles as styles } from '../../styles/spending.styles';
+import { useColors } from '../../contexts/ThemeContext';
+import { useThemeStyles } from '../../hooks/useThemeStyles';
+import { createSpendingStyles } from '../../styles/spending.styles';
 import type { SpendingSummaryData } from '../../types/spending';
 import type { Transaction } from '../../types/transaction';
 import { getCategoryColor } from '../../utils/categoryColors';
 import { buildCategoryRankMap } from '../../utils/categoryRanking';
-import { text, semantic, gold, purple } from '../../theme';
 import { isHovered } from '../../utils/pressable';
 import AccordionReveal from '../../components/AccordionReveal';
 import useAccordionHeight from '../../hooks/useAccordionHeight';
@@ -34,6 +35,8 @@ export default function CategoryAccordion({
   transactions,
   variant = 'default',
 }: CategoryAccordionProps) {
+  const colors = useColors();
+  const styles = useThemeStyles(createSpendingStyles);
   const { toggle, getState, handleMeasure } = useAccordionHeight();
   const isRefund = variant === 'refund';
 
@@ -74,7 +77,7 @@ export default function CategoryAccordion({
         const { isExpanded, isClosing, isSettled, showContent, animValue } =
           getState(cat.name);
         const isUncategorized = !isRefund && cat.name === 'General';
-        const color = isRefund ? semantic.success : getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0);
+        const color = isRefund ? colors.semantic.success : getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0);
         const categoryTransactions = showContent
           ? getTransactionsForCategory(cat.name)
           : [];
@@ -154,8 +157,8 @@ export default function CategoryAccordion({
                     size={14}
                     color={
                       isExpanded && !isClosing
-                        ? (isUncategorized ? gold[700] : purple[700])
-                        : text.tertiary
+                        ? (isUncategorized ? colors.gold[700] : colors.purple[700])
+                        : colors.text.tertiary
                     }
                   />
                 </View>
@@ -172,7 +175,7 @@ export default function CategoryAccordion({
                 >
                   <View style={styles.expandedContainer}>
                     <View style={styles.expandedHeader}>
-                      <Ionicons name="card-outline" size={13} color={text.tertiary} />
+                      <Ionicons name="card-outline" size={13} color={colors.text.tertiary} />
                       <Text style={styles.expandedHeaderText}>Recent Transactions</Text>
                     </View>
                     {categoryTransactions.map((txn) => (
@@ -184,7 +187,7 @@ export default function CategoryAccordion({
                           <Ionicons
                             name="card-outline"
                             size={14}
-                            color={isUncategorized ? gold[600] : purple[600]}
+                            color={isUncategorized ? colors.gold[600] : colors.purple[600]}
                           />
                         </View>
                         <View style={styles.expandedTxnLeft}>
@@ -225,7 +228,7 @@ export default function CategoryAccordion({
                 >
                   <View style={[styles.expandedContainer, !isSettled && styles.expandedContainerAnimating]}>
                     <View style={styles.expandedHeader}>
-                      <Ionicons name="card-outline" size={13} color={text.tertiary} />
+                      <Ionicons name="card-outline" size={13} color={colors.text.tertiary} />
                       <Text style={styles.expandedHeaderText}>Recent Transactions</Text>
                     </View>
                     {categoryTransactions.map((txn, txnIndex) => {
@@ -247,7 +250,7 @@ export default function CategoryAccordion({
                               <Ionicons
                                 name="card-outline"
                                 size={14}
-                                color={isUncategorized ? gold[600] : purple[600]}
+                                color={isUncategorized ? colors.gold[600] : colors.purple[600]}
                               />
                             </View>
                             <View style={styles.expandedTxnLeft}>

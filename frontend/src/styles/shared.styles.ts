@@ -1,8 +1,9 @@
 import { isNarrow } from '../utils/responsive';
-import { text, surface, border, purple, shadows, radius, typography } from '../theme';
+import { typography } from '../theme';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
 // Raw style definitions — spread into StyleSheet.create() calls
-export const pageHeaderDefs = {
+export const pageHeaderDefs = (deps: StyleDeps) => ({
   pageHeader: {
     marginBottom: isNarrow ? 36 : 44,
   },
@@ -10,50 +11,50 @@ export const pageHeaderDefs = {
     fontFamily: typography.fontFamily.bold,
     fontSize: isNarrow ? 22 : 32,
     fontWeight: '700' as const,
-    color: text.primary,
+    color: deps.colors.text.primary,
     letterSpacing: -0.96,
     marginBottom: 4,
   },
   pageSubtitle: {
     fontFamily: typography.fontFamily.regular,
     fontSize: isNarrow ? 13 : 15,
-    color: text.secondary,
+    color: deps.colors.text.secondary,
   },
-};
+});
 
 // Placeholder card — used by stub pages (Analytics, Settings, Overview empty state)
-export const placeholderDefs = {
+export const placeholderDefs = (deps: StyleDeps) => ({
   placeholderCard: {
-    backgroundColor: surface.card,
-    borderRadius: radius.lg,
+    backgroundColor: deps.colors.surface.card,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: border.default,
+    borderColor: deps.colors.border.default,
     padding: isNarrow ? 28 : 48,
     alignItems: 'center' as const,
-    ...shadows.md,
+    ...deps.shadows.md,
   },
   placeholderIconContainer: {
     width: 64,
     height: 64,
-    borderRadius: radius.lg,
-    backgroundColor: purple[100],
+    borderRadius: 16,
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '60' : deps.colors.purple[100],
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginBottom: 16,
-    ...shadows.purple,
+    ...deps.shadows.purple,
   },
   placeholderTitle: {
     fontFamily: typography.fontFamily.bold,
     fontSize: 18,
     fontWeight: '700' as const,
-    color: text.primary,
+    color: deps.colors.text.primary,
     marginBottom: 8,
   },
   placeholderText: {
     fontFamily: typography.fontFamily.regular,
     fontSize: 15,
-    color: text.secondary,
+    color: deps.colors.text.secondary,
     textAlign: 'center' as const,
     lineHeight: 22,
   },
-};
+});

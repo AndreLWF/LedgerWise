@@ -1,11 +1,12 @@
 import { Platform, StyleSheet } from 'react-native';
 import { isNarrow } from '../utils/responsive';
-import { surface, text, border, purple, gold, brand, shadows, radius, typography } from '../theme';
+import { radius, typography } from '../theme';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
-export const dashboardLayoutStyles = StyleSheet.create({
+export const createDashboardLayoutStyles = (deps: StyleDeps) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: surface.bg,
+    backgroundColor: deps.colors.surface.bg,
   },
 
   // --- Header ---
@@ -15,10 +16,10 @@ export const dashboardLayoutStyles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: isNarrow ? 16 : 24,
     paddingVertical: isNarrow ? 12 : 20,
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     borderBottomWidth: 1,
-    borderBottomColor: border.default,
-    ...shadows.sm,
+    borderBottomColor: deps.colors.border.default,
+    ...deps.shadows.sm,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -29,11 +30,28 @@ export const dashboardLayoutStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.bold,
     fontSize: 24,
     fontWeight: '700',
-    color: text.primary,
+    color: deps.colors.text.primary,
     letterSpacing: -0.2,
   },
   headerTitleMobile: {
     fontSize: 21,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  themeToggle: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeToggleHovered: {
+    backgroundColor: deps.colors.isDark
+      ? deps.colors.purple[900] + '60'
+      : deps.colors.purple[50],
   },
   signOutButton: {
     flexDirection: 'row',
@@ -44,13 +62,15 @@ export const dashboardLayoutStyles = StyleSheet.create({
     borderRadius: radius.md,
   },
   signOutButtonHovered: {
-    backgroundColor: purple[50],
+    backgroundColor: deps.colors.isDark
+      ? deps.colors.purple[900] + '60'
+      : deps.colors.purple[50],
   },
   signOutText: {
     fontFamily: typography.fontFamily.medium,
     fontSize: 14,
     fontWeight: '500',
-    color: text.secondary,
+    color: deps.colors.text.secondary,
   },
 
   // --- Body ---
@@ -62,9 +82,9 @@ export const dashboardLayoutStyles = StyleSheet.create({
   // --- Sidebar (web) ---
   sidebar: {
     width: 256,
-    backgroundColor: surface.sidebar,
+    backgroundColor: deps.colors.surface.sidebar,
     borderRightWidth: 1,
-    borderRightColor: border.subtle,
+    borderRightColor: deps.colors.border.subtle,
     justifyContent: 'space-between',
   },
   sidebarNav: {
@@ -81,11 +101,15 @@ export const dashboardLayoutStyles = StyleSheet.create({
     marginBottom: 6,
   },
   navItemActive: {
-    backgroundColor: purple[50],
-    ...shadows.sm,
+    backgroundColor: deps.colors.isDark
+      ? deps.colors.purple[900] + '50'
+      : deps.colors.purple[50],
+    ...deps.shadows.sm,
   },
   navItemHovered: {
-    backgroundColor: surface.card + '99',
+    backgroundColor: deps.colors.isDark
+      ? deps.colors.surface.elevated + '80'
+      : deps.colors.surface.card + '99',
   },
   navActiveIndicator: {
     position: 'absolute',
@@ -96,18 +120,18 @@ export const dashboardLayoutStyles = StyleSheet.create({
     height: 32,
     borderTopRightRadius: 4,
     borderBottomRightRadius: 4,
-    backgroundColor: brand.primary,
-    ...shadows.purple,
+    backgroundColor: deps.colors.brand.primary,
+    ...deps.shadows.purple,
   },
   navText: {
     fontFamily: typography.fontFamily.medium,
     fontSize: 14,
     fontWeight: '500',
-    color: text.secondary,
+    color: deps.colors.text.secondary,
   },
   navTextActive: {
     fontFamily: typography.fontFamily.semiBold,
-    color: purple[700],
+    color: deps.colors.isDark ? deps.colors.purple[300] : deps.colors.purple[700],
     fontWeight: '600',
   },
 
@@ -117,23 +141,23 @@ export const dashboardLayoutStyles = StyleSheet.create({
     marginBottom: 24,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: gold[50],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '30' : deps.colors.gold[50],
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: gold[200],
-    ...shadows.sm,
+    borderColor: deps.colors.isDark ? deps.colors.gold[700] + '40' : deps.colors.gold[200],
+    ...deps.shadows.sm,
   },
   proTipTitle: {
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 13,
     fontWeight: '600',
-    color: gold[900],
+    color: deps.colors.isDark ? deps.colors.gold[300] : deps.colors.gold[900],
     marginBottom: 2,
   },
   proTipText: {
     fontFamily: typography.fontFamily.regular,
     fontSize: 12,
-    color: gold[800],
+    color: deps.colors.isDark ? deps.colors.gold[400] : deps.colors.gold[800],
     lineHeight: 18,
   },
 
@@ -145,9 +169,9 @@ export const dashboardLayoutStyles = StyleSheet.create({
   // --- Bottom Bar (narrow screens) ---
   bottomBar: {
     flexDirection: 'row',
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     borderTopWidth: 1,
-    borderTopColor: border.default,
+    borderTopColor: deps.colors.border.default,
     paddingBottom: Platform.OS === 'ios' ? 30 : 12,
     paddingTop: 10,
   },
@@ -161,11 +185,11 @@ export const dashboardLayoutStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.medium,
     fontSize: 11,
     fontWeight: '500',
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
   },
   bottomTabTextActive: {
     fontFamily: typography.fontFamily.semiBold,
-    color: brand.primary,
+    color: deps.colors.brand.primary,
     fontWeight: '600',
   },
 });

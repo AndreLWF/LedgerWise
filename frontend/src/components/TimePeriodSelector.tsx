@@ -2,8 +2,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { timePeriodStyles as styles } from '../styles/timePeriod.styles';
-import { purple, text, border } from '../theme';
+import { useColors } from '../contexts/ThemeContext';
+import { useThemeStyles } from '../hooks/useThemeStyles';
+import { createTimePeriodStyles } from '../styles/timePeriod.styles';
 import { isHovered } from '../utils/pressable';
 
 export type TimePeriodType = 'month' | 'year' | 'alltime';
@@ -63,6 +64,8 @@ export default function TimePeriodSelector({
   onPeriodChange,
   availableYears,
 }: TimePeriodSelectorProps) {
+  const colors = useColors();
+  const styles = useThemeStyles(createTimePeriodStyles);
   const [isOpen, setIsOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<TimePeriodType>(selectedPeriod.type);
   const [viewYear, setViewYear] = useState(selectedPeriod.year || new Date().getFullYear());
@@ -119,7 +122,7 @@ export default function TimePeriodSelector({
         ]}
         onPress={() => setIsOpen(true)}
       >
-        <Ionicons name="calendar-outline" size={16} color={purple[600]} />
+        <Ionicons name="calendar-outline" size={16} color={colors.purple[600]} />
         <Text style={styles.triggerText}>{getDisplayText(selectedPeriod)}</Text>
       </Pressable>
 
@@ -164,7 +167,7 @@ export default function TimePeriodSelector({
               {activeMode === 'alltime' && (
                 <View style={styles.allTimeContainer}>
                   <View style={styles.allTimeIconWrapper}>
-                    <Ionicons name="calendar-outline" size={28} color={purple[600]} />
+                    <Ionicons name="calendar-outline" size={28} color={colors.purple[600]} />
                   </View>
                   <Text style={styles.allTimeTitle}>All Transactions</Text>
                   <Text style={styles.allTimeSubtitle}>
@@ -231,7 +234,7 @@ export default function TimePeriodSelector({
                       <Ionicons
                         name="chevron-back"
                         size={20}
-                        color={viewYear <= minYear ? border.default : text.primary}
+                        color={viewYear <= minYear ? colors.border.default : colors.text.primary}
                       />
                     </Pressable>
                     <Text style={styles.yearNavText}>{viewYear}</Text>
@@ -247,7 +250,7 @@ export default function TimePeriodSelector({
                       <Ionicons
                         name="chevron-forward"
                         size={20}
-                        color={viewYear >= currentYear ? border.default : text.primary}
+                        color={viewYear >= currentYear ? colors.border.default : colors.text.primary}
                       />
                     </Pressable>
                   </View>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { spendingStyles as styles } from '../../styles/spending.styles';
+import { useThemeStyles } from '../../hooks/useThemeStyles';
+import { createSpendingStyles } from '../../styles/spending.styles';
 import type { CategoryData } from '../../types/spending';
 import { getCategoryColor } from '../../utils/categoryColors';
 import { buildCategoryRankMap } from '../../utils/categoryRanking';
@@ -10,6 +11,7 @@ interface ProportionBarProps {
 }
 
 export default function ProportionBar({ categories }: ProportionBarProps) {
+  const styles = useThemeStyles(createSpendingStyles);
   const sorted = useMemo(
     () => [...categories].sort((a, b) => b.total - a.total),
     [categories],

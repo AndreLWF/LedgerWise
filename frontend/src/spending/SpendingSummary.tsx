@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { spendingStyles as styles } from '../styles/spending.styles';
-import { purple, gold, brand, surface } from '../theme';
+import { useColors } from '../contexts/ThemeContext';
+import { useThemeStyles } from '../hooks/useThemeStyles';
+import { createSpendingStyles } from '../styles/spending.styles';
 import type { SpendingSummaryData } from '../types/spending';
 import type { Transaction } from '../types/transaction';
 import TimePeriodSelector, {
@@ -31,6 +32,8 @@ export default function SpendingSummary({
   onPeriodChange,
   availableYears,
 }: Props) {
+  const colors = useColors();
+  const styles = useThemeStyles(createSpendingStyles);
   const scrollRef = useRef<ScrollView>(null);
   const hasData = data && data.categories.length > 0;
   const topCategory = hasData ? data.categories[0] : null;
@@ -44,6 +47,9 @@ export default function SpendingSummary({
       scrollRef.current?.scrollTo({ y: 0, animated: true });
     });
   }, [periodKey]);
+
+  const iconBgPurple = colors.isDark ? colors.purple[900] + '60' : colors.purple[100];
+  const iconBgGold = colors.isDark ? colors.gold[900] + '40' : colors.gold[100];
 
   return (
     <View style={styles.container}>
@@ -63,7 +69,7 @@ export default function SpendingSummary({
         </StaggeredView>
       </View>
       <LinearGradient
-        colors={[surface.bg, surface.bg + '00']}
+        colors={[colors.surface.bg, colors.surface.bg + '00']}
         style={styles.headerGradient}
         pointerEvents="none"
       />
@@ -72,7 +78,7 @@ export default function SpendingSummary({
         {loading && (
           <ActivityIndicator
             size="large"
-            color={brand.primary}
+            color={colors.brand.primary}
             style={styles.spinner}
           />
         )}
@@ -89,30 +95,30 @@ export default function SpendingSummary({
                   value={`$${data.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   subtitle={getDisplayText(selectedPeriod)}
                   icon="trending-up"
-                  iconColor={purple[700]}
-                  iconBgColor={purple[100]}
+                  iconColor={colors.purple[700]}
+                  iconBgColor={iconBgPurple}
                 />
                 <SummaryChip
                   value={`${data.transaction_count}`}
                   subtitle={`across ${data.category_count} categories`}
                   icon="receipt-outline"
-                  iconColor={purple[700]}
-                  iconBgColor={purple[100]}
+                  iconColor={colors.purple[700]}
+                  iconBgColor={iconBgPurple}
                 />
                 <SummaryChip
                   value={topCategory.name}
                   subtitle={`$${topCategory.total.toLocaleString(undefined, { minimumFractionDigits: 2 })} \u00B7 ${topCategory.percentage}% of total`}
                   icon="pie-chart-outline"
-                  iconColor={purple[700]}
-                  iconBgColor={purple[100]}
+                  iconColor={colors.purple[700]}
+                  iconBgColor={iconBgPurple}
                 />
                 <SummaryChip
                   value={`${data.uncategorized_percentage}%`}
                   subtitle="Uncategorized spending"
                   variant="warning"
                   icon="alert-circle-outline"
-                  iconColor={gold[700]}
-                  iconBgColor={gold[100]}
+                  iconColor={colors.gold[700]}
+                  iconBgColor={iconBgGold}
                 />
               </View>
             </StaggeredView>

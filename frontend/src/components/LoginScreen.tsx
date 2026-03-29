@@ -1,12 +1,14 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { authStyles } from '../styles/auth.styles';
+import { useThemeStyles } from '../hooks/useThemeStyles';
+import { createAuthStyles } from '../styles/auth.styles';
 import { isHovered } from '../utils/pressable';
 import LedgerWiseLogo from './LedgerWiseLogo';
 import GoogleIcon from './GoogleIcon';
 
 export default function LoginScreen() {
   const { signInWithGoogle } = useAuth();
+  const authStyles = useThemeStyles(createAuthStyles);
 
   return (
     <ScrollView

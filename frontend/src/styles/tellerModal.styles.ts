@@ -1,10 +1,11 @@
 import { StyleSheet } from 'react-native';
-import { surface, brand, text, typography } from '../theme';
+import { typography } from '../theme';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
-export const tellerModalStyles = StyleSheet.create({
+export const createTellerModalStyles = (deps: StyleDeps) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
   },
   closeButton: {
     padding: 16,
@@ -12,7 +13,7 @@ export const tellerModalStyles = StyleSheet.create({
   },
   closeButtonText: {
     fontFamily: typography.fontFamily.semiBold,
-    color: brand.primary,
+    color: deps.colors.brand.primary,
     fontSize: 15,
     fontWeight: '600',
   },

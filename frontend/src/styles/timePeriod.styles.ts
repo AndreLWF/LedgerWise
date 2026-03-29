@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
-import { surface, text, border, purple, gold, brand, shadows, radius, overlay, typography } from '../theme';
+import { radius, typography } from '../theme';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
-export const timePeriodStyles = StyleSheet.create({
+export const createTimePeriodStyles = (deps: StyleDeps) => StyleSheet.create({
   // Trigger button
   trigger: {
     flexDirection: 'row',
@@ -9,26 +10,26 @@ export const timePeriodStyles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     borderWidth: 2,
-    borderColor: border.default,
+    borderColor: deps.colors.border.default,
     borderRadius: radius.md,
-    ...shadows.sm,
+    ...deps.shadows.sm,
   },
   triggerHovered: {
-    borderColor: purple[400],
-    backgroundColor: purple[50],
-    ...shadows.purple,
+    borderColor: deps.colors.purple[400],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '60' : deps.colors.purple[50],
+    ...deps.shadows.purple,
   },
   triggerPressed: {
-    borderColor: brand.primary,
-    backgroundColor: purple[100],
+    borderColor: deps.colors.brand.primary,
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '80' : deps.colors.purple[100],
   },
   triggerText: {
     fontFamily: typography.fontFamily.medium,
     fontSize: 14,
     fontWeight: '500',
-    color: text.primary,
+    color: deps.colors.text.primary,
   },
 
   // Modal
@@ -39,26 +40,26 @@ export const timePeriodStyles = StyleSheet.create({
   },
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: overlay.backdrop,
+    backgroundColor: deps.colors.overlay.backdrop,
   },
   modalContent: {
     width: '90%',
     maxWidth: 400,
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     borderRadius: radius.xl,
     overflow: 'hidden',
-    ...shadows.lg,
+    ...deps.shadows.lg,
   },
 
   // Segmented control
   segmentedControlWrapper: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: border.default,
+    borderBottomColor: deps.colors.border.default,
   },
   segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: surface.bg,
+    backgroundColor: deps.colors.surface.bg,
     borderRadius: radius.md,
     padding: 4,
     gap: 4,
@@ -70,23 +71,23 @@ export const timePeriodStyles = StyleSheet.create({
     alignItems: 'center',
   },
   segmentButtonActive: {
-    backgroundColor: brand.secondary,
-    ...shadows.gold,
+    backgroundColor: deps.colors.brand.secondary,
+    ...deps.shadows.gold,
   },
   segmentButtonHovered: {
-    backgroundColor: gold[100],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '40' : deps.colors.gold[100],
   },
   segmentButtonText: {
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 14,
     fontWeight: '600',
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
   },
   segmentButtonTextActive: {
-    color: text.inverse,
+    color: deps.colors.text.inverse,
   },
   segmentButtonTextHovered: {
-    color: text.primary,
+    color: deps.colors.text.primary,
   },
 
   // All time mode
@@ -98,41 +99,41 @@ export const timePeriodStyles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: radius.lg,
-    backgroundColor: purple[100],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '60' : deps.colors.purple[100],
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    ...shadows.purple,
+    ...deps.shadows.purple,
   },
   allTimeTitle: {
     fontFamily: typography.fontFamily.bold,
     fontSize: 18,
     fontWeight: '700',
-    color: text.primary,
+    color: deps.colors.text.primary,
     marginBottom: 8,
   },
   allTimeSubtitle: {
     fontFamily: typography.fontFamily.regular,
     fontSize: 15,
-    color: text.secondary,
+    color: deps.colors.text.secondary,
     marginBottom: 24,
   },
   applyButton: {
     width: '100%',
     paddingVertical: 14,
-    backgroundColor: brand.primary,
+    backgroundColor: deps.colors.brand.primary,
     borderRadius: radius.md,
     alignItems: 'center',
-    ...shadows.purple,
+    ...deps.shadows.purple,
   },
   applyButtonPressed: {
-    backgroundColor: purple[700],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[700],
   },
   applyButtonText: {
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 14,
     fontWeight: '600',
-    color: text.inverse,
+    color: deps.colors.text.inverse,
   },
 
   // Grid container (year + month modes)
@@ -155,7 +156,7 @@ export const timePeriodStyles = StyleSheet.create({
     alignItems: 'center',
   },
   yearNavButtonHovered: {
-    backgroundColor: surface.bg,
+    backgroundColor: deps.colors.surface.bg,
   },
   yearNavButtonDisabled: {
     opacity: 0.3,
@@ -164,7 +165,7 @@ export const timePeriodStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.bold,
     fontSize: 18,
     fontWeight: '700',
-    color: text.primary,
+    color: deps.colors.text.primary,
   },
 
   // Grids (year and month share the same layout)
@@ -180,33 +181,33 @@ export const timePeriodStyles = StyleSheet.create({
     flexGrow: 1,
     paddingVertical: 16,
     borderRadius: radius.md,
-    backgroundColor: surface.bg,
+    backgroundColor: deps.colors.surface.bg,
     alignItems: 'center',
   },
   gridItemHovered: {
-    backgroundColor: purple[100],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '60' : deps.colors.purple[100],
   },
   gridItemActive: {
-    backgroundColor: brand.primary,
-    ...shadows.purple,
+    backgroundColor: deps.colors.brand.primary,
+    ...deps.shadows.purple,
   },
   gridItemDisabled: {
-    backgroundColor: surface.bg,
+    backgroundColor: deps.colors.surface.bg,
     opacity: 0.4,
   },
   gridItemText: {
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 14,
     fontWeight: '600',
-    color: text.primary,
+    color: deps.colors.text.primary,
   },
   gridItemTextHovered: {
-    color: purple[700],
+    color: deps.colors.isDark ? deps.colors.purple[300] : deps.colors.purple[700],
   },
   gridItemTextActive: {
-    color: text.inverse,
+    color: deps.colors.text.inverse,
   },
   gridItemTextDisabled: {
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
   },
 });

@@ -7,8 +7,9 @@ import { enrollAccount } from '../../src/api/client';
 import { useTellerConnect } from '../../src/hooks/useTellerConnect';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useTransactionData, useDataSlice } from '../../src/contexts/TransactionDataContext';
-import { spendingScreenStyles as styles } from '../../src/styles/spendingScreen.styles';
-import { brand } from '../../src/theme';
+import { useColors } from '../../src/contexts/ThemeContext';
+import { useThemeStyles } from '../../src/hooks/useThemeStyles';
+import { createSpendingScreenStyles } from '../../src/styles/spendingScreen.styles';
 import { isHovered } from '../../src/utils/pressable';
 
 export default function SpendingScreen() {
@@ -16,6 +17,8 @@ export default function SpendingScreen() {
   const [tellerError, setTellerError] = useState<string | null>(null);
   const { session } = useAuth();
   const token = session?.access_token ?? null;
+  const colors = useColors();
+  const styles = useThemeStyles(createSpendingScreenStyles);
 
   const { hasAccounts, accountsLoading, allTransactions, error: dataError, refresh, selectedPeriod, setSelectedPeriod } = useTransactionData();
   const dateRange = useMemo(() => periodToDateRange(selectedPeriod), [selectedPeriod]);
@@ -72,7 +75,7 @@ export default function SpendingScreen() {
 
       {(accountsLoading && !hasAccounts || enrolling) && (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator style={styles.spinner} size="large" color={brand.primary} />
+          <ActivityIndicator style={styles.spinner} size="large" color={colors.brand.primary} />
           {enrolling && (
             <Text style={styles.emptyText}>Syncing your accounts...</Text>
           )}

@@ -1,14 +1,15 @@
 import { Platform, StyleSheet } from 'react-native';
 import { isNarrow } from '../utils/responsive';
 import { pageHeaderDefs } from './shared.styles';
-import { surface, text, border, purple, gold, semantic, shadows, radius, typography } from '../theme';
+import { radius, typography } from '../theme';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
-export const spendingStyles = StyleSheet.create({
+export const createSpendingStyles = (deps: StyleDeps) => StyleSheet.create({
   container: {
     flex: 1,
   },
   stickyHeader: {
-    backgroundColor: surface.bg,
+    backgroundColor: deps.colors.surface.bg,
     zIndex: 2,
     paddingBottom: isNarrow ? 16 : 24,
   },
@@ -29,12 +30,12 @@ export const spendingStyles = StyleSheet.create({
   },
   emptyText: {
     fontFamily: typography.fontFamily.regular,
-    color: text.secondary,
+    color: deps.colors.text.secondary,
     marginTop: 40,
     textAlign: 'center',
     fontSize: 15,
   },
-  ...pageHeaderDefs,
+  ...pageHeaderDefs(deps),
   pageHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -56,18 +57,18 @@ export const spendingStyles = StyleSheet.create({
     flexBasis: isNarrow ? '47%' : 'auto',
     flexGrow: 1,
     minWidth: isNarrow ? 0 : 150,
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: border.default,
+    borderColor: deps.colors.border.default,
     padding: isNarrow ? 14 : 20,
-    ...shadows.md,
+    ...deps.shadows.md,
   },
   uncategorizedCard: {
-    backgroundColor: gold[50],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '30' : deps.colors.gold[50],
     borderWidth: 2,
-    borderColor: gold[300],
-    ...shadows.gold,
+    borderColor: deps.colors.isDark ? deps.colors.gold[700] + '50' : deps.colors.gold[300],
+    ...deps.shadows.gold,
   },
   cardIconContainer: {
     width: isNarrow ? 32 : 40,
@@ -80,39 +81,39 @@ export const spendingStyles = StyleSheet.create({
   cardValue: {
     ...typography.amount,
     fontSize: isNarrow ? 20 : 32,
-    color: text.primary,
+    color: deps.colors.text.primary,
     letterSpacing: -0.5,
     marginBottom: 2,
   },
   uncategorizedValue: {
-    color: gold[900],
+    color: deps.colors.isDark ? deps.colors.gold[300] : deps.colors.gold[900],
   },
   cardSub: {
     fontFamily: typography.fontFamily.medium,
     fontSize: isNarrow ? 11 : 13,
     fontWeight: '500',
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
   },
   uncategorizedSub: {
-    color: gold[800],
+    color: deps.colors.isDark ? deps.colors.gold[400] : deps.colors.gold[800],
     fontWeight: '600',
   },
 
   // --- Proportion Bar Section ---
   proportionBarContainer: {
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: border.default,
+    borderColor: deps.colors.border.default,
     padding: isNarrow ? 16 : 24,
     marginBottom: isNarrow ? 12 : 20,
-    ...shadows.md,
+    ...deps.shadows.md,
   },
   proportionBarTitle: {
     fontFamily: typography.fontFamily.bold,
     fontSize: 18,
     fontWeight: '700',
-    color: text.primary,
+    color: deps.colors.text.primary,
     marginBottom: 24,
   },
   proportionBar: {
@@ -120,7 +121,7 @@ export const spendingStyles = StyleSheet.create({
     height: isNarrow ? 32 : 48,
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: border.default,
+    backgroundColor: deps.colors.border.default,
     marginBottom: isNarrow ? 12 : 24,
   },
   proportionSegment: {
@@ -142,7 +143,7 @@ export const spendingStyles = StyleSheet.create({
   },
   proportionBrightenOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: deps.colors.isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(255, 255, 255, 0.15)',
   },
   proportionLabel: {
     justifyContent: 'center',
@@ -150,7 +151,7 @@ export const spendingStyles = StyleSheet.create({
   },
   proportionLabelText: {
     fontFamily: typography.fontFamily.semiBold,
-    color: text.inverse,
+    color: deps.colors.text.inverse,
     fontSize: 12,
     fontWeight: '600',
     textShadowColor: 'rgba(0,0,0,0.3)',
@@ -164,16 +165,16 @@ export const spendingStyles = StyleSheet.create({
       default: { bottom: 40 },
     }),
     left: 0,
-    backgroundColor: text.primary,
+    backgroundColor: deps.colors.isDark ? deps.colors.surface.elevated : deps.colors.text.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.sm,
-    ...shadows.lg,
+    ...deps.shadows.lg,
     zIndex: 10,
   },
   proportionTooltipText: {
     fontFamily: typography.fontFamily.medium,
-    color: text.inverse,
+    color: deps.colors.isDark ? deps.colors.text.primary : deps.colors.text.inverse,
     fontSize: 12,
     fontWeight: '500',
     ...(Platform.OS === 'web' ? { whiteSpace: 'nowrap' } : {}),
@@ -200,37 +201,37 @@ export const spendingStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.medium,
     fontSize: 13,
     fontWeight: '500',
-    color: text.secondary,
+    color: deps.colors.text.secondary,
     flex: 1,
   },
   legendPercentage: {
     fontFamily: typography.fontFamily.regular,
     fontSize: 12,
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
     marginLeft: 4,
   },
 
   // --- Category List Section ---
   categoriesSection: {
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: border.default,
+    borderColor: deps.colors.border.default,
     overflow: 'hidden',
     marginBottom: 20,
-    ...shadows.md,
+    ...deps.shadows.md,
   },
   categoriesSectionHeader: {
     paddingHorizontal: isNarrow ? 16 : 24,
     paddingVertical: isNarrow ? 14 : 20,
     borderBottomWidth: 1,
-    borderBottomColor: border.default,
+    borderBottomColor: deps.colors.border.default,
   },
   categoriesSectionTitle: {
     fontFamily: typography.fontFamily.bold,
     fontSize: 18,
     fontWeight: '700',
-    color: text.primary,
+    color: deps.colors.text.primary,
   },
   categoriesContainer: {
     paddingBottom: 0,
@@ -242,13 +243,13 @@ export const spendingStyles = StyleSheet.create({
     paddingHorizontal: isNarrow ? 14 : 24,
     paddingVertical: isNarrow ? 12 : 16,
     borderBottomWidth: 1,
-    borderBottomColor: border.default,
-    backgroundColor: surface.card,
+    borderBottomColor: deps.colors.border.default,
+    backgroundColor: deps.colors.surface.card,
   },
   uncategorizedRow: {
-    backgroundColor: gold[50],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '20' : deps.colors.gold[50],
     borderLeftWidth: 4,
-    borderLeftColor: gold[500],
+    borderLeftColor: deps.colors.gold[500],
   },
   categoryLeft: {
     flexDirection: 'row',
@@ -263,7 +264,7 @@ export const spendingStyles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    ...shadows.sm,
+    ...deps.shadows.sm,
   },
   categoryDotGlow: {
     position: 'absolute',
@@ -272,7 +273,7 @@ export const spendingStyles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    opacity: 0.2,
+    opacity: deps.colors.isDark ? 0.35 : 0.2,
   },
   categoryNameBlock: {
     flex: 1,
@@ -286,13 +287,13 @@ export const spendingStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 15,
     fontWeight: '600',
-    color: text.primary,
+    color: deps.colors.text.primary,
     flexShrink: 1,
   },
   uncategorizedName: {
     fontFamily: typography.fontFamily.semiBold,
     fontWeight: '600',
-    color: gold[900],
+    color: deps.colors.isDark ? deps.colors.gold[300] : deps.colors.gold[900],
   },
   categorySubRow: {
     flexDirection: 'row',
@@ -302,19 +303,19 @@ export const spendingStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.medium,
     fontSize: 12,
     fontWeight: '500',
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
   },
   categorySubDot: {
     fontFamily: typography.fontFamily.medium,
     fontSize: 12,
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
     marginHorizontal: 6,
   },
   reviewBadge: {
-    backgroundColor: gold[100],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '50' : deps.colors.gold[100],
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: gold[300],
+    borderColor: deps.colors.isDark ? deps.colors.gold[700] + '50' : deps.colors.gold[300],
     paddingHorizontal: 10,
     paddingVertical: 2,
     marginLeft: 8,
@@ -323,7 +324,7 @@ export const spendingStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 11,
     fontWeight: '600',
-    color: gold[900],
+    color: deps.colors.isDark ? deps.colors.gold[300] : deps.colors.gold[900],
   },
   categoryRight: {
     flexDirection: 'row',
@@ -333,13 +334,13 @@ export const spendingStyles = StyleSheet.create({
     ...typography.amount,
     fontSize: 17,
     fontWeight: '700',
-    color: text.primary,
+    color: deps.colors.text.primary,
     marginRight: 10,
     minWidth: 100,
     textAlign: 'right',
   },
   uncategorizedTotal: {
-    color: gold[900],
+    color: deps.colors.isDark ? deps.colors.gold[300] : deps.colors.gold[900],
   },
   chevronBox: {
     width: 28,
@@ -349,10 +350,10 @@ export const spendingStyles = StyleSheet.create({
     alignItems: 'center',
   },
   chevronBoxPurpleActive: {
-    backgroundColor: purple[100],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '60' : deps.colors.purple[100],
   },
   chevronBoxGoldActive: {
-    backgroundColor: gold[100],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '50' : deps.colors.gold[100],
   },
   // --- Expanded Transactions ---
   hiddenMeasurer: {
@@ -362,7 +363,7 @@ export const spendingStyles = StyleSheet.create({
     right: 0,
   },
   expandedContainer: {
-    backgroundColor: surface.bg,
+    backgroundColor: deps.colors.surface.bg,
     paddingHorizontal: isNarrow ? 16 : 24,
     paddingVertical: 16,
   },
@@ -382,7 +383,7 @@ export const spendingStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 12,
     fontWeight: '600',
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -391,10 +392,10 @@ export const spendingStyles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    backgroundColor: surface.card,
+    backgroundColor: deps.colors.surface.card,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: border.default,
+    borderColor: deps.colors.border.default,
     marginBottom: 8,
   },
   txnIconBox: {
@@ -406,10 +407,10 @@ export const spendingStyles = StyleSheet.create({
     marginRight: 12,
   },
   txnIconBoxPurple: {
-    backgroundColor: purple[50],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '60' : deps.colors.purple[50],
   },
   txnIconBoxGold: {
-    backgroundColor: gold[50],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '40' : deps.colors.gold[50],
   },
   expandedTxnLeft: {
     flex: 1,
@@ -424,11 +425,11 @@ export const spendingStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 14,
     fontWeight: '600',
-    color: text.primary,
+    color: deps.colors.text.primary,
     flexShrink: 1,
   },
   largeBadge: {
-    backgroundColor: purple[100],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '60' : deps.colors.purple[100],
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 1,
@@ -437,7 +438,7 @@ export const spendingStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 10,
     fontWeight: '700',
-    color: purple[700],
+    color: deps.colors.isDark ? deps.colors.purple[300] : deps.colors.purple[700],
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
@@ -445,17 +446,17 @@ export const spendingStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.medium,
     fontSize: 12,
     fontWeight: '500',
-    color: text.tertiary,
+    color: deps.colors.text.tertiary,
     marginTop: 2,
   },
   expandedTxnAmount: {
     ...typography.amount,
     fontSize: 16,
     fontWeight: '700',
-    color: text.primary,
+    color: deps.colors.text.primary,
   },
   expandedTxnRefund: {
-    color: semantic.success,
+    color: deps.colors.semantic.success,
   },
   expandedFooter: {
     flexDirection: 'row',
@@ -465,28 +466,28 @@ export const spendingStyles = StyleSheet.create({
     paddingTop: 12,
     paddingHorizontal: 4,
     borderTopWidth: 1,
-    borderTopColor: border.default,
+    borderTopColor: deps.colors.border.default,
   },
   expandedFooterGold: {
-    borderTopColor: gold[200],
+    borderTopColor: deps.colors.isDark ? deps.colors.gold[700] + '40' : deps.colors.gold[200],
   },
   expandedFooterLabel: {
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 13,
     fontWeight: '600',
-    color: text.secondary,
+    color: deps.colors.text.secondary,
   },
   expandedFooterAmount: {
     ...typography.amount,
     fontSize: 15,
     fontWeight: '700',
-    color: purple[700],
+    color: deps.colors.isDark ? deps.colors.purple[300] : deps.colors.purple[700],
   },
   expandedFooterAmountGold: {
-    color: gold[900],
+    color: deps.colors.isDark ? deps.colors.gold[300] : deps.colors.gold[900],
   },
   expandedFooterAmountRefund: {
-    color: semantic.success,
+    color: deps.colors.semantic.success,
   },
 
   // --- Refund Section ---
@@ -494,22 +495,22 @@ export const spendingStyles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: border.default,
+    borderTopColor: deps.colors.border.default,
   },
   refundSectionLabel: {
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 12,
     fontWeight: '600',
-    color: semantic.success,
+    color: deps.colors.semantic.success,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 10,
   },
   refundSectionCard: {
     borderWidth: 1.5,
-    borderColor: semantic.success,
+    borderColor: deps.colors.semantic.success,
   },
   refundTotal: {
-    color: semantic.success,
+    color: deps.colors.semantic.success,
   },
 });

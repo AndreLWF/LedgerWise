@@ -1,10 +1,14 @@
 import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors } from '../../src/contexts/ThemeContext';
+import { useThemeStyles } from '../../src/hooks/useThemeStyles';
+import { createPlaceholderStyles } from '../../src/styles/placeholder.styles';
 import StaggeredView from '../../src/components/StaggeredView';
-import { placeholderStyles as styles } from '../../src/styles/placeholder.styles';
-import { purple } from '../../src/theme';
 
 export default function AnalyticsScreen() {
+  const colors = useColors();
+  const styles = useThemeStyles(createPlaceholderStyles);
+
   return (
     <ScrollView
       style={styles.container}
@@ -21,7 +25,7 @@ export default function AnalyticsScreen() {
       <StaggeredView index={1}>
         <View style={styles.placeholderCard}>
           <View style={styles.placeholderIconContainer}>
-            <Ionicons name="bar-chart-outline" size={32} color={purple[700]} />
+            <Ionicons name="bar-chart-outline" size={32} color={colors.purple[700]} />
           </View>
           <Text style={styles.placeholderTitle}>Advanced Analytics</Text>
           <Text style={styles.placeholderText}>

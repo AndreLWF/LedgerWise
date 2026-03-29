@@ -49,3 +49,26 @@ export const shadows = {
     ...nativeShadow(gold[500], 0.12, 12, 4, 3),
   },
 } as const;
+
+export const darkShadows = {
+  sm: {
+    ...webShadow('0 1px 2px 0 rgba(0, 0, 0, 0.2)'),
+    ...nativeShadow('#000', 0.2, 2, 1, 1),
+  },
+  md: {
+    ...webShadow('0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2)'),
+    ...nativeShadow('#000', 0.3, 6, 4, 2),
+  },
+  lg: {
+    ...webShadow('0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.25)'),
+    ...nativeShadow('#000', 0.4, 15, 10, 4),
+  },
+  purple: {
+    ...webShadow('0 4px 14px -2px rgba(168, 85, 247, 0.3)'),
+    ...nativeShadow(purple[500], 0.3, 14, 4, 3),
+  },
+  gold: {
+    ...webShadow('0 4px 14px -2px rgba(245, 158, 11, 0.25)'),
+    ...nativeShadow(gold[500], 0.25, 14, 4, 3),
+  },
+} as const;

@@ -4,10 +4,12 @@ import { Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useColors } from '../../src/contexts/ThemeContext';
 import { TransactionDataProvider } from '../../src/contexts/TransactionDataContext';
+import { useThemeStyles } from '../../src/hooks/useThemeStyles';
+import { createDashboardLayoutStyles } from '../../src/styles/dashboardLayout.styles';
 import LedgerWiseLogo from '../../src/components/LedgerWiseLogo';
-import { dashboardLayoutStyles as styles } from '../../src/styles/dashboardLayout.styles';
-import { text, brand } from '../../src/theme';
+import ThemeToggle from '../../src/components/ThemeToggle';
 import { isHovered } from '../../src/utils/pressable';
 
 interface NavItem {
@@ -28,6 +30,8 @@ const SIDEBAR_BREAKPOINT = 768;
 
 export default function DashboardLayout() {
   const { session, signOut } = useAuth();
+  const colors = useColors();
+  const styles = useThemeStyles(createDashboardLayoutStyles);
   const pathname = usePathname();
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -57,16 +61,19 @@ export default function DashboardLayout() {
           <LedgerWiseLogo size={showSidebar ? 38 : 34} />
           <Text style={[styles.headerTitle, !showSidebar && styles.headerTitleMobile]}>LedgerWise</Text>
         </View>
-        <Pressable
-          style={(state) => [
-            styles.signOutButton,
-            isHovered(state) && styles.signOutButtonHovered,
-          ]}
-          onPress={signOut}
-        >
-          <Ionicons name="log-out-outline" size={16} color={text.secondary} />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </Pressable>
+        <View style={styles.headerRight}>
+          <ThemeToggle />
+          <Pressable
+            style={(state) => [
+              styles.signOutButton,
+              isHovered(state) && styles.signOutButtonHovered,
+            ]}
+            onPress={signOut}
+          >
+            <Ionicons name="log-out-outline" size={16} color={colors.text.secondary} />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.body}>
@@ -90,7 +97,7 @@ export default function DashboardLayout() {
                     <Ionicons
                       name={item.icon}
                       size={20}
-                      color={active ? brand.primary : text.tertiary}
+                      color={active ? colors.brand.primary : colors.text.tertiary}
                     />
                     <Text style={[styles.navText, active && styles.navTextActive]}>
                       {item.name}
@@ -130,7 +137,7 @@ export default function DashboardLayout() {
                 <Ionicons
                   name={item.activeIcon}
                   size={26}
-                  color={active ? brand.primary : text.tertiary}
+                  color={active ? colors.brand.primary : colors.text.tertiary}
                 />
                 <Text style={[styles.bottomTabText, active && styles.bottomTabTextActive]}>
                   {item.name}

@@ -1,8 +1,9 @@
 import { StyleSheet } from 'react-native';
 import { isNarrow } from '../utils/responsive';
-import { text, brand, purple, border, surface, semantic, shadows, radius, typography } from '../theme';
+import { radius, typography } from '../theme';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
-export const spendingScreenStyles = StyleSheet.create({
+export const createSpendingScreenStyles = (deps: StyleDeps) => StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: isNarrow ? 16 : 24,
@@ -15,22 +16,22 @@ export const spendingScreenStyles = StyleSheet.create({
   emptyText: {
     fontFamily: typography.fontFamily.regular,
     fontSize: 15,
-    color: text.secondary,
+    color: deps.colors.text.secondary,
     marginBottom: 16,
   },
   connectButton: {
-    backgroundColor: brand.primary,
+    backgroundColor: deps.colors.brand.primary,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: radius.md,
-    ...shadows.purple,
+    ...deps.shadows.purple,
   },
   connectButtonPressed: {
-    backgroundColor: purple[700],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[700],
   },
   connectButtonText: {
     fontFamily: typography.fontFamily.semiBold,
-    color: text.inverse,
+    color: deps.colors.text.inverse,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -38,7 +39,7 @@ export const spendingScreenStyles = StyleSheet.create({
     marginTop: 40,
   },
   errorText: {
-    color: semantic.error,
+    color: deps.colors.semantic.error,
     marginTop: 16,
     textAlign: 'center',
   },
@@ -53,22 +54,22 @@ export const spendingScreenStyles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: radius.md,
     borderWidth: 1.5,
-    borderColor: purple[200],
-    backgroundColor: surface.card,
-    ...shadows.sm,
+    borderColor: deps.colors.isDark ? deps.colors.purple[700] : deps.colors.purple[200],
+    backgroundColor: deps.colors.surface.card,
+    ...deps.shadows.sm,
   },
   addAccountButtonHovered: {
-    borderColor: purple[400],
-    backgroundColor: purple[50],
-    ...shadows.purple,
+    borderColor: deps.colors.purple[400],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '60' : deps.colors.purple[50],
+    ...deps.shadows.purple,
   },
   addAccountButtonPressed: {
-    borderColor: brand.primary,
-    backgroundColor: purple[100],
+    borderColor: deps.colors.brand.primary,
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '80' : deps.colors.purple[100],
   },
   addAccountText: {
     fontFamily: typography.fontFamily.semiBold,
-    color: brand.primary,
+    color: deps.colors.brand.primary,
     fontSize: 14,
     fontWeight: '600',
   },

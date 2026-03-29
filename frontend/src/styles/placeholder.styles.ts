@@ -1,8 +1,9 @@
 import { StyleSheet } from 'react-native';
 import { isNarrow } from '../utils/responsive';
 import { pageHeaderDefs, placeholderDefs } from './shared.styles';
+import type { StyleDeps } from '../hooks/useThemeStyles';
 
-export const placeholderStyles = StyleSheet.create({
+export const createPlaceholderStyles = (deps: StyleDeps) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -11,6 +12,6 @@ export const placeholderStyles = StyleSheet.create({
     paddingTop: isNarrow ? 16 : 24,
     paddingBottom: 40,
   },
-  ...pageHeaderDefs,
-  ...placeholderDefs,
+  ...pageHeaderDefs(deps),
+  ...placeholderDefs(deps),
 });

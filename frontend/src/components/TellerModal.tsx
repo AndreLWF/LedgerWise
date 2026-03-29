@@ -1,7 +1,8 @@
 import { Modal, Pressable, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
-import { tellerModalStyles as styles } from '../styles/tellerModal.styles';
+import { useThemeStyles } from '../hooks/useThemeStyles';
+import { createTellerModalStyles } from '../styles/tellerModal.styles';
 
 interface TellerModalProps {
   visible: boolean;
@@ -11,6 +12,8 @@ interface TellerModalProps {
 }
 
 export default function TellerModal({ visible, tellerSource, onMessage, onClose }: TellerModalProps) {
+  const styles = useThemeStyles(createTellerModalStyles);
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaProvider>

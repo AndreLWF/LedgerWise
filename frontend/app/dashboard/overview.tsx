@@ -1,16 +1,22 @@
 import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTransactionData, useDataSlice } from '../../src/contexts/TransactionDataContext';
+import { useColors } from '../../src/contexts/ThemeContext';
+import { useThemeStyles } from '../../src/hooks/useThemeStyles';
+import { createOverviewStyles } from '../../src/styles/overview.styles';
 import SummaryChip from '../../src/spending/components/SummaryChip';
 import StaggeredView from '../../src/components/StaggeredView';
-import { overviewStyles as styles } from '../../src/styles/overview.styles';
-import { purple, gold } from '../../src/theme';
 
 export default function OverviewScreen() {
   const { hasAccounts, accountsLoading } = useTransactionData();
   const { summaryData } = useDataSlice();
+  const colors = useColors();
+  const styles = useThemeStyles(createOverviewStyles);
 
   const topCategory = summaryData?.categories[0];
+
+  const iconBgPurple = colors.isDark ? colors.purple[900] + '60' : colors.purple[100];
+  const iconBgGold = colors.isDark ? colors.gold[900] + '40' : colors.gold[100];
 
   return (
     <ScrollView
@@ -33,23 +39,23 @@ export default function OverviewScreen() {
                 value={`$${summaryData.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 subtitle="Total Expenses"
                 icon="trending-up"
-                iconColor={purple[700]}
-                iconBgColor={purple[100]}
+                iconColor={colors.purple[700]}
+                iconBgColor={iconBgPurple}
               />
               <SummaryChip
                 value={`${summaryData.transaction_count}`}
                 subtitle="Transactions"
                 icon="receipt-outline"
-                iconColor={purple[700]}
-                iconBgColor={purple[100]}
+                iconColor={colors.purple[700]}
+                iconBgColor={iconBgPurple}
               />
               {topCategory && (
                 <SummaryChip
                   value={topCategory.name}
                   subtitle={`$${topCategory.total.toLocaleString(undefined, { minimumFractionDigits: 2 })} \u00B7 ${topCategory.percentage}% of total`}
                   icon="pie-chart-outline"
-                  iconColor={gold[700]}
-                  iconBgColor={gold[100]}
+                  iconColor={colors.gold[700]}
+                  iconBgColor={iconBgGold}
                 />
               )}
             </View>
@@ -59,7 +65,7 @@ export default function OverviewScreen() {
             <StaggeredView index={2}>
               <View style={styles.alertCard}>
                 <View style={styles.alertIconContainer}>
-                  <Ionicons name="alert-circle-outline" size={24} color={gold[700]} />
+                  <Ionicons name="alert-circle-outline" size={24} color={colors.gold[700]} />
                 </View>
                 <View style={styles.alertContent}>
                   <Text style={styles.alertTitle}>
@@ -80,7 +86,7 @@ export default function OverviewScreen() {
         <StaggeredView index={1}>
           <View style={styles.placeholderCard}>
             <View style={styles.placeholderIconContainer}>
-              <Ionicons name="trending-up" size={32} color={purple[700]} />
+              <Ionicons name="trending-up" size={32} color={colors.purple[700]} />
             </View>
             <Text style={styles.placeholderTitle}>Connect a bank to get started</Text>
             <Text style={styles.placeholderText}>
