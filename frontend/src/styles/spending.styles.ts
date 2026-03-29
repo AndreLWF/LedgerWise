@@ -7,7 +7,21 @@ export const spendingStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  stickyHeader: {
+    backgroundColor: surface.bg,
+    zIndex: 2,
+    paddingBottom: isNarrow ? 16 : 24,
+  },
+  headerGradient: {
+    height: 20,
+    zIndex: 1,
+  },
+  scrollArea: {
+    flex: 1,
+    marginTop: -20,
+  },
   scrollContent: {
+    paddingTop: 20,
     paddingBottom: 30,
   },
   spinner: {
@@ -25,7 +39,7 @@ export const spendingStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: isNarrow ? 16 : 24,
+    marginBottom: 0,
   },
   pageHeaderLeft: {
     flex: 1,
@@ -309,10 +323,21 @@ export const spendingStyles = StyleSheet.create({
     color: gold[900],
   },
   // --- Expanded Transactions ---
+  hiddenMeasurer: {
+    position: 'absolute',
+    opacity: 0,
+    left: 0,
+    right: 0,
+  },
   expandedContainer: {
     backgroundColor: surface.bg,
     paddingHorizontal: 24,
     paddingVertical: 12,
+  },
+  expandedContainerAnimating: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
   },
   expandedTxn: {
     flexDirection: 'row',

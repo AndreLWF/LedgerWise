@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
-import { LayoutAnimation, Platform, Pressable, Text, UIManager, View } from 'react-native';
+import { useMemo } from 'react';
+import { Animated, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spendingStyles as styles } from '../../styles/spending.styles';
 import type { SpendingSummaryData } from '../../types/spending';
@@ -8,17 +8,8 @@ import { getCategoryColor } from '../../utils/categoryColors';
 import { buildCategoryRankMap } from '../../utils/categoryRanking';
 import { text, semantic } from '../../theme';
 import { isHovered } from '../../utils/pressable';
-import StaggeredView from '../../components/StaggeredView';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-const ACCORDION_ANIM = LayoutAnimation.create(
-  250,
-  LayoutAnimation.Types.easeInEaseOut,
-  LayoutAnimation.Properties.opacity,
-);
+import AccordionReveal from '../../components/AccordionReveal';
+import useAccordionHeight from '../../hooks/useAccordionHeight';
 
 const PAYMENT_PATTERN = /pymt|payment/i;
 
@@ -43,23 +34,8 @@ export default function CategoryAccordion({
   transactions,
   variant = 'default',
 }: CategoryAccordionProps) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(),
-  );
+  const { toggle, getState, handleMeasure } = useAccordionHeight();
   const isRefund = variant === 'refund';
-
-  const toggleCategory = useCallback((name: string) => {
-    LayoutAnimation.configureNext(ACCORDION_ANIM);
-    setExpandedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) {
-        next.delete(name);
-      } else {
-        next.add(name);
-      }
-      return next;
-    });
-  }, []);
 
   function getTransactionsForCategory(categoryName: string): Transaction[] {
     if (isRefund) {
@@ -90,10 +66,11 @@ export default function CategoryAccordion({
   const content = (
     <View style={styles.categoriesContainer}>
       {sorted.map((cat, i) => {
-        const isExpanded = expandedCategories.has(cat.name);
+        const { isExpanded, isClosing, isSettled, showContent, animValue } =
+          getState(cat.name);
         const isUncategorized = !isRefund && cat.name === 'General';
         const color = isRefund ? semantic.success : getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0);
-        const categoryTransactions = isExpanded
+        const categoryTransactions = showContent
           ? getTransactionsForCategory(cat.name)
           : [];
 
@@ -104,11 +81,11 @@ export default function CategoryAccordion({
                 styles.categoryRow,
                 isUncategorized && styles.uncategorizedRow,
                 i === sorted.length - 1 && !isExpanded && { borderBottomWidth: 0 },
-                isHovered(state) && {
+                ((isExpanded && !isClosing) || isHovered(state)) && {
                   backgroundColor: color + '14',
                 },
               ]}
-              onPress={() => toggleCategory(cat.name)}
+              onPress={() => toggle(cat.name)}
             >
               <View style={styles.categoryLeft}>
                 <View
@@ -142,26 +119,24 @@ export default function CategoryAccordion({
                   {isRefund ? '+' : ''}${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </Text>
                 <Ionicons
-                  name={isExpanded ? 'chevron-down' : 'chevron-forward'}
+                  name={isExpanded && !isClosing ? 'chevron-down' : 'chevron-forward'}
                   size={16}
                   color={text.tertiary}
                 />
               </View>
             </Pressable>
 
-            {isExpanded && (
-              <View style={styles.expandedContainer}>
-                {categoryTransactions.map((txn, txnIndex) => {
-                  const amt = parseFloat(txn.amount);
-                  return (
-                    <StaggeredView
-                      key={txn.id}
-                      index={txnIndex}
-                      delay={40}
-                      duration={200}
-                      trigger={cat.name}
-                    >
-                      <View style={styles.expandedTxn}>
+            {showContent && (
+              <>
+                {/* Hidden measurer — off-screen so onLayout fires even at height 0 on iOS */}
+                <View
+                  style={styles.hiddenMeasurer}
+                  pointerEvents="none"
+                  onLayout={(e) => handleMeasure(cat.name, e.nativeEvent.layout.height)}
+                >
+                  <View style={styles.expandedContainer}>
+                    {categoryTransactions.map((txn) => (
+                      <View key={txn.id} style={styles.expandedTxn}>
                         <View style={styles.expandedTxnLeft}>
                           <Text style={styles.expandedTxnDesc} numberOfLines={1}>
                             {txn.description}
@@ -170,19 +145,56 @@ export default function CategoryAccordion({
                             {formatLocalDate(txn.date)}
                           </Text>
                         </View>
-                        <Text
-                          style={[
-                            styles.expandedTxnAmount,
-                            isRefund && styles.expandedTxnRefund,
-                          ]}
-                        >
-                          {isRefund ? '+' : ''}${Math.abs(amt).toFixed(2)}
+                        <Text style={styles.expandedTxnAmount}>
+                          {isRefund ? '+' : ''}${Math.abs(parseFloat(txn.amount)).toFixed(2)}
                         </Text>
                       </View>
-                    </StaggeredView>
-                  );
-                })}
-              </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Animated container — drops height constraint once spring settles */}
+                <Animated.View
+                  style={isSettled ? undefined : {
+                    height: animValue,
+                    overflow: 'hidden' as const,
+                  }}
+                >
+                  <View style={[styles.expandedContainer, !isSettled && styles.expandedContainerAnimating]}>
+                    {categoryTransactions.map((txn, txnIndex) => {
+                      const amt = parseFloat(txn.amount);
+                      return (
+                        <AccordionReveal
+                          key={txn.id}
+                          index={txnIndex}
+                          total={categoryTransactions.length}
+                          trigger={cat.name}
+                          visible={!isClosing}
+                        >
+                          <View style={styles.expandedTxn}>
+                            <View style={styles.expandedTxnLeft}>
+                              <Text style={styles.expandedTxnDesc} numberOfLines={1}>
+                                {txn.description}
+                              </Text>
+                              <Text style={styles.expandedTxnMeta}>
+                                {formatLocalDate(txn.date)}
+                              </Text>
+                            </View>
+                            <Text
+                              style={[
+                                styles.expandedTxnAmount,
+                                isRefund && styles.expandedTxnRefund,
+                              ]}
+                            >
+                              {isRefund ? '+' : ''}${Math.abs(amt).toFixed(2)}
+                            </Text>
+                          </View>
+                        </AccordionReveal>
+                      );
+                    })}
+                  </View>
+                </Animated.View>
+              </>
             )}
           </View>
         );

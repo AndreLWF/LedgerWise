@@ -3,6 +3,7 @@ import { Animated, type ViewStyle } from 'react-native';
 
 interface StaggeredViewProps {
   index: number;
+  total?: number;
   delay?: number;
   duration?: number;
   trigger?: string | number;
@@ -10,8 +11,13 @@ interface StaggeredViewProps {
   style?: ViewStyle;
 }
 
+/**
+ * Page-level entrance animation. Each child fades in and slides up
+ * with a staggered delay based on its index. Used for tab/page transitions.
+ */
 export default function StaggeredView({
   index,
+  total = 0,
   delay = 80,
   duration = 400,
   trigger,
@@ -24,7 +30,11 @@ export default function StaggeredView({
   useEffect(() => {
     opacity.setValue(0);
     translateY.setValue(16);
-    const staggerDelay = index * delay;
+    // Ease-in stagger: slow start, items appear faster toward the end
+    const t = total > 1 ? index / (total - 1) : 0;
+    const easedT = t * t; // quadratic ease-in
+    const maxDelay = (total - 1) * delay;
+    const staggerDelay = Math.round(easedT * maxDelay);
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
@@ -39,7 +49,7 @@ export default function StaggeredView({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [index, delay, duration, trigger, opacity, translateY]);
+  }, [index, total, delay, duration, trigger, opacity, translateY]);
 
   return (
     <Animated.View style={[{ opacity, transform: [{ translateY }] }, style]}>

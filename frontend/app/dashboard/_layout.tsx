@@ -14,13 +14,14 @@ interface NavItem {
   name: string;
   path: '/dashboard/overview' | '/dashboard/spending' | '/dashboard/analytics' | '/dashboard/settings';
   icon: keyof typeof Ionicons.glyphMap;
+  activeIcon: keyof typeof Ionicons.glyphMap;
 }
 
 const navItems: NavItem[] = [
-  { name: 'Overview', path: '/dashboard/overview', icon: 'trending-up' },
-  { name: 'Spending', path: '/dashboard/spending', icon: 'pie-chart-outline' },
-  { name: 'Analytics', path: '/dashboard/analytics', icon: 'bar-chart-outline' },
-  { name: 'Settings', path: '/dashboard/settings', icon: 'settings-outline' },
+  { name: 'Overview', path: '/dashboard/overview', icon: 'trending-up', activeIcon: 'trending-up' },
+  { name: 'Spending', path: '/dashboard/spending', icon: 'pie-chart-outline', activeIcon: 'pie-chart' },
+  { name: 'Analytics', path: '/dashboard/analytics', icon: 'bar-chart-outline', activeIcon: 'bar-chart' },
+  { name: 'Settings', path: '/dashboard/settings', icon: 'settings-outline', activeIcon: 'settings' },
 ];
 
 const SIDEBAR_BREAKPOINT = 768;
@@ -53,7 +54,7 @@ export default function DashboardLayout() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + (showSidebar ? 20 : 12) }]}>
         <View style={styles.headerLeft}>
-          <LedgerWiseLogo size={showSidebar ? 32 : 26} />
+          <LedgerWiseLogo size={showSidebar ? 38 : 34} />
           <Text style={[styles.headerTitle, !showSidebar && styles.headerTitleMobile]}>LedgerWise</Text>
         </View>
         <Pressable
@@ -127,8 +128,8 @@ export default function DashboardLayout() {
                 onPress={() => router.push(item.path)}
               >
                 <Ionicons
-                  name={item.icon}
-                  size={22}
+                  name={item.activeIcon}
+                  size={26}
                   color={active ? brand.primary : text.tertiary}
                 />
                 <Text style={[styles.bottomTabText, active && styles.bottomTabTextActive]}>

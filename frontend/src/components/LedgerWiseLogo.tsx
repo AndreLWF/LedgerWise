@@ -9,7 +9,7 @@ export default function LedgerWiseLogo({ size = 32 }: LedgerWiseLogoProps) {
     <Svg
       width={size}
       height={size}
-      viewBox="6 2 20 28"
+      viewBox="7 2 18 28"
       fill="none"
     >
       {/* Ledger Book Base */}

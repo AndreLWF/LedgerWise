@@ -63,8 +63,8 @@
       y2="28"
       gradientUnits="userSpaceOnUse"
     >
-      <stop stop-color="#6366F1" />
-      <stop offset="1" stop-color="#8B5CF6" />
+      <stop stop-color="#9333EA" />
+      <stop offset="1" stop-color="#A855F7" />
     </linearGradient>
     <linearGradient
       id="crownGradient"

@@ -22,18 +22,18 @@ export const dashboardLayoutStyles = StyleSheet.create({
   },
   headerLeft: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'flex-end',
+    gap: 8,
   },
   headerTitle: {
     fontFamily: typography.fontFamily.bold,
-    fontSize: 21,
+    fontSize: 24,
     fontWeight: '700',
     color: text.primary,
     letterSpacing: -0.2,
   },
   headerTitleMobile: {
-    fontSize: 18,
+    fontSize: 21,
   },
   signOutButton: {
     flexDirection: 'row',

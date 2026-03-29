@@ -4,7 +4,7 @@ import { text, surface, border, purple, shadows, radius, typography } from '../t
 // Raw style definitions — spread into StyleSheet.create() calls
 export const pageHeaderDefs = {
   pageHeader: {
-    marginBottom: isNarrow ? 16 : 24,
+    marginBottom: isNarrow ? 36 : 44,
   },
   pageTitle: {
     fontFamily: typography.fontFamily.bold,
