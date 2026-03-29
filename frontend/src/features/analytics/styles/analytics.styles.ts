@@ -1,8 +1,8 @@
 import { Platform, StyleSheet } from 'react-native';
-import { isNarrow } from '../utils/responsive';
-import { pageHeaderDefs, placeholderDefs } from './shared.styles';
-import { radius, typography } from '../theme';
-import type { StyleDeps } from '../hooks/useThemeStyles';
+import { isNarrow } from '../../../utils/responsive';
+import { pageHeaderDefs, placeholderDefs } from '../../../styles/shared.styles';
+import { radius, typography } from '../../../theme';
+import type { StyleDeps } from '../../../hooks/useThemeStyles';
 
 export const createAnalyticsStyles = (deps: StyleDeps) => StyleSheet.create({
   container: {

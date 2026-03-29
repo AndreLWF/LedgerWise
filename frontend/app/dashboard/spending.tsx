@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 import { periodToDateRange } from '../../src/components/TimePeriodSelector';
 import TellerModal from '../../src/components/TellerModal';
-import { SpendingSummary } from '../../src/spending';
+import { SpendingSummary } from '../../src/features/spending';
 import { enrollAccount } from '../../src/api/client';
 import { useTellerConnect } from '../../src/hooks/useTellerConnect';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useTransactionData, useDataSlice } from '../../src/contexts/TransactionDataContext';
 import { useColors } from '../../src/contexts/ThemeContext';
 import { useThemeStyles } from '../../src/hooks/useThemeStyles';
-import { createSpendingScreenStyles } from '../../src/styles/spendingScreen.styles';
+import { createSpendingScreenStyles } from '../../src/features/spending/styles/spendingScreen.styles';
 import { isHovered } from '../../src/utils/pressable';
 
 export default function SpendingScreen() {

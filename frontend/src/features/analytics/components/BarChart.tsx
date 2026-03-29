@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '../../contexts/ThemeContext';
-import { useThemeStyles } from '../../hooks/useThemeStyles';
-import { createAnalyticsStyles } from '../../styles/analytics.styles';
-import { isNarrow } from '../../utils/responsive';
-import type { MonthlyAggregate } from '../../types/analytics';
+import { useColors } from '../../../contexts/ThemeContext';
+import { useThemeStyles } from '../../../hooks/useThemeStyles';
+import { createAnalyticsStyles } from '../styles/analytics.styles';
+import { isNarrow } from '../../../utils/responsive';
+import type { MonthlyAggregate } from '../../../types/analytics';
 
 /** Must match plotArea height in analytics.styles.ts */
 const PLOT_HEIGHT = isNarrow ? 160 : 220;

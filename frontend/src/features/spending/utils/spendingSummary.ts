@@ -3,8 +3,8 @@
  * Mirrors backend logic in backend/app/services/spending.py.
  */
 
-import type { Transaction } from '../types/transaction';
-import type { SpendingSummaryData, CategoryData } from '../types/spending';
+import type { Transaction } from '../../../types/transaction';
+import type { SpendingSummaryData, CategoryData } from '../../../types/spending';
 
 function titleCase(s: string): string {
   return s

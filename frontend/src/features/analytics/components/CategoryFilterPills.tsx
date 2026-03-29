@@ -1,8 +1,8 @@
 import { Pressable, Text, View } from 'react-native';
-import { useThemeStyles } from '../../hooks/useThemeStyles';
-import { createAnalyticsStyles } from '../../styles/analytics.styles';
-import { getCategoryColor } from '../../utils/categoryColors';
-import { isHovered } from '../../utils/pressable';
+import { useThemeStyles } from '../../../hooks/useThemeStyles';
+import { createAnalyticsStyles } from '../styles/analytics.styles';
+import { getCategoryColor } from '../../../utils/categoryColors';
+import { isHovered } from '../../../utils/pressable';
 
 interface Props {
   categories: string[];

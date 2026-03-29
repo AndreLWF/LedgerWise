@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { isNarrow } from '../utils/responsive';
-import { radius, typography } from '../theme';
-import type { StyleDeps } from '../hooks/useThemeStyles';
+import { isNarrow } from '../../../utils/responsive';
+import { radius, typography } from '../../../theme';
+import type { StyleDeps } from '../../../hooks/useThemeStyles';
 
 export const createSpendingScreenStyles = (deps: StyleDeps) => StyleSheet.create({
   container: {

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTransactionData } from '../contexts/TransactionDataContext';
-import { useColors } from '../contexts/ThemeContext';
-import { useThemeStyles } from '../hooks/useThemeStyles';
-import { createAnalyticsStyles } from '../styles/analytics.styles';
-import { getCategoryColor } from '../utils/categoryColors';
-import StaggeredView from '../components/StaggeredView';
+import { useTransactionData } from '../../contexts/TransactionDataContext';
+import { useColors } from '../../contexts/ThemeContext';
+import { useThemeStyles } from '../../hooks/useThemeStyles';
+import { createAnalyticsStyles } from './styles/analytics.styles';
+import { getCategoryColor } from '../../utils/categoryColors';
+import StaggeredView from '../../components/StaggeredView';
 import { useAnalyticsData } from './useAnalyticsData';
 import SummaryStatsRow from './components/SummaryStatsRow';
 import CategoryFilterPills from './components/CategoryFilterPills';

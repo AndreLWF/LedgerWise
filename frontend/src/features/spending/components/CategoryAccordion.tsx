@@ -1,16 +1,16 @@
 import { useMemo } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '../../contexts/ThemeContext';
-import { useThemeStyles } from '../../hooks/useThemeStyles';
-import { createSpendingStyles } from '../../styles/spending.styles';
-import type { SpendingSummaryData } from '../../types/spending';
-import type { Transaction } from '../../types/transaction';
-import { getCategoryColor } from '../../utils/categoryColors';
-import { buildCategoryRankMap } from '../../utils/categoryRanking';
-import { isHovered } from '../../utils/pressable';
-import AccordionReveal from '../../components/AccordionReveal';
-import useAccordionHeight from '../../hooks/useAccordionHeight';
+import { useColors } from '../../../contexts/ThemeContext';
+import { useThemeStyles } from '../../../hooks/useThemeStyles';
+import { createSpendingStyles } from '../styles/spending.styles';
+import type { SpendingSummaryData } from '../../../types/spending';
+import type { Transaction } from '../../../types/transaction';
+import { getCategoryColor } from '../../../utils/categoryColors';
+import { buildCategoryRankMap } from '../utils/categoryRanking';
+import { isHovered } from '../../../utils/pressable';
+import AccordionReveal from '../../../components/AccordionReveal';
+import useAccordionHeight from '../useAccordionHeight';
 
 const PAYMENT_PATTERN = /pymt|payment/i;
 

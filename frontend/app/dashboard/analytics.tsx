@@ -1,4 +1,4 @@
-import { Analytics } from '../../src/analytics';
+import { Analytics } from '../../src/features/analytics';
 
 export default function AnalyticsScreen() {
   return <Analytics />;

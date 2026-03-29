@@ -1,4 +1,4 @@
-import type { CategoryData } from '../types/spending';
+import type { CategoryData } from '../../../types/spending';
 
 /**
  * Build a rank map for non-General categories, sorted by spend (highest = 0).

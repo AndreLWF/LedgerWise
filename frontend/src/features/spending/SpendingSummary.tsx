@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useColors } from '../contexts/ThemeContext';
-import { useThemeStyles } from '../hooks/useThemeStyles';
-import { createSpendingStyles } from '../styles/spending.styles';
-import type { SpendingSummaryData } from '../types/spending';
-import type { Transaction } from '../types/transaction';
+import { useColors } from '../../contexts/ThemeContext';
+import { useThemeStyles } from '../../hooks/useThemeStyles';
+import { createSpendingStyles } from './styles/spending.styles';
+import type { SpendingSummaryData } from '../../types/spending';
+import type { Transaction } from '../../types/transaction';
 import TimePeriodSelector, {
   type TimePeriod,
   getDisplayText,
-} from '../components/TimePeriodSelector';
-import StatCard from '../components/StatCard';
-import StaggeredView from '../components/StaggeredView';
+} from '../../components/TimePeriodSelector';
+import StatCard from '../../components/StatCard';
+import StaggeredView from '../../components/StaggeredView';
 import CategoryAccordion from './components/CategoryAccordion';
 import ProportionBar from './components/ProportionBar';
 

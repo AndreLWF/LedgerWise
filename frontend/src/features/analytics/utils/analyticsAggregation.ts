@@ -3,9 +3,9 @@
  * Pure computation — no React dependencies.
  */
 
-import type { Transaction } from '../types/transaction';
-import type { AnalyticsSummary, MonthlyAggregate } from '../types/analytics';
-import { isSpending, isRefund } from './spendingSummary';
+import type { Transaction } from '../../../types/transaction';
+import type { AnalyticsSummary, MonthlyAggregate } from '../../../types/analytics';
+import { isSpending, isRefund } from '../../spending/utils/spendingSummary';
 
 const MONTH_LABELS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

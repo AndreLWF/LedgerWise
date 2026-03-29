@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { useTransactionData } from '../contexts/TransactionDataContext';
-import { computeAnalyticsSummary, extractCategories } from '../utils/analyticsAggregation';
-import type { AnalyticsSummary } from '../types/analytics';
+import { useTransactionData } from '../../contexts/TransactionDataContext';
+import { computeAnalyticsSummary, extractCategories } from './utils/analyticsAggregation';
+import type { AnalyticsSummary } from '../../types/analytics';
 
 interface AnalyticsData {
   summary: AnalyticsSummary | null;

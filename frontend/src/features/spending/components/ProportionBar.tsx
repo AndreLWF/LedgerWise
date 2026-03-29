@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useThemeStyles } from '../../hooks/useThemeStyles';
-import { createSpendingStyles } from '../../styles/spending.styles';
-import type { CategoryData } from '../../types/spending';
-import { getCategoryColor } from '../../utils/categoryColors';
-import { buildCategoryRankMap } from '../../utils/categoryRanking';
+import { useThemeStyles } from '../../../hooks/useThemeStyles';
+import { createSpendingStyles } from '../styles/spending.styles';
+import type { CategoryData } from '../../../types/spending';
+import { getCategoryColor } from '../../../utils/categoryColors';
+import { buildCategoryRankMap } from '../utils/categoryRanking';
 
 interface ProportionBarProps {
   categories: CategoryData[];

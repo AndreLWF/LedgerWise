@@ -14,7 +14,7 @@ import {
   UnauthorizedError,
 } from '../api/client';
 import { supabase } from '../api/supabase';
-import { computeSpendingSummary } from '../utils/spendingSummary';
+import { computeSpendingSummary } from '../features/spending/utils/spendingSummary';
 import type { TimePeriod } from '../components/TimePeriodSelector';
 import type { Account } from '../types/account';
 import type { SpendingSummaryData } from '../types/spending';
