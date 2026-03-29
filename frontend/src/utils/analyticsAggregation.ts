@@ -50,8 +50,17 @@ export function computeAnalyticsSummary(
   }
 
   for (const tx of transactions) {
-    // Subtract refunds from the month they occurred in
-    if (isRefund(tx)) {
+    const matchesCategory = (t: Transaction): boolean => {
+      if (!categoryFilter) return true;
+      const txCategory = (t.category ?? '').toLowerCase().trim();
+      const filterLower = categoryFilter.toLowerCase().trim();
+      const isGeneralFilter = filterLower === 'general';
+      const isGeneralTx = txCategory === '' || txCategory === 'general';
+      return isGeneralFilter ? isGeneralTx : txCategory === filterLower;
+    };
+
+    // Subtract refunds from the month they occurred in (same category filter)
+    if (isRefund(tx) && matchesCategory(tx)) {
       const [yearStr, monthStr] = tx.date.split('-');
       const year = parseInt(yearStr, 10);
       const month = parseInt(monthStr, 10) - 1;
@@ -64,16 +73,7 @@ export function computeAnalyticsSummary(
     }
 
     if (!isSpending(tx)) continue;
-
-    if (categoryFilter) {
-      const txCategory = (tx.category ?? '').toLowerCase().trim();
-      const filterLower = categoryFilter.toLowerCase().trim();
-      // "General" maps to empty/missing category
-      const isGeneralFilter = filterLower === 'general';
-      const isGeneralTx = txCategory === '' || txCategory === 'general';
-
-      if (isGeneralFilter ? !isGeneralTx : txCategory !== filterLower) continue;
-    }
+    if (!matchesCategory(tx)) continue;
 
     const [yearStr, monthStr] = tx.date.split('-');
     const year = parseInt(yearStr, 10);
@@ -86,9 +86,9 @@ export function computeAnalyticsSummary(
     }
   }
 
-  // Round totals
+  // Round totals and clamp to zero (refunds can't make a month negative)
   for (const m of months) {
-    m.total = Math.round(m.total * 100) / 100;
+    m.total = Math.max(0, Math.round(m.total * 100) / 100);
   }
 
   const twelveMonthTotal = months.reduce((sum, m) => sum + m.total, 0);
