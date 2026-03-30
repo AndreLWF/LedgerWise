@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
 from app.middleware.auth import get_current_user_id
-from app.schemas import AccountResponse, TokenRequest, TransactionResponse
+from app.schemas import AccountResponse, CategoryUpdateRequest, TokenRequest, TransactionResponse
 from app.services import teller as teller_service
 from app.utils.logging import log_data_access
 
@@ -51,6 +51,23 @@ async def get_my_transactions(
     return await teller_service.get_user_transactions(
         db, user_id, start_date, end_date, account_type
     )
+
+
+@router.patch("/transactions/{transaction_id}/category", response_model=TransactionResponse)
+async def update_category(
+    transaction_id: str,
+    body: CategoryUpdateRequest,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> TransactionResponse:
+    """Update the category of a single transaction."""
+    log_data_access(user_id, f"transaction_category_update:{transaction_id}")
+    result = await teller_service.update_transaction_category(
+        db, user_id, transaction_id, body.category
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail="Transaction not found.")
+    return result
 
 
 @router.post("/enroll", response_model=list[AccountResponse])

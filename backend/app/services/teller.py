@@ -112,6 +112,31 @@ def _map_transactions(rows: list[Transaction]) -> list[TransactionResponse]:
     return results
 
 
+async def update_transaction_category(
+    db: AsyncSession,
+    user_id: str,
+    transaction_id: str,
+    category: str,
+) -> TransactionResponse | None:
+    """Update the category of a transaction, scoped to the authenticated user."""
+    stmt = (
+        select(Transaction)
+        .join(Account)
+        .where(Account.user_id == user_id)
+        .where(Transaction.teller_transaction_id == transaction_id)
+        .options(joinedload(Transaction.account))
+    )
+    result = await db.execute(stmt)
+    txn = result.scalars().first()
+    if txn is None:
+        return None
+
+    txn.category = category.lower()
+    await db.commit()
+    await db.refresh(txn)
+    return _map_transactions([txn])[0]
+
+
 async def enroll_accounts(
     db: AsyncSession, user_id: str, access_token: str
 ) -> list[AccountResponse]:

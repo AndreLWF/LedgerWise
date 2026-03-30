@@ -14,7 +14,7 @@ import { isHovered } from '../../src/utils/pressable';
 
 interface NavItem {
   name: string;
-  path: '/dashboard/overview' | '/dashboard/spending' | '/dashboard/analytics' | '/dashboard/settings';
+  path: '/dashboard/overview' | '/dashboard/spending' | '/dashboard/analytics' | '/dashboard/categorize' | '/dashboard/settings';
   icon: keyof typeof Ionicons.glyphMap;
   activeIcon: keyof typeof Ionicons.glyphMap;
 }
@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
   { name: 'Overview', path: '/dashboard/overview', icon: 'trending-up', activeIcon: 'trending-up' },
   { name: 'Spending', path: '/dashboard/spending', icon: 'pie-chart-outline', activeIcon: 'pie-chart' },
   { name: 'Analytics', path: '/dashboard/analytics', icon: 'bar-chart-outline', activeIcon: 'bar-chart' },
+  { name: 'Categorize', path: '/dashboard/categorize', icon: 'pricetags-outline', activeIcon: 'pricetags' },
   { name: 'Settings', path: '/dashboard/settings', icon: 'settings-outline', activeIcon: 'settings' },
 ];
 

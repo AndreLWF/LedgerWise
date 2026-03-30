@@ -29,6 +29,22 @@ class TransactionResponse(BaseModel):
     category: str
 
 
+class CategoryUpdateRequest(BaseModel):
+    category: str
+
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("category must not be empty")
+        if len(v) > 100:
+            raise ValueError("category exceeds maximum length")
+        if not re.match(r"^[a-zA-Z0-9 &\-']+$", v):
+            raise ValueError("category contains invalid characters")
+        return v
+
+
 class AccountResponse(BaseModel):
     id: str
     teller_account_id: str

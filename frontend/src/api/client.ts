@@ -107,6 +107,24 @@ export async function fetchSpendingSummary(
   );
 }
 
+export async function updateTransactionCategory(
+  token: string,
+  transactionId: string,
+  category: string,
+): Promise<Transaction> {
+  const res = await fetch(
+    `${API_URL}/api/v1/teller/transactions/${encodeURIComponent(transactionId)}/category`,
+    {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify({ category }),
+    },
+  );
+  const data = await handleResponse<Transaction>(res);
+  clearApiCache();
+  return data;
+}
+
 export async function enrollAccount(
   token: string,
   tellerAccessToken: string,
