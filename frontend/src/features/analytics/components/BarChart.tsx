@@ -19,6 +19,11 @@ interface Props {
   barColor?: string;
 }
 
+function formatAmount(value: number): string {
+  if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
+  return `$${Math.round(value)}`;
+}
+
 export default function BarChart({ months, categoryLabel, barColor }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createAnalyticsStyles);
@@ -41,11 +46,6 @@ export default function BarChart({ months, categoryLabel, barColor }: Props) {
   const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
   const gridStep = Math.ceil(rawStep / magnitude) * magnitude;
   const gridMax = gridStep * GRID_LINES;
-
-  function formatAmount(value: number): string {
-    if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
-    return `$${Math.round(value)}`;
-  }
 
   return (
     <View style={styles.chartCard}>
@@ -101,6 +101,8 @@ export default function BarChart({ months, categoryLabel, barColor }: Props) {
                 onPress={() => setActiveBar(isActive ? null : index)}
                 onHoverIn={() => setActiveBar(index)}
                 onHoverOut={() => setActiveBar(null)}
+                accessibilityRole="button"
+                accessibilityLabel={`${month.label} ${month.year}: ${formatAmount(month.total)}`}
               >
                 {/* Amount label on hover/active */}
                 {isActive && month.total > 0 && (

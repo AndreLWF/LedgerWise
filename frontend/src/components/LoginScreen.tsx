@@ -51,6 +51,8 @@ export default function LoginScreen() {
               state.pressed && authStyles.googleButtonPressed,
             ]}
             onPress={signInWithGoogle}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in with Google"
           >
             <GoogleIcon size={20} />
             <Text style={authStyles.googleButtonText}>Sign in with Google</Text>

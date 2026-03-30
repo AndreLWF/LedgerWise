@@ -18,7 +18,7 @@ export default function TellerModal({ visible, tellerSource, onMessage, onClose 
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaProvider>
         <SafeAreaView style={styles.container}>
-          <Pressable style={styles.closeButton} onPress={onClose}>
+          <Pressable style={styles.closeButton} onPress={onClose} accessibilityRole="button" accessibilityLabel="Cancel and close">
             <Text style={styles.closeButtonText}>Cancel</Text>
           </Pressable>
           <WebView

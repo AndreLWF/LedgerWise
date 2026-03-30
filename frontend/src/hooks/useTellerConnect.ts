@@ -80,6 +80,10 @@ export function useTellerConnect(
     script.src = 'https://cdn.teller.io/connect/connect.js';
     script.async = true;
     document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+      scriptLoaded.current = false;
+    };
   }, []);
 
   const openTellerConnect = useCallback(() => {

@@ -8,11 +8,10 @@ import type { SpendingSummaryData } from '../../../types/spending';
 import type { Transaction } from '../../../types/transaction';
 import { getCategoryColor } from '../../../utils/categoryColors';
 import { buildCategoryRankMap } from '../utils/categoryRanking';
+import { isPayment } from '../utils/spendingSummary';
 import { isHovered } from '../../../utils/pressable';
 import AccordionReveal from '../../../components/AccordionReveal';
 import useAccordionHeight from '../useAccordionHeight';
-
-const PAYMENT_PATTERN = /pymt|payment/i;
 
 /** Parse "YYYY-MM-DD" as local time (not UTC) and format for display. */
 function formatLocalDate(iso: string): string {
@@ -50,14 +49,14 @@ export default function CategoryAccordion({
       return transactions.filter((t) => {
         const amt = parseFloat(t.amount);
         const isCategoryRefund = t.category?.toLowerCase() === 'refund';
-        const isNegativeNonPayment = amt < 0 && !PAYMENT_PATTERN.test(t.description);
+        const isNegativeNonPayment = amt < 0 && !isPayment(t.description);
         return isCategoryRefund || isNegativeNonPayment;
       });
     }
     return transactions.filter((t) => {
       const txnCategory = t.category || 'General';
       if (txnCategory !== categoryName) return false;
-      if (PAYMENT_PATTERN.test(t.description)) return false;
+      if (isPayment(t.description)) return false;
       const amt = parseFloat(t.amount);
       if (amt < 0) return false;
       return true;
@@ -97,6 +96,9 @@ export default function CategoryAccordion({
                 },
               ]}
               onPress={() => toggle(cat.name)}
+              accessibilityRole="button"
+              accessibilityLabel={`${cat.name}, ${percentage}% of spending, $${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              accessibilityState={{ expanded: isExpanded && !isClosing }}
             >
               <View style={styles.categoryLeft}>
                 <View style={styles.categoryDotWrapper}>

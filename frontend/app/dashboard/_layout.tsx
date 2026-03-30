@@ -69,6 +69,8 @@ export default function DashboardLayout() {
               isHovered(state) && styles.signOutButtonHovered,
             ]}
             onPress={signOut}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
           >
             <Ionicons name="log-out-outline" size={16} color={colors.text.secondary} />
             <Text style={styles.signOutText}>Sign Out</Text>
@@ -92,6 +94,9 @@ export default function DashboardLayout() {
                       isHovered(state) && !active && styles.navItemHovered,
                     ]}
                     onPress={() => router.push(item.path)}
+                    accessibilityRole="tab"
+                    accessibilityLabel={item.name}
+                    accessibilityState={{ selected: active }}
                   >
                     {active && <View style={styles.navActiveIndicator} />}
                     <Ionicons
@@ -133,6 +138,9 @@ export default function DashboardLayout() {
                 key={item.path}
                 style={styles.bottomTab}
                 onPress={() => router.push(item.path)}
+                accessibilityRole="tab"
+                accessibilityLabel={item.name}
+                accessibilityState={{ selected: active }}
               >
                 <Ionicons
                   name={item.activeIcon}

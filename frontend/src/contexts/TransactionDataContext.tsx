@@ -17,7 +17,6 @@ import { supabase } from '../api/supabase';
 import { computeSpendingSummary } from '../features/spending/utils/spendingSummary';
 import type { TimePeriod } from '../components/TimePeriodSelector';
 import type { Account } from '../types/account';
-import type { SpendingSummaryData } from '../types/spending';
 import type { Transaction } from '../types/transaction';
 
 const DEFAULT_PERIOD: TimePeriod = {

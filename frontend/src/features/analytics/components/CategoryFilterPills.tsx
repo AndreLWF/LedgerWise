@@ -24,6 +24,9 @@ export default function CategoryFilterPills({ categories, selected, onSelect }: 
             selected === null && styles.pillAllSelected,
             selected !== null && isHovered(state) && styles.pillHovered,
           ]}
+          accessibilityRole="tab"
+          accessibilityLabel="All Categories"
+          accessibilityState={{ selected: selected === null }}
         >
           <Text style={[
             styles.pillText,
@@ -46,6 +49,9 @@ export default function CategoryFilterPills({ categories, selected, onSelect }: 
                 isActive && [styles.pillSelected, { borderColor: color }],
                 !isActive && isHovered(state) && styles.pillHovered,
               ]}
+              accessibilityRole="tab"
+              accessibilityLabel={name}
+              accessibilityState={{ selected: isActive }}
             >
               <View style={[styles.pillDot, { backgroundColor: color }]} />
               <Text style={[

@@ -13,7 +13,7 @@ function titleCase(s: string): string {
     .join(' ');
 }
 
-function isPayment(description: string): boolean {
+export function isPayment(description: string): boolean {
   const lower = (description ?? '').toLowerCase();
   return lower.includes('pymt') || lower.includes('payment');
 }

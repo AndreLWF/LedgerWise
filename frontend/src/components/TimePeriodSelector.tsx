@@ -121,6 +121,8 @@ export default function TimePeriodSelector({
           state.pressed && styles.triggerPressed,
         ]}
         onPress={() => setIsOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel={`Time period: ${getDisplayText(selectedPeriod)}. Tap to change`}
       >
         <Ionicons name="calendar-outline" size={16} color={colors.purple[600]} />
         <Text style={styles.triggerText}>{getDisplayText(selectedPeriod)}</Text>
@@ -145,6 +147,9 @@ export default function TimePeriodSelector({
                           !isActive && isHovered(state) && styles.segmentButtonHovered,
                         ]}
                         onPress={() => setActiveMode(mode)}
+                        accessibilityRole="tab"
+                        accessibilityLabel={mode === 'alltime' ? 'All time' : mode === 'year' ? 'Year' : 'Month'}
+                        accessibilityState={{ selected: isActive }}
                       >
                         {(state) => (
                           <Text
@@ -179,6 +184,8 @@ export default function TimePeriodSelector({
                       pressed && styles.applyButtonPressed,
                     ]}
                     onPress={handleApplyAllTime}
+                    accessibilityRole="button"
+                    accessibilityLabel="Apply all time filter"
                   >
                     <Text style={styles.applyButtonText}>Apply</Text>
                   </Pressable>
@@ -200,6 +207,9 @@ export default function TimePeriodSelector({
                             !selected && isHovered(state) && styles.gridItemHovered,
                           ]}
                           onPress={() => handleYearSelect(year)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${year}`}
+                          accessibilityState={{ selected }}
                         >
                           {(state) => (
                             <Text style={[
@@ -230,6 +240,8 @@ export default function TimePeriodSelector({
                       ]}
                       onPress={() => viewYear > minYear && setViewYear(viewYear - 1)}
                       disabled={viewYear <= minYear}
+                      accessibilityRole="button"
+                      accessibilityLabel="Previous year"
                     >
                       <Ionicons
                         name="chevron-back"
@@ -246,6 +258,8 @@ export default function TimePeriodSelector({
                       ]}
                       onPress={() => viewYear < currentYear && setViewYear(viewYear + 1)}
                       disabled={viewYear >= currentYear}
+                      accessibilityRole="button"
+                      accessibilityLabel="Next year"
                     >
                       <Ionicons
                         name="chevron-forward"
@@ -271,6 +285,9 @@ export default function TimePeriodSelector({
                           ]}
                           onPress={() => !disabled && handleMonthSelect(index)}
                           disabled={disabled}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${month} ${viewYear}`}
+                          accessibilityState={{ selected, disabled }}
                         >
                           {(state) => (
                             <Text

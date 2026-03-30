@@ -32,6 +32,8 @@ export default function ThemeToggle() {
         isHovered(state) && styles.themeToggleHovered,
       ]}
       onPress={toggleTheme}
+      accessibilityRole="button"
+      accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       <Animated.View style={{ transform: [{ rotate }] }}>
         <Ionicons

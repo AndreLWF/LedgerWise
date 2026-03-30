@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { createSpendingStyles } from '../styles/spending.styles';
@@ -24,12 +24,13 @@ export default function ProportionBar({ categories }: ProportionBarProps) {
   const leftColumn = sorted.slice(0, midpoint);
   const rightColumn = sorted.slice(midpoint);
 
-  const renderLegendItem = (cat: CategoryData, i: number) => (
+  const renderLegendItem = useCallback((cat: CategoryData, i: number) => (
     <Pressable
       key={cat.name}
       onHoverIn={() => setHoveredIndex(i)}
       onHoverOut={() => setHoveredIndex(null)}
       style={styles.legendItem}
+      accessibilityLabel={`${cat.name === 'General' ? 'General / Uncategorized' : cat.name}, ${Math.round(cat.percentage)}%`}
     >
       <View
         style={[
@@ -44,7 +45,7 @@ export default function ProportionBar({ categories }: ProportionBarProps) {
         {Math.round(cat.percentage)}%
       </Text>
     </Pressable>
-  );
+  ), [styles, rankMap]);
 
   return (
     <View style={styles.proportionBarContainer}>
@@ -73,6 +74,7 @@ export default function ProportionBar({ categories }: ProportionBarProps) {
                 i === 0 && styles.proportionSegmentFirst,
                 i === sorted.length - 1 && styles.proportionSegmentLast,
               ]}
+              accessibilityLabel={`${cat.name}, $${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}, ${cat.percentage.toFixed(1)}%`}
             >
               {/* Brighten overlay on hovered segment */}
               {isHovered && (
