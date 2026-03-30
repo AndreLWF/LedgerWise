@@ -3,6 +3,9 @@ import { isNarrow } from '../utils/responsive';
 import { radius, typography } from '../theme';
 import type { StyleDeps } from '../hooks/useThemeStyles';
 
+export const SIDEBAR_WIDTH = 256;
+export const SIDEBAR_COLLAPSED_WIDTH = 72;
+
 export const createDashboardLayoutStyles = (deps: StyleDeps) => StyleSheet.create({
   root: {
     flex: 1,
@@ -81,15 +84,42 @@ export const createDashboardLayoutStyles = (deps: StyleDeps) => StyleSheet.creat
 
   // --- Sidebar (web) ---
   sidebar: {
-    width: 256,
+    width: SIDEBAR_WIDTH,
     backgroundColor: deps.colors.surface.sidebar,
     borderRightWidth: 1,
     borderRightColor: deps.colors.border.subtle,
     justifyContent: 'space-between',
+    overflow: 'hidden',
   },
   sidebarCollapsed: {
-    width: 72,
+    width: SIDEBAR_COLLAPSED_WIDTH,
     alignItems: 'center',
+  },
+  sidebarBottom: {
+    borderTopWidth: 1,
+    borderTopColor: deps.colors.border.subtle,
+  },
+  collapseToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  collapseToggleRowCollapsed: {
+    justifyContent: 'center',
+    paddingHorizontal: 0,
+  },
+  collapseToggle: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  collapseToggleHovered: {
+    backgroundColor: deps.colors.isDark
+      ? deps.colors.surface.elevated + '80'
+      : deps.colors.purple[50],
   },
   sidebarNav: {
     paddingHorizontal: 16,

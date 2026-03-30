@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Redirect, Slot, usePathname, useRouter } from 'expo-router';
-import { Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Animated, Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useColors } from '../../src/contexts/ThemeContext';
 import { TransactionDataProvider } from '../../src/contexts/TransactionDataContext';
 import { useThemeStyles } from '../../src/hooks/useThemeStyles';
-import { createDashboardLayoutStyles } from '../../src/styles/dashboardLayout.styles';
+import { createDashboardLayoutStyles, SIDEBAR_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '../../src/styles/dashboardLayout.styles';
 import LedgerWiseLogo from '../../src/components/icons/LedgerWiseLogo';
 import ThemeToggle from '../../src/components/ThemeToggle';
 import { isHovered } from '../../src/utils/pressable';
-import { SIDEBAR_BREAKPOINT, COMPACT_BREAKPOINT } from '../../src/utils/responsive';
+import { SIDEBAR_BREAKPOINT } from '../../src/utils/responsive';
 
 interface NavItem {
   name: string;
@@ -28,6 +28,12 @@ const navItems: NavItem[] = [
   { name: 'Settings', path: '/dashboard/settings', icon: 'settings-outline', activeIcon: 'settings' },
 ];
 
+const getInitialCollapsed = () => {
+  if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+    return localStorage.getItem('sidebarCollapsed') === 'true';
+  }
+  return false;
+};
 
 export default function DashboardLayout() {
   const { session, signOut } = useAuth();
@@ -43,12 +49,33 @@ export default function DashboardLayout() {
   const [mounted, setMounted] = useState(Platform.OS !== 'web');
   useEffect(() => { setMounted(true); }, []);
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialCollapsed);
+
+  const sidebarAnim = useRef(
+    new Animated.Value(getInitialCollapsed() ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH)
+  ).current;
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+        localStorage.setItem('sidebarCollapsed', String(next));
+      }
+      Animated.timing(sidebarAnim, {
+        toValue: next ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+      return next;
+    });
+  }, [sidebarAnim]);
+
   if (!session) {
     return <Redirect href="/login" />;
   }
 
   const showSidebar = mounted && width >= SIDEBAR_BREAKPOINT;
-  const collapsedSidebar = showSidebar && width < COMPACT_BREAKPOINT;
+  const collapsedSidebar = showSidebar && sidebarCollapsed;
   const token = session.access_token ?? null;
 
   const isActive = (path: string) =>
@@ -83,7 +110,7 @@ export default function DashboardLayout() {
       <View style={styles.body}>
         {/* Sidebar (wide screens only) */}
         {showSidebar && (
-          <View style={[styles.sidebar, collapsedSidebar && styles.sidebarCollapsed]}>
+          <Animated.View style={[styles.sidebar, collapsedSidebar && styles.sidebarCollapsed, { width: sidebarAnim }]}>
             <ScrollView style={styles.sidebarNav} showsVerticalScrollIndicator={false}>
               {navItems.map((item) => {
                 const active = isActive(item.path);
@@ -117,16 +144,27 @@ export default function DashboardLayout() {
               })}
             </ScrollView>
 
-            {/* Pro Tip card */}
-            {!collapsedSidebar && (
-              <View style={styles.proTipCard}>
-                <Text style={styles.proTipTitle}>Pro Tip</Text>
-                <Text style={styles.proTipText}>
-                  Categorize all transactions to get better insights
-                </Text>
+            {/* Bottom section: toggle */}
+            <View style={styles.sidebarBottom}>
+              <View style={[styles.collapseToggleRow, collapsedSidebar && styles.collapseToggleRowCollapsed]}>
+                <Pressable
+                  style={(state) => [
+                    styles.collapseToggle,
+                    isHovered(state) && styles.collapseToggleHovered,
+                  ]}
+                  onPress={toggleSidebar}
+                  accessibilityRole="button"
+                  accessibilityLabel={collapsedSidebar ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  <Ionicons
+                    name={collapsedSidebar ? 'chevron-forward' : 'chevron-back'}
+                    size={16}
+                    color={colors.text.tertiary}
+                  />
+                </Pressable>
               </View>
-            )}
-          </View>
+            </View>
+          </Animated.View>
         )}
 
         {/* Main content */}
