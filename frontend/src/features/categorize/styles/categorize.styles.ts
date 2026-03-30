@@ -19,28 +19,20 @@ export const createCategorizeStyles = (deps: StyleDeps) => StyleSheet.create({
   // --- Page Header ---
   ...pageHeaderDefs(deps),
   headerSection: {
-    backgroundColor: deps.colors.surface.card,
-    borderBottomWidth: 1,
-    borderBottomColor: deps.colors.border.default,
-    paddingHorizontal: isNarrow ? 16 : 32,
+    paddingHorizontal: isNarrow ? 16 : 24,
     paddingTop: isNarrow ? 16 : 24,
-    paddingBottom: isNarrow ? 16 : 24,
+    paddingBottom: isNarrow ? 8 : 12,
   },
   headerContent: {
     maxWidth: 1600,
     width: '100%',
     alignSelf: 'center',
   },
-  headerTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: isNarrow ? 16 : 20,
-  },
 
   // --- Progress Bar ---
   progressContainer: {
     gap: 8,
+    paddingHorizontal: isNarrow ? 15 : 21,
   },
   progressLabelRow: {
     flexDirection: 'row',
@@ -76,20 +68,32 @@ export const createCategorizeStyles = (deps: StyleDeps) => StyleSheet.create({
   },
 
   // --- Two Panel Layout ---
-  panelContainer: {
+  panelOuterContainer: {
+    flex: 1,
+    paddingHorizontal: isNarrow ? 16 : 24,
+    paddingTop: isNarrow ? 4 : 8,
+    paddingBottom: isNarrow ? 12 : 24,
+    gap: isNarrow ? 12 : 16,
+  },
+  panelRow: {
     flex: 1,
     flexDirection: isNarrow ? 'column' : 'row',
-    maxWidth: 1600,
-    width: '100%',
-    alignSelf: 'center',
     gap: isNarrow ? 12 : 24,
-    padding: isNarrow ? 12 : 24,
+  },
+
+  // --- Stagger wrappers (carry flex so panels animate in place) ---
+  transactionsPanelWrapper: {
+    flex: isNarrow ? undefined : 2,
+    width: isNarrow ? '100%' : undefined,
+  },
+  categoriesPanelWrapper: {
+    flex: isNarrow ? undefined : 3,
+    width: isNarrow ? '100%' : undefined,
   },
 
   // --- Left Panel (Transactions) ---
   transactionsPanel: {
-    flex: isNarrow ? undefined : 2,
-    width: isNarrow ? '100%' : undefined,
+    flex: 1,
     backgroundColor: deps.colors.surface.card,
     borderRadius: radius.xl,
     borderWidth: 1,
@@ -210,8 +214,7 @@ export const createCategorizeStyles = (deps: StyleDeps) => StyleSheet.create({
 
   // --- Right Panel (Categories) ---
   categoriesPanel: {
-    flex: isNarrow ? undefined : 3,
-    width: isNarrow ? '100%' : undefined,
+    flex: 1,
     backgroundColor: deps.colors.surface.card,
     borderRadius: radius.xl,
     borderWidth: 1,

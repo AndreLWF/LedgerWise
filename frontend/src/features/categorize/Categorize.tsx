@@ -6,6 +6,7 @@ import { useThemeStyles } from '../../hooks/useThemeStyles';
 import { createCategorizeStyles } from './styles/categorize.styles';
 import { isHovered } from '../../utils/pressable';
 import { COMPACT_BREAKPOINT } from '../../utils/responsive';
+import StaggeredView from '../../components/StaggeredView';
 import useCategorizeData from './useCategorizeData';
 import TransactionRow from './components/TransactionRow';
 import CategoryTarget from './components/CategoryTarget';
@@ -94,142 +95,149 @@ export default function Categorize() {
 
   return (
     <View style={styles.container}>
-      {/* Page Header with Progress */}
-      <View style={styles.headerSection}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerTitleRow}>
-            <View>
-              <Text style={styles.pageTitle}>Categorize Transactions</Text>
-              <Text style={styles.pageSubtitle}>
-                Organize your uncategorized transactions to improve insights
-              </Text>
-            </View>
+      {/* Page Header */}
+      <StaggeredView index={0}>
+        <View style={styles.headerSection}>
+          <View style={styles.headerContent}>
+            <Text style={styles.pageTitle}>Categorize Transactions</Text>
+            <Text style={styles.pageSubtitle}>
+              Organize your uncategorized transactions to improve insights
+            </Text>
           </View>
+        </View>
+      </StaggeredView>
+
+      {/* Progress Bar + Two Panel Layout */}
+      <View style={styles.panelOuterContainer}>
+        <StaggeredView index={1}>
           <ProgressHeader
             categorizedCount={categorizedCount}
             totalCount={totalTransactions}
           />
-        </View>
-      </View>
+        </StaggeredView>
 
-      {/* Two Panel Layout */}
-      <View style={styles.panelContainer}>
-        {/* Left Panel — Uncategorized Transactions */}
-        <View style={styles.transactionsPanel}>
-          <View style={styles.panelHeader}>
-            <View style={styles.panelHeaderRow}>
-              <Text style={styles.panelTitle}>Uncategorized Transactions</Text>
-              <Text style={styles.countBadge}>{transactions.length}</Text>
-            </View>
-            <View style={styles.searchContainer}>
-              <Ionicons
-                name="search"
-                size={16}
-                color={colors.text.tertiary}
-                style={styles.searchIcon}
+        <View style={styles.panelRow}>
+          {/* Left Panel — Uncategorized Transactions */}
+          <StaggeredView index={2} style={styles.transactionsPanelWrapper}>
+            <View style={styles.transactionsPanel}>
+              <View style={styles.panelHeader}>
+                <View style={styles.panelHeaderRow}>
+                  <Text style={styles.panelTitle}>Uncategorized Transactions</Text>
+                  <Text style={styles.countBadge}>{transactions.length}</Text>
+                </View>
+                <View style={styles.searchContainer}>
+                  <Ionicons
+                    name="search"
+                    size={16}
+                    color={colors.text.tertiary}
+                    style={styles.searchIcon}
+                  />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search transactions..."
+                    placeholderTextColor={colors.text.tertiary}
+                    value={transactionSearch}
+                    onChangeText={setTransactionSearch}
+                    accessibilityLabel="Search transactions"
+                  />
+                </View>
+              </View>
+
+              <FlatList
+                data={transactions}
+                renderItem={renderTransaction}
+                keyExtractor={keyExtractorTx}
+                style={styles.transactionList}
+                contentContainerStyle={
+                  transactions.length === 0 ? { flex: 1 } : styles.transactionListContent
+                }
+                ListEmptyComponent={transactionEmptyState}
+                showsVerticalScrollIndicator={true}
               />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search transactions..."
-                placeholderTextColor={colors.text.tertiary}
-                value={transactionSearch}
-                onChangeText={setTransactionSearch}
-                accessibilityLabel="Search transactions"
-              />
             </View>
-          </View>
+          </StaggeredView>
 
-          <FlatList
-            data={transactions}
-            renderItem={renderTransaction}
-            keyExtractor={keyExtractorTx}
-            style={styles.transactionList}
-            contentContainerStyle={
-              transactions.length === 0 ? { flex: 1 } : styles.transactionListContent
-            }
-            ListEmptyComponent={transactionEmptyState}
-            showsVerticalScrollIndicator={true}
-          />
-        </View>
+          {/* Right Panel — Categories */}
+          <StaggeredView index={3} style={styles.categoriesPanelWrapper}>
+            <View style={styles.categoriesPanel}>
+              <View style={styles.panelHeader}>
+                <View style={styles.panelHeaderRow}>
+                  <Text style={styles.panelTitle}>Categories</Text>
+                  <Pressable
+                    style={(state) => [
+                      styles.addCategoryButton,
+                      isHovered(state) && styles.addCategoryButtonHovered,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add category"
+                  >
+                    <Ionicons
+                      name="add"
+                      size={18}
+                      color={colors.isDark ? colors.purple[400] : colors.purple[600]}
+                    />
+                  </Pressable>
+                </View>
+                <View style={styles.searchContainer}>
+                  <Ionicons
+                    name="search"
+                    size={16}
+                    color={colors.text.tertiary}
+                    style={styles.searchIcon}
+                  />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Filter categories..."
+                    placeholderTextColor={colors.text.tertiary}
+                    value={categorySearch}
+                    onChangeText={setCategorySearch}
+                    accessibilityLabel="Filter categories"
+                  />
+                </View>
+              </View>
 
-        {/* Right Panel — Categories */}
-        <View style={styles.categoriesPanel}>
-          <View style={styles.panelHeader}>
-            <View style={styles.panelHeaderRow}>
-              <Text style={styles.panelTitle}>Categories</Text>
+              <FlatList
+                data={categoryData}
+                renderItem={renderCategory}
+                keyExtractor={keyExtractorCat}
+                numColumns={2}
+                style={styles.categoryList}
+                contentContainerStyle={styles.categoryListContent}
+                columnWrapperStyle={styles.categoryColumnWrapper}
+                showsVerticalScrollIndicator={true}
+              />
+
+              {/* Create New Category */}
               <Pressable
                 style={(state) => [
-                  styles.addCategoryButton,
-                  isHovered(state) && styles.addCategoryButtonHovered,
+                  styles.createCategoryRow,
+                  isHovered(state) && styles.createCategoryRowHovered,
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel="Add category"
+                accessibilityLabel="Create new category"
               >
-                <Ionicons
-                  name="add"
-                  size={18}
-                  color={colors.isDark ? colors.purple[400] : colors.purple[600]}
-                />
+                {(state) => (
+                  <>
+                    <Ionicons
+                      name="add"
+                      size={16}
+                      color={
+                        isHovered(state)
+                          ? (colors.isDark ? colors.purple[400] : colors.purple[600])
+                          : colors.text.secondary
+                      }
+                    />
+                    <Text style={[
+                      styles.createCategoryText,
+                      isHovered(state) && styles.createCategoryTextHovered,
+                    ]}>
+                      Create New Category
+                    </Text>
+                  </>
+                )}
               </Pressable>
             </View>
-            <View style={styles.searchContainer}>
-              <Ionicons
-                name="search"
-                size={16}
-                color={colors.text.tertiary}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Filter categories..."
-                placeholderTextColor={colors.text.tertiary}
-                value={categorySearch}
-                onChangeText={setCategorySearch}
-                accessibilityLabel="Filter categories"
-              />
-            </View>
-          </View>
-
-          <FlatList
-            data={categoryData}
-            renderItem={renderCategory}
-            keyExtractor={keyExtractorCat}
-            numColumns={2}
-            style={styles.categoryList}
-            contentContainerStyle={styles.categoryListContent}
-            columnWrapperStyle={styles.categoryColumnWrapper}
-            showsVerticalScrollIndicator={true}
-          />
-
-          {/* Create New Category */}
-          <Pressable
-            style={(state) => [
-              styles.createCategoryRow,
-              isHovered(state) && styles.createCategoryRowHovered,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Create new category"
-          >
-            {(state) => (
-              <>
-                <Ionicons
-                  name="add"
-                  size={16}
-                  color={
-                    isHovered(state)
-                      ? (colors.isDark ? colors.purple[400] : colors.purple[600])
-                      : colors.text.secondary
-                  }
-                />
-                <Text style={[
-                  styles.createCategoryText,
-                  isHovered(state) && styles.createCategoryTextHovered,
-                ]}>
-                  Create New Category
-                </Text>
-              </>
-            )}
-          </Pressable>
+          </StaggeredView>
         </View>
       </View>
     </View>
