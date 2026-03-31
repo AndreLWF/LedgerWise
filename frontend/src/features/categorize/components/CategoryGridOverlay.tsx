@@ -21,6 +21,9 @@ interface Props {
   dragX: SharedValue<number>;
   dragY: SharedValue<number>;
   dragCardScale: SharedValue<number>;
+  gridOpacity: SharedValue<number>;
+  gridScale: SharedValue<number>;
+  gridTranslateY: SharedValue<number>;
   onRegisterTile: (index: number, pageX: number, pageY: number, width: number, height: number) => void;
   onRegisterCancel: (pageX: number, pageY: number, width: number, height: number) => void;
 }
@@ -33,6 +36,9 @@ export default function CategoryGridOverlay({
   dragX,
   dragY,
   dragCardScale,
+  gridOpacity,
+  gridScale,
+  gridTranslateY,
   onRegisterTile,
   onRegisterCancel,
 }: Props) {
@@ -60,6 +66,15 @@ export default function CategoryGridOverlay({
       onRegisterCancel(pageX, pageY, width, height);
     });
   }, [onRegisterCancel]);
+
+  // Overlay crossfade: opacity + slight scale + slide down for a revealing feel
+  const overlayAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: gridOpacity.value,
+    transform: [
+      { scale: gridScale.value },
+      { translateY: gridTranslateY.value },
+    ],
+  }));
 
   // Floating card positioned on UI thread via shared values.
   // Subtract overlay offset to convert screen coords → overlay-local coords.
@@ -92,48 +107,51 @@ export default function CategoryGridOverlay({
       accessibilityRole="menu"
       accessibilityLabel="Category selection. Drag to a category or drop on cancel to dismiss."
     >
-      {/* Category Grid */}
-      <View style={styles.gridContainer} pointerEvents="none">
-        {rows.map((row, rowIdx) => (
-          <View key={rowIdx} style={styles.gridRow}>
-            {row.map((cat, colIdx) => {
-              const tileIndex = rowIdx * GRID_COLUMNS + colIdx;
-              if (!cat) {
-                return <View key={`empty-${colIdx}`} style={styles.tileEmpty} />;
-              }
-              return (
-                <CategoryTile
-                  key={cat.id}
-                  category={cat}
-                  index={tileIndex}
-                  isActive={activeTileIndex === tileIndex}
-                  onLayout={onRegisterTile}
-                />
-              );
-            })}
-          </View>
-        ))}
-      </View>
+      {/* Animated overlay wrapper for crossfade */}
+      <Animated.View style={[styles.overlayContent, overlayAnimatedStyle]} pointerEvents="box-none">
+        {/* Category Grid */}
+        <View style={styles.gridContainer} pointerEvents="none">
+          {rows.map((row, rowIdx) => (
+            <View key={rowIdx} style={styles.gridRow}>
+              {row.map((cat, colIdx) => {
+                const tileIndex = rowIdx * GRID_COLUMNS + colIdx;
+                if (!cat) {
+                  return <View key={`empty-${colIdx}`} style={styles.tileEmpty} />;
+                }
+                return (
+                  <CategoryTile
+                    key={cat.id}
+                    category={cat}
+                    index={tileIndex}
+                    isActive={activeTileIndex === tileIndex}
+                    onLayout={onRegisterTile}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </View>
 
-      {/* Cancel Zone */}
-      <View
-        ref={cancelRef}
-        style={[styles.cancelZone, isOverCancel && styles.cancelZoneActive]}
-        onLayout={handleCancelLayout}
-        pointerEvents="none"
-        accessibilityRole="button"
-        accessibilityLabel="Cancel categorization"
-        accessibilityState={{ selected: isOverCancel }}
-      >
-        <Ionicons
-          name="close-circle-outline"
-          size={20}
-          color={isOverCancel ? '#B91C1C' : '#999999'}
-        />
-        <Text style={[styles.cancelText, isOverCancel && styles.cancelTextActive]}>
-          Drop here to cancel
-        </Text>
-      </View>
+        {/* Cancel Zone */}
+        <View
+          ref={cancelRef}
+          style={[styles.cancelZone, isOverCancel && styles.cancelZoneActive]}
+          onLayout={handleCancelLayout}
+          pointerEvents="none"
+          accessibilityRole="button"
+          accessibilityLabel="Cancel categorization"
+          accessibilityState={{ selected: isOverCancel }}
+        >
+          <Ionicons
+            name="close-circle-outline"
+            size={20}
+            color={isOverCancel ? '#B91C1C' : '#999999'}
+          />
+          <Text style={[styles.cancelText, isOverCancel && styles.cancelTextActive]}>
+            Drop here to cancel
+          </Text>
+        </View>
+      </Animated.View>
 
       {/* Floating Drag Card */}
       <Animated.View

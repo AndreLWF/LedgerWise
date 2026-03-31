@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, FlatList, Text, TextInput, View } from 'react-native';
+import RNAnimated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
 import { useThemeStyles } from '../../../hooks/useThemeStyles';
@@ -77,16 +78,21 @@ export default function MobileCategorizeList({
   }, [transactions, assignToCategory, showToast]);
 
   const {
-    isDragging,
     draggedTransaction,
     activeTileIndex,
     isOverCancel,
+    overlayVisible,
     dragX,
     dragY,
     isDragActive,
     dragCardScale,
     sourceRowOpacity,
     sourceRowScale,
+    listOpacity,
+    listScale,
+    gridOpacity,
+    gridScale,
+    gridTranslateY,
     startDrag,
     onDragMove,
     onDragEnd,
@@ -113,6 +119,11 @@ export default function MobileCategorizeList({
 
   const keyExtractor = useCallback((item: Transaction) => item.id, []);
 
+  const listAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: listOpacity.value,
+    transform: [{ scale: listScale.value }],
+  }));
+
   const emptyState = useMemo(() => (
     <View style={styles.emptyContainer}>
       <Ionicons name="checkmark-circle-outline" size={48} color={colors.text.tertiary} />
@@ -129,62 +140,65 @@ export default function MobileCategorizeList({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Categorize</Text>
-        <Text style={styles.subtitle}>
-          {categorizedCount} of {totalTransactions} categorized
-        </Text>
+      {/* Transaction list layer — fades out during drag */}
+      <RNAnimated.View style={[styles.listLayer, listAnimatedStyle]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Categorize</Text>
+          <Text style={styles.subtitle}>
+            {categorizedCount} of {totalTransactions} categorized
+          </Text>
 
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressLabelRow}>
-            <View style={styles.progressLabelLeft}>
-              <Ionicons
-                name="checkmark-circle"
-                size={14}
-                color={colors.isDark ? colors.purple[400] : colors.purple[600]}
-              />
-              <Text style={styles.progressLabelText}>Progress</Text>
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressLabelRow}>
+              <View style={styles.progressLabelLeft}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={14}
+                  color={colors.isDark ? colors.purple[400] : colors.purple[600]}
+                />
+                <Text style={styles.progressLabelText}>Progress</Text>
+              </View>
+              <Text style={styles.progressPercentage}>{percentage}%</Text>
             </View>
-            <Text style={styles.progressPercentage}>{percentage}%</Text>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${percentage}%` }]} />
+            </View>
           </View>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${percentage}%` }]} />
+
+          {/* Search */}
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={16}
+              color={colors.text.tertiary}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search transactions..."
+              placeholderTextColor={colors.text.tertiary}
+              value={transactionSearch}
+              onChangeText={setTransactionSearch}
+              accessibilityLabel="Search transactions"
+            />
           </View>
         </View>
 
-        {/* Search */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={16}
-            color={colors.text.tertiary}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search transactions..."
-            placeholderTextColor={colors.text.tertiary}
-            value={transactionSearch}
-            onChangeText={setTransactionSearch}
-            accessibilityLabel="Search transactions"
-          />
-        </View>
-      </View>
+        {/* Transaction List */}
+        <FlatList
+          data={transactions}
+          renderItem={renderTransaction}
+          keyExtractor={keyExtractor}
+          ListEmptyComponent={emptyState}
+          showsVerticalScrollIndicator={true}
+          contentContainerStyle={transactions.length === 0 ? styles.listEmptyContent : undefined}
+        />
+      </RNAnimated.View>
 
-      {/* Transaction List */}
-      <FlatList
-        data={transactions}
-        renderItem={renderTransaction}
-        keyExtractor={keyExtractor}
-        ListEmptyComponent={emptyState}
-        showsVerticalScrollIndicator={true}
-        contentContainerStyle={transactions.length === 0 ? styles.listEmptyContent : undefined}
-      />
-
-      {/* Category Grid Overlay — shown during drag */}
-      {isDragging && draggedTransaction && (
+      {/* Category Grid Overlay — always mounted, crossfades via shared values */}
+      {overlayVisible && draggedTransaction && (
         <CategoryGridOverlay
           transaction={draggedTransaction}
           categories={categories}
@@ -193,6 +207,9 @@ export default function MobileCategorizeList({
           dragX={dragX}
           dragY={dragY}
           dragCardScale={dragCardScale}
+          gridOpacity={gridOpacity}
+          gridScale={gridScale}
+          gridTranslateY={gridTranslateY}
           onRegisterTile={registerTileBounds}
           onRegisterCancel={registerCancelBounds}
         />

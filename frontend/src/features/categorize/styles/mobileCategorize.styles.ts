@@ -9,6 +9,11 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     backgroundColor: deps.colors.surface.bg,
   },
 
+  // --- List Layer (animated during crossfade) ---
+  listLayer: {
+    flex: 1,
+  },
+
   // --- Header ---
   header: {
     paddingHorizontal: 16,
@@ -170,6 +175,9 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     ...StyleSheet.absoluteFillObject,
     backgroundColor: deps.colors.surface.bg,
     zIndex: 100,
+  },
+  overlayContent: {
+    flex: 1,
   },
   // --- Category Grid ---
   gridContainer: {
