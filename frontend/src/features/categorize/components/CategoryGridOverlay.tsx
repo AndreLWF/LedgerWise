@@ -1,7 +1,13 @@
 import { useCallback, useRef } from 'react';
 import { LayoutChangeEvent, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors } from '../../../contexts/ThemeContext';
 import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { formatCurrency } from '../../../utils/formatters';
 import { createMobileCategorizeStyles } from '../styles/mobileCategorize.styles';
@@ -17,7 +23,7 @@ interface Props {
   transaction: Transaction;
   categories: CategoryInfo[];
   activeTileIndex: number | null;
-  isOverCancel: boolean;
+  cancelHoverSV: SharedValue<number>;
   dragX: SharedValue<number>;
   dragY: SharedValue<number>;
   dragCardScale: SharedValue<number>;
@@ -32,7 +38,7 @@ export default function CategoryGridOverlay({
   transaction,
   categories,
   activeTileIndex,
-  isOverCancel,
+  cancelHoverSV,
   dragX,
   dragY,
   dragCardScale,
@@ -42,12 +48,11 @@ export default function CategoryGridOverlay({
   onRegisterTile,
   onRegisterCancel,
 }: Props) {
+  const colors = useColors();
   const styles = useThemeStyles(createMobileCategorizeStyles);
   const overlayRef = useRef<View>(null);
   const cancelRef = useRef<View>(null);
 
-  // Overlay's window-space offset — gesture absoluteX/Y are screen-relative,
-  // but translateX/Y are relative to the overlay container.
   const overlayOffsetX = useSharedValue(0);
   const overlayOffsetY = useSharedValue(0);
 
@@ -67,7 +72,6 @@ export default function CategoryGridOverlay({
     });
   }, [onRegisterCancel]);
 
-  // Overlay crossfade: opacity + slight scale + slide down for a revealing feel
   const overlayAnimatedStyle = useAnimatedStyle(() => ({
     opacity: gridOpacity.value,
     transform: [
@@ -76,9 +80,6 @@ export default function CategoryGridOverlay({
     ],
   }));
 
-  // Floating card positioned on UI thread via shared values.
-  // Subtract overlay offset to convert screen coords → overlay-local coords.
-  // Then offset 65px above touch point so card floats above the thumb.
   const floatingCardStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: dragX.value - overlayOffsetX.value - CARD_HALF_WIDTH },
@@ -86,6 +87,38 @@ export default function CategoryGridOverlay({
       { rotate: '-2.5deg' },
       { scale: dragCardScale.value },
     ],
+  }));
+
+  // Cancel zone animated styles driven by cancelHoverSV (0 → 1)
+  const baseBg = colors.surface.card;
+  const baseBorder = colors.border.default;
+  const cancelZoneAnimStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      cancelHoverSV.value,
+      [0, 1],
+      [baseBg, '#FEE2E2'],
+    ),
+    borderTopColor: interpolateColor(
+      cancelHoverSV.value,
+      [0, 1],
+      [baseBorder, '#FECACA'],
+    ),
+  }));
+
+  const cancelTextAnimStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      cancelHoverSV.value,
+      [0, 1],
+      ['#999999', '#B91C1C'],
+    ),
+  }));
+
+  const cancelIconAnimStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      cancelHoverSV.value,
+      [0, 1],
+      ['#999999', '#B91C1C'],
+    ),
   }));
 
   // Build grid rows (4 columns per row, max 6 rows = 24 tiles)
@@ -107,7 +140,6 @@ export default function CategoryGridOverlay({
       accessibilityRole="menu"
       accessibilityLabel="Category selection. Drag to a category or drop on cancel to dismiss."
     >
-      {/* Animated overlay wrapper for crossfade */}
       <Animated.View style={[styles.overlayContent, overlayAnimatedStyle]} pointerEvents="box-none">
         {/* Category Grid */}
         <View style={styles.gridContainer} pointerEvents="none">
@@ -133,24 +165,21 @@ export default function CategoryGridOverlay({
         </View>
 
         {/* Cancel Zone */}
-        <View
+        <Animated.View
           ref={cancelRef}
-          style={[styles.cancelZone, isOverCancel && styles.cancelZoneActive]}
+          style={[styles.cancelZone, cancelZoneAnimStyle]}
           onLayout={handleCancelLayout}
           pointerEvents="none"
           accessibilityRole="button"
           accessibilityLabel="Cancel categorization"
-          accessibilityState={{ selected: isOverCancel }}
         >
-          <Ionicons
-            name="close-circle-outline"
-            size={20}
-            color={isOverCancel ? '#B91C1C' : '#999999'}
-          />
-          <Text style={[styles.cancelText, isOverCancel && styles.cancelTextActive]}>
+          <Animated.Text style={cancelIconAnimStyle}>
+            <Ionicons name="close-circle-outline" size={20} />
+          </Animated.Text>
+          <Animated.Text style={[styles.cancelText, cancelTextAnimStyle]}>
             Drop here to cancel
-          </Text>
-        </View>
+          </Animated.Text>
+        </Animated.View>
       </Animated.View>
 
       {/* Floating Drag Card */}

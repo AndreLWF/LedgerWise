@@ -1,7 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 import { Easing, runOnJS, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import type { Transaction } from '../../types/transaction';
 import type { CategoryInfo } from '../../types/categorize';
+
+// Hover spring config
+export const HOVER_SPRING = { damping: 12, stiffness: 200 };
 
 // --- Animation constants ---
 const CROSSFADE_EASING = Easing.out(Easing.cubic);
@@ -28,21 +32,22 @@ export default function useCategorizeDrag(
   categories: CategoryInfo[],
   onAssign: (transactionId: string, categoryName: string) => void,
 ) {
-  // React state for discrete events (start/end of drag, tile hover changes)
+  // React state for discrete events (hover changes only fire on actual transitions)
   const [isDragging, setIsDragging] = useState(false);
   const [draggedTransaction, setDraggedTransaction] = useState<Transaction | null>(null);
   const [activeTileIndex, setActiveTileIndex] = useState<number | null>(null);
-  const [isOverCancel, setIsOverCancel] = useState(false);
-  // Overlay stays mounted while animating out — cleared after exit animation
   const [overlayVisible, setOverlayVisible] = useState(false);
 
-  // Shared values for UI-thread position tracking (no React state during drag)
+  // Shared values for UI-thread position tracking
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
   const isDragActive = useSharedValue(false);
   const dragCardScale = useSharedValue(0.8);
   const sourceRowOpacity = useSharedValue(1);
   const sourceRowScale = useSharedValue(1);
+
+  // Cancel zone hover animation (0 → 1)
+  const cancelHoverSV = useSharedValue(0);
 
   // Crossfade shared values (list ↔ grid transition)
   const listOpacity = useSharedValue(1);
@@ -51,11 +56,12 @@ export default function useCategorizeDrag(
   const gridScale = useSharedValue(GRID_INITIAL_SCALE);
   const gridTranslateY = useSharedValue(GRID_SLIDE_OFFSET);
 
-  // Refs for synchronous hit testing
+  // Refs for synchronous hit testing — avoids setState on every frame
   const tileBoundsRef = useRef<Bounds[]>([]);
   const cancelBoundsRef = useRef<Bounds | null>(null);
   const draggedTxRef = useRef<Transaction | null>(null);
   const activeTileRef = useRef<number | null>(null);
+  const cancelRef = useRef(false);
 
   const registerTileBounds = useCallback((index: number, pageX: number, pageY: number, width: number, height: number) => {
     tileBoundsRef.current[index] = { x: pageX, y: pageY, width, height };
@@ -65,38 +71,64 @@ export default function useCategorizeDrag(
     cancelBoundsRef.current = { x: pageX, y: pageY, width, height };
   }, []);
 
+  const triggerLightHaptic = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, []);
+
+  // Hit test uses refs for comparison, only calls setState on actual changes
+  // Runs on every pan frame — uses refs for fast comparison,
+  // only triggers setState/haptic when hover target actually changes.
   const hitTest = useCallback((absX: number, absY: number) => {
-    const cancel = cancelBoundsRef.current;
-    if (cancel && pointInBounds(absX, absY, cancel)) {
-      activeTileRef.current = null;
-      setActiveTileIndex(null);
-      setIsOverCancel(true);
+    const prevTile = activeTileRef.current;
+    const prevCancel = cancelRef.current;
+
+    const cancelBounds = cancelBoundsRef.current;
+    if (cancelBounds && pointInBounds(absX, absY, cancelBounds)) {
+      if (!prevCancel) {
+        cancelRef.current = true;
+        cancelHoverSV.value = withSpring(1, HOVER_SPRING);
+        triggerLightHaptic();
+      }
+      if (prevTile !== null) {
+        activeTileRef.current = null;
+        setActiveTileIndex(null);
+      }
       return;
     }
 
-    setIsOverCancel(false);
+    if (prevCancel) {
+      cancelRef.current = false;
+      cancelHoverSV.value = withSpring(0, HOVER_SPRING);
+    }
 
     for (let i = 0; i < tileBoundsRef.current.length; i++) {
       const bounds = tileBoundsRef.current[i];
       if (bounds && pointInBounds(absX, absY, bounds)) {
-        activeTileRef.current = i;
-        setActiveTileIndex(i);
+        if (prevTile !== i) {
+          activeTileRef.current = i;
+          setActiveTileIndex(i);
+          triggerLightHaptic();
+        }
         return;
       }
     }
-    activeTileRef.current = null;
-    setActiveTileIndex(null);
-  }, []);
+
+    if (prevTile !== null) {
+      activeTileRef.current = null;
+      setActiveTileIndex(null);
+    }
+  }, [cancelHoverSV, triggerLightHaptic]);
 
   const clearAfterExit = useCallback(() => {
     draggedTxRef.current = null;
     activeTileRef.current = null;
+    cancelRef.current = false;
+    cancelHoverSV.value = 0;
     setIsDragging(false);
     setDraggedTransaction(null);
     setActiveTileIndex(null);
-    setIsOverCancel(false);
     setOverlayVisible(false);
-  }, []);
+  }, [cancelHoverSV]);
 
   const resetDragState = useCallback(() => {
     isDragActive.value = false;
@@ -105,7 +137,6 @@ export default function useCategorizeDrag(
 
     const exitConfig = { duration: CROSSFADE_EXIT_MS, easing: CROSSFADE_EASING };
 
-    // Exit crossfade: grid out, list back in (overlapping)
     gridOpacity.value = withTiming(0, exitConfig);
     gridScale.value = withTiming(GRID_INITIAL_SCALE, exitConfig);
     gridTranslateY.value = withTiming(GRID_SLIDE_OFFSET, exitConfig);
@@ -121,15 +152,12 @@ export default function useCategorizeDrag(
     dragY.value = pageY;
     isDragActive.value = true;
 
-    // Drag card entrance: spring from 0.8 → 1.05
     dragCardScale.value = 0.8;
     dragCardScale.value = withSpring(1.05, { damping: 15, stiffness: 150 });
 
-    // Source row: fade and shrink
     sourceRowOpacity.value = withTiming(0.3, { duration: SOURCE_ROW_MS });
     sourceRowScale.value = withTiming(0.97, { duration: SOURCE_ROW_MS });
 
-    // Crossfade entrance: list out, grid in
     const listOutConfig = { duration: CROSSFADE_LIST_MS, easing: CROSSFADE_EASING };
     listOpacity.value = withTiming(0, listOutConfig);
     listScale.value = withTiming(LIST_SHRUNK_SCALE, listOutConfig);
@@ -145,9 +173,11 @@ export default function useCategorizeDrag(
     setDraggedTransaction(transaction);
     setIsDragging(true);
     setOverlayVisible(true);
+    activeTileRef.current = null;
+    cancelRef.current = false;
     setActiveTileIndex(null);
-    setIsOverCancel(false);
-  }, [dragX, dragY, isDragActive, dragCardScale, sourceRowOpacity, sourceRowScale, listOpacity, listScale, gridOpacity, gridScale, gridTranslateY]);
+    cancelHoverSV.value = 0;
+  }, [dragX, dragY, isDragActive, dragCardScale, sourceRowOpacity, sourceRowScale, listOpacity, listScale, gridOpacity, gridScale, gridTranslateY, cancelHoverSV]);
 
   const onDragMove = useCallback((pageX: number, pageY: number) => {
     hitTest(pageX, pageY);
@@ -168,7 +198,6 @@ export default function useCategorizeDrag(
     isDragging,
     draggedTransaction,
     activeTileIndex,
-    isOverCancel,
     overlayVisible,
     dragX,
     dragY,
@@ -176,6 +205,7 @@ export default function useCategorizeDrag(
     dragCardScale,
     sourceRowOpacity,
     sourceRowScale,
+    cancelHoverSV,
     listOpacity,
     listScale,
     gridOpacity,

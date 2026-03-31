@@ -80,7 +80,6 @@ export default function MobileCategorizeList({
   const {
     draggedTransaction,
     activeTileIndex,
-    isOverCancel,
     overlayVisible,
     dragX,
     dragY,
@@ -88,6 +87,7 @@ export default function MobileCategorizeList({
     dragCardScale,
     sourceRowOpacity,
     sourceRowScale,
+    cancelHoverSV,
     listOpacity,
     listScale,
     gridOpacity,
@@ -193,6 +193,7 @@ export default function MobileCategorizeList({
           keyExtractor={keyExtractor}
           ListEmptyComponent={emptyState}
           showsVerticalScrollIndicator={true}
+          style={styles.transactionList}
           contentContainerStyle={transactions.length === 0 ? styles.listEmptyContent : undefined}
         />
       </RNAnimated.View>
@@ -203,7 +204,7 @@ export default function MobileCategorizeList({
           transaction={draggedTransaction}
           categories={categories}
           activeTileIndex={activeTileIndex}
-          isOverCancel={isOverCancel}
+          cancelHoverSV={cancelHoverSV}
           dragX={dragX}
           dragY={dragY}
           dragCardScale={dragCardScale}

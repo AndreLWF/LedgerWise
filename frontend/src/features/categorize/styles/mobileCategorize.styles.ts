@@ -143,6 +143,9 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
   },
 
   // --- List ---
+  transactionList: {
+    flex: 1,
+  },
   listEmptyContent: {
     flex: 1,
   },
@@ -206,14 +209,14 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     borderRadius: radius.md,
     borderWidth: 2,
     borderColor: 'transparent',
+    borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 8,
     gap: 4,
   },
   tileActive: {
-    borderColor: deps.colors.purple[600],
-    borderStyle: 'dashed',
+    borderColor: '#9333EA',
     backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '30' : deps.colors.purple[50],
   },
   tileDot: {
@@ -256,18 +259,11 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     borderTopWidth: 1,
     borderTopColor: deps.colors.border.default,
   },
-  cancelZoneActive: {
-    backgroundColor: '#FEE2E2',
-    borderTopColor: '#FECACA',
-  },
   cancelText: {
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 14,
     fontWeight: '600',
     color: '#999999',
-  },
-  cancelTextActive: {
-    color: '#B91C1C',
   },
 
   // --- Floating Drag Card ---
