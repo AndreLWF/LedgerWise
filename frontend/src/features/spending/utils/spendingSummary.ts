@@ -3,38 +3,18 @@
  * Mirrors backend logic in backend/app/services/spending.py.
  */
 
+import { isPayment, isSpending, isRefund } from '../../../utils/transactionFilters';
 import type { Transaction } from '../../../types/transaction';
 import type { SpendingSummaryData, CategoryData } from '../../../types/spending';
+
+// Re-export for backwards compatibility with existing barrel imports
+export { isPayment, isSpending, isRefund };
 
 function titleCase(s: string): string {
   return s
     .split(' ')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
-}
-
-export function isPayment(description: string): boolean {
-  const lower = (description ?? '').toLowerCase();
-  return lower.includes('pymt') || lower.includes('payment');
-}
-
-export function isSpending(tx: Transaction): boolean {
-  const amount = parseFloat(tx.amount);
-  if (amount <= 0) return false;
-
-  const category = (tx.category ?? '').toLowerCase();
-  if (category === 'payment' || category === 'refund') return false;
-  if (isPayment(tx.description)) return false;
-
-  return true;
-}
-
-export function isRefund(tx: Transaction): boolean {
-  const category = (tx.category ?? '').toLowerCase();
-  if (category === 'refund') return true;
-
-  const amount = parseFloat(tx.amount);
-  return amount < 0 && !isPayment(tx.description);
 }
 
 function normalizeCategory(category: string | null | undefined): string {

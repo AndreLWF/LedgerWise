@@ -6,6 +6,7 @@ Full-stack fintech app connecting to real bank accounts for transaction viewing,
 
 **Current state:**
 - Teller bank linking, transaction list, spending summary, analytics — working on web + iOS (Expo Go)
+- Transaction categorization with drag & drop (HTML5 on web, gesture-based on mobile)
 - Google OAuth via Supabase Auth (web redirect flow + native `expo-auth-session` + `signInWithIdToken`)
 - Database: SQLAlchemy + Alembic + Supabase PostgreSQL, auth middleware with user-scoped queries
 - Expo Router file-based routing — sidebar nav (web), bottom tabs (mobile)
@@ -17,7 +18,7 @@ Full-stack fintech app connecting to real bank accounts for transaction viewing,
 ## Development Phases
 
 ### Phase 1 — Web App (CURRENT)
-**Done:** Teller Connect + transaction list (1.0) → spending summary + feature modules (1.5) → Google OAuth + JWT auth + user-scoped queries (1.75) → Expo Router + dashboard layout + time period selector (1.9) → TransactionDataContext + overview page + Railway deploy + security headers (1.95) → analytics page + dark mode + theme system + ErrorBoundary + accessibility + frontend cleanup (1.96).
+**Done:** Teller Connect + transaction list (1.0) → spending summary + feature modules (1.5) → Google OAuth + JWT auth + user-scoped queries (1.75) → Expo Router + dashboard layout + time period selector (1.9) → TransactionDataContext + overview page + Railway deploy + security headers (1.95) → analytics page + dark mode + theme system + ErrorBoundary + accessibility + frontend cleanup (1.96) → categorize page with drag & drop (web HTML5 + mobile gesture-based), optimistic updates, PATCH endpoint (1.97).
 **Next (Iteration 2):** Re-enable live Teller data, persist enrolled tokens, native session persistence (AsyncStorage).
 
 ### Phase 2 — Mobile (FUTURE)
@@ -122,7 +123,7 @@ Backend is platform-agnostic (JSON over HTTPS) — no changes needed for mobile.
 │   │   ├── models/               User, Account, Transaction (SQLAlchemy)
 │   │   ├── schemas/              spending.py, transaction.py (Pydantic)
 │   │   ├── routers/
-│   │   │   ├── teller.py         GET /accounts, GET /transactions, POST /enroll
+│   │   │   ├── teller.py         GET /accounts, GET /transactions, POST /enroll, PATCH /transactions/{id}/category
 │   │   │   └── spending.py       GET /spending/summary
 │   │   ├── services/
 │   │   │   ├── teller.py         Teller API integration + DB persistence
@@ -144,6 +145,7 @@ Backend is platform-agnostic (JSON over HTTPS) — no changes needed for mobile.
 │   │       ├── overview.tsx      Overview page (stats, alerts)
 │   │       ├── spending.tsx      Spending page (Teller connect, time period, summary)
 │   │       ├── analytics.tsx     Analytics page (bar chart, category filters, stats)
+│   │       ├── categorize.tsx    Categorize page (drag & drop transaction categorization)
 │   │       └── settings.tsx      Settings page (placeholder)
 │   └── src/
 │       ├── api/
@@ -176,6 +178,29 @@ Backend is platform-agnostic (JSON over HTTPS) — no changes needed for mobile.
 │       │   │   │   └── analytics.styles.ts
 │       │   │   └── utils/
 │       │   │       └── analyticsAggregation.ts
+│       │   ├── categorize/       Categorize feature module
+│       │   │   ├── Categorize.tsx        Screen-level component (desktop 2-panel + mobile)
+│       │   │   ├── useCategorizeData.ts  Data hook (uncategorized txns, categories, assignment)
+│       │   │   ├── useCategorizeDrag.ts  Mobile drag gesture + crossfade animations
+│       │   │   ├── useDragSource.ts      HTML5 drag source hook (web)
+│       │   │   ├── useDropTarget.ts      HTML5 drop target hook (web)
+│       │   │   ├── index.ts              Barrel export
+│       │   │   ├── components/
+│       │   │   │   ├── TransactionRow.tsx       Draggable transaction (web)
+│       │   │   │   ├── CategoryTarget.tsx       Drop target category card (web)
+│       │   │   │   ├── ProgressHeader.tsx       Linear progress bar
+│       │   │   │   ├── ProgressRing.tsx         SVG circular progress indicator
+│       │   │   │   ├── MobileCategorizeList.tsx Mobile main view + toast
+│       │   │   │   ├── MobileDraggableRow.tsx   Long-press + pan gesture row (mobile)
+│       │   │   │   └── CategoryGridOverlay.tsx  Category grid + cancel zone (mobile)
+│       │   │   │   └── CategoryTile.tsx         Animated tile in mobile grid
+│       │   │   ├── styles/
+│       │   │   │   ├── categorize.styles.ts     Desktop styles
+│       │   │   │   └── mobileCategorize.styles.ts Mobile styles
+│       │   │   └── utils/
+│       │   │       ├── normalizeCategory.ts     Category name formatting
+│       │   │       ├── dragState.ts             Module-level drag state (web)
+│       │   │       └── dragGhost.ts             HTML5 drag ghost image builder
 │       │   └── spending/         Spending feature module
 │       │       ├── SpendingSummary.tsx    Screen-level component
 │       │       ├── useAccordionHeight.ts
@@ -188,7 +213,7 @@ Backend is platform-agnostic (JSON over HTTPS) — no changes needed for mobile.
 │       │       │   └── spendingScreen.styles.ts
 │       │       └── utils/
 │       │           ├── categoryRanking.ts
-│       │           └── spendingSummary.ts  Includes shared isPayment()
+│       │           └── spendingSummary.ts  computeSpendingSummary + re-exports from transactionFilters
 │       ├── hooks/
 │       │   ├── useTellerConnect.ts  Teller Connect widget integration
 │       │   └── useThemeStyles.ts   Theme-aware StyleSheet factory hook
@@ -212,12 +237,15 @@ Backend is platform-agnostic (JSON over HTTPS) — no changes needed for mobile.
 │       ├── types/                Shared TypeScript interfaces (one file per domain)
 │       │   ├── account.ts
 │       │   ├── analytics.ts
+│       │   ├── categorize.ts
 │       │   ├── spending.ts
 │       │   └── transaction.ts
 │       └── utils/                Shared utilities
 │           ├── categoryColors.ts
+│           ├── formatters.ts     Currency + date formatting helpers
 │           ├── pressable.ts      Platform-safe hover state helper
-│           └── responsive.ts     Screen width breakpoint utilities
+│           ├── responsive.ts     Screen width breakpoint utilities
+│           └── transactionFilters.ts  isSpending, isRefund, isPayment (shared across features)
 ```
 
 ## Key Architecture Decisions
@@ -233,6 +261,8 @@ Backend is platform-agnostic (JSON over HTTPS) — no changes needed for mobile.
 9. **TransactionDataContext** — Provider fetches all transactions once on mount. `useDataSlice(dateRange?)` filters by date range and computes spending summaries client-side via `computeSpendingSummary()`. This enables instant period switching without additional API calls. The context is mounted in the dashboard layout so data persists across tab navigation.
 10. **In-memory API cache** — `client.ts` caches GET responses for 5 minutes (keyed by URL). `clearApiCache()` invalidates on refresh or enrollment. Eliminates redundant fetches during tab switching.
 11. **Theme system** — `ThemeContext` provides `isDark`, `toggleTheme`, and `colors`. Style files export factory functions (`createXStyles(colors)`) consumed by `useThemeStyles()` hook, which re-creates styles when theme changes. Design tokens (colors, spacing, typography, shadows) live in `src/theme/`.
+12. **Dual drag & drop for categorize** — Web uses native HTML5 drag/drop via `useDragSource`/`useDropTarget` hooks (bypasses RNW's synthetic events; module-level `dragState.ts` avoids unreliable `dataTransfer`). Mobile uses `react-native-gesture-handler` (LongPress + Pan) with `react-native-reanimated` shared values for UI-thread position tracking. Hit testing uses refs (not state) on every pan frame to avoid excessive re-renders. Crossfade animation transitions between transaction list and category grid during drag.
+13. **Optimistic categorization** — `useCategorizeData` maintains a local `reassigned` Map for instant UI feedback. On success, `updateTransactionLocally()` updates the global `TransactionDataContext`. On failure, the optimistic entry is reverted from the Map.
 
 ## Environment Variables
 

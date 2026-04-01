@@ -97,32 +97,26 @@ export default function CategoryGridOverlay({
   // Cancel zone animated styles driven by cancelHoverSV (0 → 1)
   const baseBg = colors.surface.card;
   const baseBorder = colors.border.default;
+  const errorColor = colors.semantic.error;
+  const tertiaryText = colors.text.tertiary;
   const cancelZoneAnimStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       cancelHoverSV.value,
       [0, 1],
-      [baseBg, '#FEE2E2'],
+      [baseBg, colors.isDark ? '#3B1515' : '#FEE2E2'],
     ),
     borderTopColor: interpolateColor(
       cancelHoverSV.value,
       [0, 1],
-      [baseBorder, '#FECACA'],
+      [baseBorder, colors.isDark ? '#5C1D1D' : '#FECACA'],
     ),
   }));
 
-  const cancelTextAnimStyle = useAnimatedStyle(() => ({
+  const cancelContentAnimStyle = useAnimatedStyle(() => ({
     color: interpolateColor(
       cancelHoverSV.value,
       [0, 1],
-      ['#999999', '#B91C1C'],
-    ),
-  }));
-
-  const cancelIconAnimStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(
-      cancelHoverSV.value,
-      [0, 1],
-      ['#999999', '#B91C1C'],
+      [tertiaryText, errorColor],
     ),
   }));
 
@@ -179,10 +173,10 @@ export default function CategoryGridOverlay({
           accessibilityRole="button"
           accessibilityLabel="Cancel categorization"
         >
-          <Animated.Text style={cancelIconAnimStyle}>
+          <Animated.Text style={cancelContentAnimStyle}>
             <Ionicons name="close-circle-outline" size={20} />
           </Animated.Text>
-          <Animated.Text style={[styles.cancelText, cancelTextAnimStyle]}>
+          <Animated.Text style={[styles.cancelText, cancelContentAnimStyle]}>
             Drop here to cancel
           </Animated.Text>
         </Animated.View>

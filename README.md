@@ -12,10 +12,11 @@ A personal finance app that connects to real bank accounts for transaction viewi
 - **Transaction feed** — View all transactions across linked accounts in a single feed
 - **Spending summary** — Category breakdown with proportional bars, summary chips, and expandable category detail
 - **Analytics** — Monthly spending trend bar chart, category filter pills, and summary stats
+- **Transaction categorization** — Drag & drop interface to assign uncategorized transactions to categories. Desktop uses HTML5 native drag; mobile uses long-press + pan gestures with animated crossfade grid. Optimistic updates with toast confirmation
 - **Overview dashboard** — At-a-glance stats with top category highlight and uncategorized transaction alerts
 - **Time period filtering** — Filter transactions and spending by month, year, year-to-date, or all time
 - **Dark mode** — Theme toggle with dark/light palettes, persisted across the app
-- **Dashboard navigation** — Sidebar nav on web, bottom tabs on mobile (Overview, Spending, Analytics, Settings)
+- **Dashboard navigation** — Sidebar nav on web, bottom tabs on mobile (Overview, Spending, Analytics, Categorize, Settings)
 - **Google sign-in** — OAuth authentication via Supabase Auth (works on web and iOS)
 - **Cross-platform** — Web and iOS from the same codebase via Expo Router
 - **Accessibility** — All interactive elements have screen reader labels, roles, and state
@@ -37,19 +38,20 @@ A personal finance app that connects to real bank accounts for transaction viewi
     ├── app/              Expo Router screens (file-based routing)
     │   ├── _layout.tsx   Root layout (ErrorBoundary + providers)
     │   ├── login.tsx     Login page
-    │   └── dashboard/    Dashboard pages (overview, spending, analytics, settings)
+    │   └── dashboard/    Dashboard pages (overview, spending, analytics, categorize, settings)
     └── src/
         ├── api/          API client + Supabase client
         ├── components/   Shared UI (ErrorBoundary, ThemeToggle, TimePeriodSelector, etc.)
         ├── contexts/     AuthContext, ThemeContext, TransactionDataContext
         ├── features/
-        │   ├── analytics/   Analytics feature (BarChart, CategoryFilterPills, SummaryStatsRow)
-        │   └── spending/    Spending feature (SpendingSummary, CategoryAccordion, ProportionBar)
+        │   ├── analytics/    Analytics feature (BarChart, CategoryFilterPills, SummaryStatsRow)
+        │   ├── categorize/   Categorize feature (drag & drop, desktop + mobile, category grid)
+        │   └── spending/     Spending feature (SpendingSummary, CategoryAccordion, ProportionBar)
         ├── hooks/        useTellerConnect, useThemeStyles
         ├── styles/       Shared/layout StyleSheet files
         ├── theme/        Design tokens (colors, dark colors, spacing, typography, shadows)
         ├── types/        Shared TypeScript interfaces
-        └── utils/        Category colors, responsive helpers, pressable utils
+        └── utils/        Category colors, formatters, responsive helpers, transaction filters, pressable utils
 ```
 
 ---

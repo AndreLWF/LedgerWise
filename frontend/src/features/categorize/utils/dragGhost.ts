@@ -2,7 +2,7 @@
  *  Uses raw DOM with inline styles because React Native Web's CSS classes
  *  lose context when elements are appended to document.body. */
 
-interface GhostColors {
+export interface DragGhostColors {
   bg: string;
   text: string;
   subText: string;
@@ -14,7 +14,7 @@ export function buildDragGhost(
   amount: string,
   date: string,
   width: number,
-  colors: GhostColors,
+  colors: DragGhostColors,
 ): HTMLDivElement {
   const ghost = document.createElement('div');
   Object.assign(ghost.style, {

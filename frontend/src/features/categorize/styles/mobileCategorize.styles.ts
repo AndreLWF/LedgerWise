@@ -107,7 +107,7 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     gap: 10,
   },
   dragHandle: {
-    width: 24,
+    width: Platform.OS === 'web' ? 44 : 24,
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0.4,
@@ -216,7 +216,7 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     gap: 4,
   },
   tileActive: {
-    borderColor: '#9333EA',
+    borderColor: deps.colors.purple[600],
     backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '30' : deps.colors.purple[50],
   },
   tileDot: {
@@ -263,7 +263,7 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 14,
     fontWeight: '600',
-    color: '#999999',
+    color: deps.colors.text.tertiary,
   },
 
   // --- Floating Drag Card ---
@@ -318,7 +318,7 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     fontFamily: typography.fontFamily.semiBold,
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: deps.colors.text.inverse,
   },
   toastDetail: {
     fontFamily: typography.fontFamily.regular,

@@ -242,7 +242,7 @@ export default function MobileCategorizeList({
       {toast && (
         <Animated.View style={[styles.toastContainer, toastAnimatedStyle]} pointerEvents="none">
           <View style={styles.toast}>
-            <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+            <Ionicons name="checkmark-circle" size={20} color={colors.text.inverse} />
             <View>
               <Text style={styles.toastText}>Assigned to {toast.categoryName}</Text>
               <Text style={styles.toastDetail}>

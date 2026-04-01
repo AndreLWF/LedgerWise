@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTransactionData } from '../../contexts/TransactionDataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { updateTransactionCategory } from '../../api/client';
-import { isSpending } from '../spending/utils/spendingSummary';
+import { isSpending } from '../../utils/transactionFilters';
 import { getCategoryColor } from '../../utils/categoryColors';
 import { normalizeCategory } from './utils/normalizeCategory';
 import type { Transaction } from '../../types/transaction';

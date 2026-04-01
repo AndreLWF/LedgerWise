@@ -3,20 +3,14 @@ import { Platform } from 'react-native';
 import type { View } from 'react-native';
 import { setDraggedTransaction } from './utils/dragState';
 import { buildDragGhost, removeDragGhost } from './utils/dragGhost';
-
-interface DragSourceColors {
-  bg: string;
-  text: string;
-  subText: string;
-  border: string;
-}
+import type { DragGhostColors } from './utils/dragGhost';
 
 interface DragSourceOptions {
   transactionId: string;
   description: string;
   amount: string;
   date: string;
-  colors: DragSourceColors;
+  colors: DragGhostColors;
 }
 
 /** Attaches native HTML5 drag listeners to a View ref, bypassing RNW's

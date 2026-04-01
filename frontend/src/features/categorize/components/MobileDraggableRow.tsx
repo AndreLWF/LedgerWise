@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, runOnJS, type SharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -90,6 +90,40 @@ export default function MobileDraggableRow({
   const formattedDate = formatLocalDate(transaction.date, { includeYear: true });
   const formattedAmount = formatCurrency(parseFloat(transaction.amount));
 
+  const handleIcon = (
+    <View style={styles.dragDots}>
+      <Ionicons name="ellipsis-vertical" size={14} color={colors.text.tertiary} />
+      <Ionicons name="ellipsis-vertical" size={14} color={colors.text.tertiary} style={styles.dragDotSecond} />
+    </View>
+  );
+
+  // On web, GestureDetector sets touch-action:none on its wrapper.
+  // Wrapping only the handle keeps the rest of the row scrollable.
+  if (Platform.OS === 'web') {
+    return (
+      <Animated.View
+        style={[styles.transactionRow, animatedRowStyle]}
+        accessibilityRole="button"
+        accessibilityLabel={`${transaction.description}, ${formattedAmount}, ${formattedDate}. Long press drag handle to categorize.`}
+      >
+        <GestureDetector gesture={composed}>
+          <View style={styles.dragHandle}>
+            {handleIcon}
+          </View>
+        </GestureDetector>
+        <View style={styles.transactionInfo}>
+          <Text style={styles.transactionMerchant} numberOfLines={1}>
+            {transaction.description}
+          </Text>
+          <Text style={styles.transactionDate}>{formattedDate}</Text>
+        </View>
+        <Text style={styles.transactionAmount}>{formattedAmount}</Text>
+      </Animated.View>
+    );
+  }
+
+  // On native, RNGH coordinates scroll vs gesture natively —
+  // the full row can be the gesture target.
   return (
     <GestureDetector gesture={composed}>
       <Animated.View
@@ -98,10 +132,7 @@ export default function MobileDraggableRow({
         accessibilityLabel={`${transaction.description}, ${formattedAmount}, ${formattedDate}. Long press to categorize.`}
       >
         <View style={styles.dragHandle}>
-          <View style={styles.dragDots}>
-            <Ionicons name="ellipsis-vertical" size={14} color={colors.text.tertiary} />
-            <Ionicons name="ellipsis-vertical" size={14} color={colors.text.tertiary} style={styles.dragDotSecond} />
-          </View>
+          {handleIcon}
         </View>
         <View style={styles.transactionInfo}>
           <Text style={styles.transactionMerchant} numberOfLines={1}>

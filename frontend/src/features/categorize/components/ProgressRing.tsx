@@ -1,4 +1,11 @@
+import { StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+
+const ringStyles = StyleSheet.create({
+  svg: {
+    transform: [{ rotate: '-90deg' }],
+  },
+});
 
 interface Props {
   progress: number;
@@ -20,7 +27,7 @@ export default function ProgressRing({
   const offset = circumference - (progress / 100) * circumference;
 
   return (
-    <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+    <Svg width={size} height={size} style={ringStyles.svg}>
       <Circle
         cx={size / 2}
         cy={size / 2}
