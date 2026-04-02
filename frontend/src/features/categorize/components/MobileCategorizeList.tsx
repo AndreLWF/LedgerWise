@@ -13,6 +13,7 @@ import { useColors } from '../../../contexts/ThemeContext';
 import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { formatCurrency } from '../../../utils/formatters';
 import { createMobileCategorizeStyles } from '../styles/mobileCategorize.styles';
+import StaggeredView from '../../../components/StaggeredView';
 import CategoryGridOverlay from './CategoryGridOverlay';
 import MobileDraggableRow from './MobileDraggableRow';
 import useCategorizeDrag from '../useCategorizeDrag';
@@ -163,50 +164,53 @@ export default function MobileCategorizeList({
       {/* Transaction list layer — fades out during drag */}
       <Animated.View style={[styles.listLayer, listAnimStyle]}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Categorize</Text>
-          <Text style={styles.subtitle}>
-            {categorizedCount} of {totalTransactions} categorized
-          </Text>
+        <StaggeredView index={0} total={3}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Categorize</Text>
+            <Text style={styles.subtitle}>
+              {categorizedCount} of {totalTransactions} categorized
+            </Text>
 
-          {/* Progress Bar */}
-          <View style={styles.progressContainer}>
-            <View style={styles.progressLabelRow}>
-              <View style={styles.progressLabelLeft}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={14}
-                  color={colors.isDark ? colors.purple[400] : colors.purple[600]}
-                />
-                <Text style={styles.progressLabelText}>Progress</Text>
+            {/* Progress Bar */}
+            <View style={styles.progressContainer}>
+              <View style={styles.progressLabelRow}>
+                <View style={styles.progressLabelLeft}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={14}
+                    color={colors.isDark ? colors.purple[400] : colors.purple[600]}
+                  />
+                  <Text style={styles.progressLabelText}>Progress</Text>
+                </View>
+                <Text style={styles.progressPercentage}>{percentage}%</Text>
               </View>
-              <Text style={styles.progressPercentage}>{percentage}%</Text>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${percentage}%` }]} />
+              </View>
             </View>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${percentage}%` }]} />
-            </View>
-          </View>
 
-          {/* Search */}
-          <View style={styles.searchContainer}>
-            <Ionicons
-              name="search"
-              size={16}
-              color={colors.text.tertiary}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search transactions..."
-              placeholderTextColor={colors.text.tertiary}
-              value={transactionSearch}
-              onChangeText={setTransactionSearch}
-              accessibilityLabel="Search transactions"
-            />
+            {/* Search */}
+            <View style={styles.searchContainer}>
+              <Ionicons
+                name="search"
+                size={16}
+                color={colors.text.tertiary}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search transactions..."
+                placeholderTextColor={colors.text.tertiary}
+                value={transactionSearch}
+                onChangeText={setTransactionSearch}
+                accessibilityLabel="Search transactions"
+              />
+            </View>
           </View>
-        </View>
+        </StaggeredView>
 
         {/* Transaction List */}
+        <StaggeredView index={1} total={3} style={{ flex: 1 }}>
         <FlatList
           data={transactions}
           renderItem={renderTransaction}
@@ -216,6 +220,7 @@ export default function MobileCategorizeList({
           style={styles.transactionList}
           contentContainerStyle={transactions.length === 0 ? styles.listEmptyContent : undefined}
         />
+        </StaggeredView>
       </Animated.View>
 
       {/* Category Grid Overlay — always mounted, crossfades via shared values */}

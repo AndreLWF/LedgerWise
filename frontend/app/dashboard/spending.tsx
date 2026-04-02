@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
+
 import { periodToDateRange } from '../../src/components/TimePeriodSelector';
 import TellerModal from '../../src/components/TellerModal';
 import { SpendingSummary } from '../../src/features/spending';
@@ -10,7 +11,7 @@ import { useTransactionData, useDataSlice } from '../../src/contexts/Transaction
 import { useColors } from '../../src/contexts/ThemeContext';
 import { useThemeStyles } from '../../src/hooks/useThemeStyles';
 import { createSpendingScreenStyles } from '../../src/features/spending/styles/spendingScreen.styles';
-import { isHovered } from '../../src/utils/pressable';
+
 
 export default function SpendingScreen() {
   const [enrolling, setEnrolling] = useState(false);
@@ -20,7 +21,7 @@ export default function SpendingScreen() {
   const colors = useColors();
   const styles = useThemeStyles(createSpendingScreenStyles);
 
-  const { hasAccounts, accountsLoading, allTransactions, error: dataError, refresh, selectedPeriod, setSelectedPeriod } = useTransactionData();
+  const { hasAccounts, accounts, accountsLoading, allTransactions, error: dataError, refresh, selectedPeriod, setSelectedPeriod } = useTransactionData();
   const dateRange = useMemo(() => periodToDateRange(selectedPeriod), [selectedPeriod]);
 
   const { transactions, summaryData, loading: sliceLoading } = useDataSlice(dateRange);
@@ -91,20 +92,9 @@ export default function SpendingScreen() {
           selectedPeriod={selectedPeriod}
           onPeriodChange={setSelectedPeriod}
           availableYears={availableYears}
+          accountCount={accounts.length}
+          onAddAccount={openTellerConnect}
         />
-      )}
-
-      {hasAccounts && (
-        <Pressable
-          style={(state) => [
-            styles.addAccountButton,
-            isHovered(state) && styles.addAccountButtonHovered,
-            state.pressed && styles.addAccountButtonPressed,
-          ]}
-          onPress={openTellerConnect}
-        >
-          <Text style={styles.addAccountText}>+ Add Account</Text>
-        </Pressable>
       )}
 
       {Platform.OS !== 'web' && (

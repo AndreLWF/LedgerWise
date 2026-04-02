@@ -1,17 +1,21 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { createSpendingStyles } from '../styles/spending.styles';
 import type { CategoryData } from '../../../types/spending';
 import { getCategoryColor } from '../../../utils/categoryColors';
 import { buildCategoryRankMap } from '../utils/categoryRanking';
+import { isNarrow } from '../../../utils/responsive';
 
 interface ProportionBarProps {
   categories: CategoryData[];
+  accountCount?: number;
 }
 
-export default function ProportionBar({ categories }: ProportionBarProps) {
+export default function ProportionBar({ categories, accountCount = 0 }: ProportionBarProps) {
   const styles = useThemeStyles(createSpendingStyles);
+  const router = useRouter();
   const sorted = useMemo(
     () => [...categories].sort((a, b) => b.total - a.total),
     [categories],
@@ -53,7 +57,23 @@ export default function ProportionBar({ categories }: ProportionBarProps) {
 
   return (
     <View style={styles.proportionBarContainer}>
-      <Text style={styles.proportionBarTitle}>Spending by Category</Text>
+      <View style={styles.proportionBarHeader}>
+        <Text style={styles.proportionBarTitle}>Spending by Category</Text>
+        {isNarrow && (
+          <Pressable
+            style={styles.mobileAccountsBadge}
+            onPress={() => router.push('/dashboard/accounts')}
+            accessibilityRole="button"
+            accessibilityLabel={`${accountCount} connected accounts. Navigate to accounts page.`}
+          >
+            <View style={styles.accountsDot} />
+            <Text style={styles.mobileAccountsBadgeText}>
+              {accountCount} {accountCount === 1 ? 'account' : 'accounts'}
+            </Text>
+            <Text style={styles.mobileAccountsPlus}>+</Text>
+          </Pressable>
+        )}
+      </View>
 
       <View style={styles.proportionBar}>
         {sorted.map((cat, i) => {

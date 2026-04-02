@@ -45,6 +45,48 @@ export const createSpendingStyles = (deps: StyleDeps) => StyleSheet.create({
   pageHeaderLeft: {
     flex: 1,
   },
+  headerControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  accountsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: deps.colors.surface.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: deps.colors.border.default,
+  },
+  accountsBadgeHovered: {
+    borderColor: deps.colors.purple[400],
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '30' : deps.colors.purple[50],
+  },
+  accountsBadgePressed: {
+    borderColor: deps.colors.brand.primary,
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '50' : deps.colors.purple[100],
+  },
+  accountsDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: deps.colors.semantic.success,
+  },
+  accountsBadgeText: {
+    fontFamily: typography.fontFamily.semiBold,
+    fontSize: 14,
+    fontWeight: '600',
+    color: deps.colors.text.primary,
+  },
+  accountsBadgePlus: {
+    fontFamily: typography.fontFamily.medium,
+    fontSize: 14,
+    fontWeight: '500',
+    color: deps.colors.text.tertiary,
+  },
 
   // --- Summary Cards ---
   summaryStrip: {
@@ -64,12 +106,40 @@ export const createSpendingStyles = (deps: StyleDeps) => StyleSheet.create({
     marginBottom: isNarrow ? 12 : 20,
     ...deps.shadows.md,
   },
+  proportionBarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
   proportionBarTitle: {
     fontFamily: typography.fontFamily.bold,
     fontSize: 18,
     fontWeight: '700',
     color: deps.colors.text.primary,
-    marginBottom: 24,
+  },
+  mobileAccountsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  mobileAccountsBadgeText: {
+    fontFamily: typography.fontFamily.semiBold,
+    fontSize: 13,
+    fontWeight: '600',
+    color: deps.colors.text.secondary,
+    lineHeight: 14,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
+  mobileAccountsPlus: {
+    fontFamily: typography.fontFamily.bold,
+    fontSize: 14,
+    fontWeight: '700',
+    color: deps.colors.text.tertiary,
+    lineHeight: 14,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   proportionBar: {
     flexDirection: 'row',

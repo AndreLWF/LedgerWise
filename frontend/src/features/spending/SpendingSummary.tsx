@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '../../contexts/ThemeContext';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
@@ -14,6 +14,9 @@ import StatCard from '../../components/StatCard';
 import StaggeredView from '../../components/StaggeredView';
 import CategoryAccordion from './components/CategoryAccordion';
 import ProportionBar from './components/ProportionBar';
+import { isHovered } from '../../utils/pressable';
+import { isNarrow } from '../../utils/responsive';
+import { useRouter } from 'expo-router';
 
 interface Props {
   data: SpendingSummaryData | null;
@@ -22,6 +25,8 @@ interface Props {
   selectedPeriod: TimePeriod;
   onPeriodChange: (period: TimePeriod) => void;
   availableYears?: number[];
+  accountCount?: number;
+  onAddAccount?: () => void;
 }
 
 export default function SpendingSummary({
@@ -31,9 +36,12 @@ export default function SpendingSummary({
   selectedPeriod,
   onPeriodChange,
   availableYears,
+  accountCount = 0,
+  onAddAccount,
 }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createSpendingStyles);
+  const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const hasData = data && data.categories.length > 0;
   const topCategory = hasData ? data.categories[0] : null;
@@ -60,11 +68,31 @@ export default function SpendingSummary({
               <Text style={styles.pageTitle}>Spending Summary</Text>
               <Text style={styles.pageSubtitle}>Track and categorize your expenses</Text>
             </View>
-            <TimePeriodSelector
-              selectedPeriod={selectedPeriod}
-              onPeriodChange={onPeriodChange}
-              availableYears={availableYears}
-            />
+            <View style={styles.headerControls}>
+              {!isNarrow && (
+                <Pressable
+                  style={(state) => [
+                    styles.accountsBadge,
+                    isHovered(state) && styles.accountsBadgeHovered,
+                    state.pressed && styles.accountsBadgePressed,
+                  ]}
+                  onPress={() => router.push('/dashboard/accounts')}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${accountCount} connected accounts. Navigate to accounts page.`}
+                >
+                  <View style={styles.accountsDot} />
+                  <Text style={styles.accountsBadgeText}>
+                    {accountCount} {accountCount === 1 ? 'account' : 'accounts'}
+                  </Text>
+                  <Text style={styles.accountsBadgePlus}>+</Text>
+                </Pressable>
+              )}
+              <TimePeriodSelector
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={onPeriodChange}
+                availableYears={availableYears}
+              />
+            </View>
           </View>
         </StaggeredView>
       </View>
@@ -124,7 +152,7 @@ export default function SpendingSummary({
             </StaggeredView>
 
             <StaggeredView index={2} trigger={periodKey}>
-              <ProportionBar categories={data.categories} />
+              <ProportionBar categories={data.categories} accountCount={accountCount} />
             </StaggeredView>
 
             <StaggeredView index={3} trigger={periodKey}>
