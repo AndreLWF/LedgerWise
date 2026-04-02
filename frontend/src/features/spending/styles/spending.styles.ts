@@ -57,9 +57,10 @@ export const createSpendingStyles = (deps: StyleDeps) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     backgroundColor: deps.colors.surface.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
+    borderRadius: radius.md,
+    borderWidth: 2,
     borderColor: deps.colors.border.default,
+    ...deps.shadows.sm,
   },
   accountsBadgeHovered: {
     borderColor: deps.colors.purple[400],
@@ -82,10 +83,13 @@ export const createSpendingStyles = (deps: StyleDeps) => StyleSheet.create({
     color: deps.colors.text.primary,
   },
   accountsBadgePlus: {
-    fontFamily: typography.fontFamily.medium,
+    fontFamily: typography.fontFamily.bold,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
     color: deps.colors.text.tertiary,
+    lineHeight: 14,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
 
   // --- Summary Cards ---

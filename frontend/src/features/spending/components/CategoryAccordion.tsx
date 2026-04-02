@@ -7,7 +7,6 @@ import { createSpendingStyles } from '../styles/spending.styles';
 import type { SpendingSummaryData } from '../../../types/spending';
 import type { Transaction } from '../../../types/transaction';
 import { getCategoryColor } from '../../../utils/categoryColors';
-import { buildCategoryRankMap } from '../utils/categoryRanking';
 import { isPayment } from '../utils/spendingSummary';
 import { isHovered } from '../../../utils/pressable';
 import AccordionReveal from '../../../components/AccordionReveal';
@@ -68,15 +67,13 @@ export default function CategoryAccordion({
     [data.categories],
   );
 
-  const rankMap = useMemo(() => buildCategoryRankMap(sorted), [sorted]);
-
   const content = (
     <View style={styles.categoriesContainer}>
       {sorted.map((cat, i) => {
         const { isExpanded, isClosing, isSettled, showContent, animValue } =
           getState(cat.name);
         const isUncategorized = !isRefund && cat.name === 'General';
-        const color = isRefund ? colors.semantic.success : getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0);
+        const color = isRefund ? colors.semantic.success : getCategoryColor(cat.name);
         const categoryTransactions = showContent
           ? getTransactionsForCategory(cat.name)
           : [];
@@ -149,18 +146,16 @@ export default function CategoryAccordion({
                 <View
                   style={[
                     styles.chevronBox,
-                    (isExpanded && !isClosing) && (
-                      isUncategorized ? styles.chevronBoxGoldActive : styles.chevronBoxPurpleActive
-                    ),
+                    (isExpanded && !isClosing) && {
+                      backgroundColor: color + (colors.isDark ? '30' : '18'),
+                    },
                   ]}
                 >
                   <Ionicons
                     name={isExpanded && !isClosing ? 'chevron-down' : 'chevron-forward'}
                     size={14}
                     color={
-                      isExpanded && !isClosing
-                        ? (isUncategorized ? colors.gold[700] : colors.purple[700])
-                        : colors.text.tertiary
+                      isExpanded && !isClosing ? color : colors.text.tertiary
                     }
                   />
                 </View>
@@ -184,12 +179,12 @@ export default function CategoryAccordion({
                       <View key={txn.id} style={styles.expandedTxn}>
                         <View style={[
                           styles.txnIconBox,
-                          isUncategorized ? styles.txnIconBoxGold : styles.txnIconBoxPurple,
+                          { backgroundColor: color + (colors.isDark ? '30' : '18') },
                         ]}>
                           <Ionicons
                             name="card-outline"
                             size={14}
-                            color={isUncategorized ? colors.gold[600] : colors.purple[600]}
+                            color={color}
                           />
                         </View>
                         <View style={styles.expandedTxnLeft}>
@@ -247,12 +242,12 @@ export default function CategoryAccordion({
                           <View style={styles.expandedTxn}>
                             <View style={[
                               styles.txnIconBox,
-                              isUncategorized ? styles.txnIconBoxGold : styles.txnIconBoxPurple,
+                              { backgroundColor: color + (colors.isDark ? '30' : '18') },
                             ]}>
                               <Ionicons
                                 name="card-outline"
                                 size={14}
-                                color={isUncategorized ? colors.gold[600] : colors.purple[600]}
+                                color={color}
                               />
                             </View>
                             <View style={styles.expandedTxnLeft}>

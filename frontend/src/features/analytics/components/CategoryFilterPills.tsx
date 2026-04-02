@@ -38,7 +38,7 @@ export default function CategoryFilterPills({ categories, selected, onSelect }: 
 
         {categories.map((name, index) => {
           const isActive = selected === name;
-          const color = getCategoryColor(name, name === 'General' ? 0 : index);
+          const color = getCategoryColor(name);
 
           return (
             <Pressable

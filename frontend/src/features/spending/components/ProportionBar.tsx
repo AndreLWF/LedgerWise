@@ -5,7 +5,6 @@ import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { createSpendingStyles } from '../styles/spending.styles';
 import type { CategoryData } from '../../../types/spending';
 import { getCategoryColor } from '../../../utils/categoryColors';
-import { buildCategoryRankMap } from '../utils/categoryRanking';
 import { isNarrow } from '../../../utils/responsive';
 
 interface ProportionBarProps {
@@ -21,7 +20,6 @@ export default function ProportionBar({ categories, accountCount = 0 }: Proporti
     [categories],
   );
 
-  const rankMap = useMemo(() => buildCategoryRankMap(sorted), [sorted]);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const midpoint = Math.ceil(sorted.length / 2);
@@ -42,7 +40,7 @@ export default function ProportionBar({ categories, accountCount = 0 }: Proporti
         <View
           style={[
             styles.legendDot,
-            { backgroundColor: getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0) },
+            { backgroundColor: getCategoryColor(cat.name) },
           ]}
         />
         <Text style={styles.legendText} numberOfLines={1}>
@@ -53,7 +51,7 @@ export default function ProportionBar({ categories, accountCount = 0 }: Proporti
         {Math.round(cat.percentage)}%
       </Text>
     </View>
-  ), [styles, rankMap]);
+  ), [styles]);
 
   return (
     <View style={styles.proportionBarContainer}>
@@ -77,7 +75,7 @@ export default function ProportionBar({ categories, accountCount = 0 }: Proporti
 
       <View style={styles.proportionBar}>
         {sorted.map((cat, i) => {
-          const color = getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0);
+          const color = getCategoryColor(cat.name);
           const isHovered = hoveredIndex === i;
           const pct = Math.round(cat.percentage);
 

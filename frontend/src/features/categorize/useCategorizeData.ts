@@ -57,12 +57,12 @@ export default function useCategorizeData() {
     const sorted = [...catMap.entries()].sort((a, b) => b[1].totalAmount - a[1].totalAmount);
     let spendingTotal = 0;
 
-    const cats = sorted.map(([name, info], rank): CategoryInfo => {
+    const cats = sorted.map(([name, info]): CategoryInfo => {
       spendingTotal += info.totalAmount;
       return {
         id: name.toLowerCase().replace(/\s+/g, '-'),
         name,
-        color: getCategoryColor(name, rank),
+        color: getCategoryColor(name),
         transactionCount: info.count,
         totalAmount: info.totalAmount,
         lastAssignedMerchant: info.lastTx?.description,

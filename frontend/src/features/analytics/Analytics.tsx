@@ -21,10 +21,7 @@ export default function Analytics() {
 
   const categoryLabel = selectedCategory ?? 'All spending categories';
   const barColor = selectedCategory
-    ? getCategoryColor(
-        selectedCategory,
-        selectedCategory === 'General' ? 0 : categories.indexOf(selectedCategory),
-      )
+    ? getCategoryColor(selectedCategory)
     : undefined;
 
   if (accountsLoading || loading) {

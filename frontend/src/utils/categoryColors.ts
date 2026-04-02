@@ -1,6 +1,6 @@
 // Category color palette — ordered for max adjacent contrast in charts.
-// Purple (#1) is the top category. Gold is reserved for uncategorized.
-// Slots 3–24 alternate warm/cool for visual separation.
+// Gold is reserved for uncategorized. Colors are assigned by name hash
+// so the same category always gets the same color across all pages.
 
 const CATEGORY_COLORS = [
   '#9333EA', // 1.  Purple (brand primary)
@@ -30,12 +30,20 @@ const CATEGORY_COLORS = [
 
 const UNCATEGORIZED_COLOR = '#F59E0B'; // Brand gold — exclusive to uncategorized
 
+/** Simple string hash → stable index into the color palette. */
+function hashName(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
 /**
- * Returns a color for a spending category.
- * @param name     Category name ("General" gets brand gold)
- * @param rank     Position among non-General categories, sorted by spending (0 = highest)
+ * Returns a deterministic color for a spending category.
+ * The same category name always returns the same color across all pages.
  */
-export function getCategoryColor(name: string, rank: number): string {
+export function getCategoryColor(name: string): string {
   if (name === 'General') return UNCATEGORIZED_COLOR;
-  return CATEGORY_COLORS[rank % CATEGORY_COLORS.length];
+  return CATEGORY_COLORS[hashName(name) % CATEGORY_COLORS.length];
 }
