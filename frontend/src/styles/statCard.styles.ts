@@ -5,7 +5,7 @@ import type { StyleDeps } from '../hooks/useThemeStyles';
 
 export const createStatCardStyles = (deps: StyleDeps) => StyleSheet.create({
   card: {
-    flexBasis: isNarrow ? '47%' : 'auto',
+    flexBasis: isNarrow ? '47%' : 0,
     flexGrow: 1,
     minWidth: isNarrow ? 0 : 150,
     backgroundColor: deps.colors.surface.card,

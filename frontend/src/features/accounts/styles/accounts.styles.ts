@@ -287,7 +287,9 @@ export const createAccountsStyles = (deps: StyleDeps) => StyleSheet.create({
 
   // --- Remove Dialog ---
   dialogBackdrop: {
-    position: 'absolute',
+    ...(Platform.OS === 'web'
+      ? { position: 'fixed' as 'absolute' }
+      : { position: 'absolute' }),
     top: 0,
     left: 0,
     right: 0,

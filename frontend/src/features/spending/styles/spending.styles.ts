@@ -146,6 +146,11 @@ export const createSpendingStyles = (deps: StyleDeps) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  legendHitArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+  },
   legendDot: {
     width: 14,
     height: 14,
@@ -163,7 +168,7 @@ export const createSpendingStyles = (deps: StyleDeps) => StyleSheet.create({
     fontFamily: typography.fontFamily.regular,
     fontSize: 12,
     color: deps.colors.text.tertiary,
-    marginLeft: 4,
+    marginLeft: 'auto',
   },
 
   // --- Category List Section ---

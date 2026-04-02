@@ -25,26 +25,30 @@ export default function ProportionBar({ categories }: ProportionBarProps) {
   const rightColumn = sorted.slice(midpoint);
 
   const renderLegendItem = useCallback((cat: CategoryData, i: number) => (
-    <Pressable
+    <View
       key={cat.name}
-      onHoverIn={() => setHoveredIndex(i)}
-      onHoverOut={() => setHoveredIndex(null)}
       style={styles.legendItem}
       accessibilityLabel={`${cat.name === 'General' ? 'General / Uncategorized' : cat.name}, ${Math.round(cat.percentage)}%`}
     >
-      <View
-        style={[
-          styles.legendDot,
-          { backgroundColor: getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0) },
-        ]}
-      />
-      <Text style={styles.legendText} numberOfLines={1}>
-        {cat.name === 'General' ? 'General / Uncategorized' : cat.name}
-      </Text>
+      <Pressable
+        onHoverIn={() => setHoveredIndex(i)}
+        onHoverOut={() => setHoveredIndex(null)}
+        style={styles.legendHitArea}
+      >
+        <View
+          style={[
+            styles.legendDot,
+            { backgroundColor: getCategoryColor(cat.name, rankMap.get(cat.name) ?? 0) },
+          ]}
+        />
+        <Text style={styles.legendText} numberOfLines={1}>
+          {cat.name === 'General' ? 'General / Uncategorized' : cat.name}
+        </Text>
+      </Pressable>
       <Text style={styles.legendPercentage}>
         {Math.round(cat.percentage)}%
       </Text>
-    </Pressable>
+    </View>
   ), [styles, rankMap]);
 
   return (
