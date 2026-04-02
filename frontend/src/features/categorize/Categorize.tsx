@@ -1,12 +1,15 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../contexts/ThemeContext';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 import { createCategorizeStyles } from './styles/categorize.styles';
 import { isHovered } from '../../utils/pressable';
+import { formatCurrency } from '../../utils/formatters';
 import { COMPACT_BREAKPOINT, SIDEBAR_BREAKPOINT } from '../../utils/responsive';
 import StaggeredView from '../../components/StaggeredView';
+import BrandedToast from '../../components/BrandedToast';
+import type { ToastData } from '../../components/BrandedToast';
 import useCategorizeData from './useCategorizeData';
 import TransactionRow from './components/TransactionRow';
 import CategoryTarget from './components/CategoryTarget';
@@ -44,6 +47,25 @@ export default function Categorize() {
 
   const isMobile = windowWidth < SIDEBAR_BREAKPOINT;
 
+  // Toast state for desktop drag & drop confirmation
+  const [toast, setToast] = useState<ToastData | null>(null);
+  const clearToast = useCallback(() => setToast(null), []);
+
+  const handleAssignToCategory = useCallback(
+    (transactionId: string, categoryName: string) => {
+      const tx = transactions.find((t) => t.id === transactionId);
+      assignToCategory(transactionId, categoryName);
+      if (tx) {
+        setToast({
+          categoryName,
+          merchant: tx.description,
+          amount: formatCurrency(parseFloat(tx.amount)),
+        });
+      }
+    },
+    [transactions, assignToCategory],
+  );
+
   const renderTransaction = useCallback(
     ({ item }: { item: Transaction }) => <TransactionRow transaction={item} />,
     [],
@@ -63,12 +85,12 @@ export default function Categorize() {
         <CategoryTarget
           category={item}
           totalSpending={totalSpendingAmount}
-          onDrop={assignToCategory}
+          onDrop={handleAssignToCategory}
           compact={compactCards}
         />
       );
     },
-    [assignToCategory, totalSpendingAmount, compactCards, styles.categoryCardSpacer],
+    [handleAssignToCategory, totalSpendingAmount, compactCards, styles.categoryCardSpacer],
   );
 
   const keyExtractorTx = useCallback((item: Transaction) => item.id, []);
@@ -255,6 +277,9 @@ export default function Categorize() {
           </StaggeredView>
         </View>
       </View>
+
+      {/* Branded toast — bottom-right confirmation on successful categorization */}
+      <BrandedToast data={toast} onDismiss={clearToast} />
     </View>
   );
 }

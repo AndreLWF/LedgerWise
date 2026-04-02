@@ -33,6 +33,7 @@ async def get_my_accounts(
             account_name=acct.account_name,
             account_type=acct.account_type,
             account_subtype=acct.account_subtype,
+            created_at=acct.created_at,
         )
         for acct in accounts
     ]

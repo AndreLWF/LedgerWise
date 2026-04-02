@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from pydantic import BaseModel, field_validator
 
@@ -52,3 +53,4 @@ class AccountResponse(BaseModel):
     account_name: str | None
     account_type: str | None
     account_subtype: str | None
+    created_at: datetime | None = None

@@ -164,7 +164,7 @@ async def enroll_accounts(
                 "account_name": acct.get("name"),
                 "updated_at": func.now(),
             },
-        ).returning(Account.id, Account.teller_account_id)
+        ).returning(Account.id, Account.teller_account_id, Account.created_at)
 
         result = await db.execute(stmt)
         row = result.fetchone()
@@ -177,6 +177,7 @@ async def enroll_accounts(
             account_name=acct.get("name"),
             account_type=acct.get("type"),
             account_subtype=acct.get("subtype"),
+            created_at=row.created_at,
         ))
 
         teller_txns = await get_transactions(access_token, acct["id"])
