@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
@@ -132,6 +133,27 @@ export function TransactionDataProvider({ token, children }: ProviderProps) {
     void loadTransactions();
     return () => { cancelled = true; };
   }, [token, hasAccounts, refreshKey]);
+
+  // Auto-select the most recent month with data on first load
+  const hasAutoSelected = useRef(false);
+  useEffect(() => {
+    if (hasAutoSelected.current || allTransactions.length === 0) return;
+    hasAutoSelected.current = true;
+
+    // Find the most recent transaction date
+    let latestDate = allTransactions[0].date;
+    for (const tx of allTransactions) {
+      if (tx.date > latestDate) latestDate = tx.date;
+    }
+
+    const latestYear = parseInt(latestDate.substring(0, 4), 10);
+    const latestMonth = parseInt(latestDate.substring(5, 7), 10) - 1; // 0-indexed
+
+    // Only update if different from current default
+    if (latestYear !== selectedPeriod.year || latestMonth !== selectedPeriod.month) {
+      setSelectedPeriod({ type: 'month', month: latestMonth, year: latestYear });
+    }
+  }, [allTransactions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value = useMemo(
     () => ({
