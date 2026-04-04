@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useCallback, useRef, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
 import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { createAnalyticsStyles } from '../styles/analytics.styles';
 import { isNarrow } from '../../../utils/responsive';
 import TimePeriodPills from './TimePeriodPills';
+import AnimatedBar from './AnimatedBar';
 import type { MonthlyAggregate, AnalyticsTimePeriod } from '../../../types/analytics';
 
 /** Must match plotArea height in analytics.styles.ts */
@@ -31,6 +32,7 @@ export default function BarChart({ months, categoryLabel, barColor, timePeriod, 
   const colors = useColors();
   const styles = useThemeStyles(createAnalyticsStyles);
   const [activeBar, setActiveBar] = useState<number | null>(null);
+  const isInitialMountRef = useRef(true);
 
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -41,6 +43,22 @@ export default function BarChart({ months, categoryLabel, barColor, timePeriod, 
   const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
   const gridStep = Math.ceil(rawStep / magnitude) * magnitude;
   const gridMax = gridStep * GRID_LINES;
+
+  const effectiveColor = barColor ?? (
+    colors.isDark ? colors.purple[500] : colors.purple[600]
+  );
+
+  // After first render, mark initial mount complete so subsequent data changes morph
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      isInitialMountRef.current = false;
+    }, months.length * 40 + 700);
+    return () => clearTimeout(timeout);
+  }, []); // Only on true first mount
+
+  const handleBarPressOut = useCallback(() => {
+    setActiveBar(null);
+  }, []);
 
   return (
     <View style={styles.chartCard}>
@@ -81,44 +99,29 @@ export default function BarChart({ months, categoryLabel, barColor, timePeriod, 
           );
         })}
 
-        {/* Bars */}
+        {/* Animated Bars */}
         <View style={[styles.barsContainer, { top: TOP_PAD }]}>
           {months.map((month, index) => {
-            const barHeight = (month.total / gridMax) * DRAW_HEIGHT;
+            const rawHeight = (month.total / gridMax) * DRAW_HEIGHT;
+            const targetHeight = month.total > 0 ? Math.max(rawHeight, 3) : 0;
             const isCurrent = month.month === currentMonth && month.year === currentYear;
-            const isActive = activeBar === index;
-            const effectiveColor = barColor ?? (
-              colors.isDark ? colors.purple[500] : colors.purple[600]
-            );
 
             return (
-              <Pressable
-                key={`${month.year}-${month.month}`}
-                style={styles.barColumn}
-                onPress={() => setActiveBar(isActive ? null : index)}
-                onHoverIn={() => setActiveBar(index)}
-                onHoverOut={() => setActiveBar(null)}
-                accessibilityRole="button"
-                accessibilityLabel={`${month.label} ${month.year}: ${formatAmount(month.total)}`}
-              >
-                {/* Amount label on hover/active */}
-                {isActive && month.total > 0 && (
-                  <Text style={styles.barAmountLabel}>
-                    ${month.total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                  </Text>
-                )}
-
-                {/* Bar */}
-                <View
-                  style={[
-                    styles.bar,
-                    { height: Math.max(barHeight, 3), backgroundColor: effectiveColor },
-                    isActive && { opacity: 0.85 },
-                  ]}
-                >
-                  {isCurrent && <View style={styles.barBrightenOverlay} />}
-                </View>
-              </Pressable>
+              <AnimatedBar
+                key={`${timePeriod}-${month.year}-${month.month}`}
+                targetHeight={targetHeight}
+                index={index}
+                isInitialMount={isInitialMountRef.current}
+                isActive={activeBar === index}
+                isDimmed={activeBar !== null && activeBar !== index}
+                color={effectiveColor}
+                isCurrent={isCurrent}
+                total={month.total}
+                monthLabel={month.label}
+                year={month.year}
+                onPress={() => setActiveBar(index)}
+                onPressOut={handleBarPressOut}
+              />
             );
           })}
         </View>

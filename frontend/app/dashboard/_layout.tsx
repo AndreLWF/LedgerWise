@@ -123,7 +123,7 @@ export default function DashboardLayout() {
                       active && styles.navItemActive,
                       isHovered(state) && !active && styles.navItemHovered,
                     ]}
-                    onPress={() => router.push(item.path)}
+                    onPress={() => { if (!active) router.push(item.path); }}
                     accessibilityRole="tab"
                     accessibilityLabel={item.name}
                     accessibilityState={{ selected: active }}
@@ -182,7 +182,7 @@ export default function DashboardLayout() {
               <Pressable
                 key={item.path}
                 style={styles.bottomTab}
-                onPress={() => router.push(item.path)}
+                onPress={() => { if (!active) router.push(item.path); }}
                 accessibilityRole="tab"
                 accessibilityLabel={item.name}
                 accessibilityState={{ selected: active }}

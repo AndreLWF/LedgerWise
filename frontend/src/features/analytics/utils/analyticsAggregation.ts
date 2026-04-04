@@ -78,6 +78,12 @@ function monthKey(year: number, month: number): string {
   return `${year}-${month}`;
 }
 
+/** Parse a YYYY-MM-DD date string into { year, month } (0-indexed month). */
+function parseTxMonth(dateStr: string): { year: number; month: number } {
+  const [yearStr, monthStr] = dateStr.split('-');
+  return { year: parseInt(yearStr, 10), month: parseInt(monthStr, 10) - 1 };
+}
+
 /**
  * Compute a spending trend from raw transactions for the given time period.
  * Optionally filter to a single category.
@@ -106,29 +112,15 @@ export function computeAnalyticsSummary(
   };
 
   for (const tx of transactions) {
-    // Subtract refunds from the month they occurred in (same category filter)
-    if (isRefund(tx) && matchesCategory(tx)) {
-      const [yearStr, monthStr] = tx.date.split('-');
-      const year = parseInt(yearStr, 10);
-      const month = parseInt(monthStr, 10) - 1;
-      const key = monthKey(year, month);
-      const bucket = monthMap.get(key);
-
-      if (bucket) {
-        bucket.total -= Math.abs(parseFloat(tx.amount));
-      }
-    }
-
-    if (!isSpending(tx)) continue;
     if (!matchesCategory(tx)) continue;
 
-    const [yearStr, monthStr] = tx.date.split('-');
-    const year = parseInt(yearStr, 10);
-    const month = parseInt(monthStr, 10) - 1; // 0-indexed
-    const key = monthKey(year, month);
-    const bucket = monthMap.get(key);
+    const { year, month } = parseTxMonth(tx.date);
+    const bucket = monthMap.get(monthKey(year, month));
+    if (!bucket) continue;
 
-    if (bucket) {
+    if (isRefund(tx)) {
+      bucket.total -= Math.abs(parseFloat(tx.amount));
+    } else if (isSpending(tx)) {
       bucket.total += parseFloat(tx.amount);
     }
   }

@@ -158,7 +158,6 @@ export const createAnalyticsStyles = (deps: StyleDeps) => StyleSheet.create({
     borderWidth: 1,
     borderColor: deps.colors.border.default,
     padding: isNarrow ? 16 : 24,
-    overflow: 'hidden',
     ...deps.shadows.md,
   },
   chartHeader: {
@@ -231,6 +230,7 @@ export const createAnalyticsStyles = (deps: StyleDeps) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingHorizontal: isNarrow ? 1 : 2,
+    overflow: 'visible',
   },
   bar: {
     width: '100%' as unknown as number,
@@ -245,13 +245,36 @@ export const createAnalyticsStyles = (deps: StyleDeps) => StyleSheet.create({
     borderTopRightRadius: radius.sm,
     backgroundColor: deps.colors.isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(255, 255, 255, 0.15)',
   },
-  barAmountLabel: {
+  barTooltip: {
+    marginBottom: 6,
+    backgroundColor: deps.colors.surface.elevated,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: deps.colors.border.default,
+    zIndex: 10,
+    ...deps.shadows.md,
+  },
+  barTooltipText: {
     fontFamily: typography.fontFamily.semiBold,
-    fontSize: isNarrow ? 9 : 11,
+    fontSize: isNarrow ? 11 : 13,
     fontWeight: '600',
-    color: deps.colors.text.secondary,
-    marginBottom: 4,
+    color: deps.colors.text.primary,
     textAlign: 'center',
+  },
+  barTooltipArrow: {
+    alignSelf: 'center',
+    width: 0,
+    height: 0,
+    marginTop: -1,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 6,
+    borderStyle: 'solid',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: deps.colors.surface.elevated,
   },
 
   // X-axis — month labels below the plot area
@@ -282,7 +305,7 @@ export const createAnalyticsStyles = (deps: StyleDeps) => StyleSheet.create({
   pillRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 16,
+    gap: isNarrow ? 8 : 16,
     marginTop: 20,
     paddingTop: 16,
     borderTopWidth: 1,
@@ -290,7 +313,7 @@ export const createAnalyticsStyles = (deps: StyleDeps) => StyleSheet.create({
   },
   pill: {
     paddingVertical: 8,
-    paddingHorizontal: 20,
+    paddingHorizontal: isNarrow ? 14 : 20,
     borderRadius: 20,
     backgroundColor: 'transparent',
   },
