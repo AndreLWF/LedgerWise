@@ -23,9 +23,16 @@ interface Props {
   onTimePeriodChange: (period: AnalyticsTimePeriod) => void;
 }
 
-function formatAmount(value: number): string {
-  if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
-  return `$${Math.round(value)}`;
+const axisFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+  notation: 'compact',
+});
+
+function formatAxisLabel(value: number): string {
+  return axisFormatter.format(value);
 }
 
 export default function BarChart({ months, categoryLabel, barColor, timePeriod, onTimePeriodChange }: Props) {
@@ -55,6 +62,10 @@ export default function BarChart({ months, categoryLabel, barColor, timePeriod, 
     }, months.length * 40 + 700);
     return () => clearTimeout(timeout);
   }, []); // Only on true first mount
+
+  const handleBarPress = useCallback((index: number) => {
+    setActiveBar(index);
+  }, []);
 
   const handleBarPressOut = useCallback(() => {
     setActiveBar(null);
@@ -93,7 +104,7 @@ export default function BarChart({ months, categoryLabel, barColor, timePeriod, 
             <View key={i} style={StyleSheet.absoluteFill} pointerEvents="none">
               <View style={[styles.chartGridLine, { bottom }]} />
               <Text style={[styles.chartGridLabel, { bottom: bottom + 2 }]}>
-                {formatAmount(value)}
+                {formatAxisLabel(value)}
               </Text>
             </View>
           );
@@ -119,7 +130,7 @@ export default function BarChart({ months, categoryLabel, barColor, timePeriod, 
                 total={month.total}
                 monthLabel={month.label}
                 year={month.year}
-                onPress={() => setActiveBar(index)}
+                onPress={handleBarPress}
                 onPressOut={handleBarPressOut}
               />
             );

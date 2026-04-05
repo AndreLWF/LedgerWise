@@ -6,6 +6,7 @@ import { createAnalyticsStyles } from '../styles/analytics.styles';
 import { createStatCardStyles } from '../../../styles/statCard.styles';
 import { isNarrow } from '../../../utils/responsive';
 import AnimatedAmount from './AnimatedAmount';
+import { formatCurrency } from '../../../utils/formatters';
 import type { AnalyticsSummary, AnalyticsTimePeriod } from '../../../types/analytics';
 
 const PERIOD_LABELS: Record<AnalyticsTimePeriod, string> = {
@@ -31,7 +32,11 @@ export default function SummaryStatsRow({ summary, timePeriod }: Props) {
   return (
     <View style={styles.statsRow}>
       {/* Period Total Card */}
-      <View style={cardStyles.card}>
+      <View
+        style={cardStyles.card}
+        accessibilityRole="summary"
+        accessibilityLabel={`${PERIOD_LABELS[timePeriod]}: ${formatCurrency(summary.periodTotal)}`}
+      >
         <View style={[cardStyles.iconContainer, { backgroundColor: iconBg }]}>
           <Ionicons name="trending-up" size={isNarrow ? 16 : 20} color={iconColor} />
         </View>
@@ -43,7 +48,11 @@ export default function SummaryStatsRow({ summary, timePeriod }: Props) {
       </View>
 
       {/* Monthly Average Card */}
-      <View style={cardStyles.card}>
+      <View
+        style={cardStyles.card}
+        accessibilityRole="summary"
+        accessibilityLabel={`Monthly average: ${formatCurrency(summary.monthlyAverage)}`}
+      >
         <View style={[cardStyles.iconContainer, { backgroundColor: iconBg }]}>
           <Ionicons name="calendar-outline" size={isNarrow ? 16 : 20} color={iconColor} />
         </View>

@@ -101,8 +101,8 @@ export default function useCategorizeData() {
               return next;
             });
           })
-          .catch((err) => {
-            console.error('Failed to update transaction category:', err);
+          .catch(() => {
+            // Silently revert — error details stay server-side
             // Revert both optimistic updates on failure
             setReassigned((prev) => {
               const next = new Map(prev);

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -10,6 +10,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { createAnalyticsStyles } from '../styles/analytics.styles';
+
+const tooltipFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
 
 const STAGGER_DELAY = 40;
 const GROW_DURATION = 600;
@@ -28,11 +35,11 @@ interface Props {
   total: number;
   monthLabel: string;
   year: number;
-  onPress: () => void;
+  onPress: (index: number) => void;
   onPressOut: () => void;
 }
 
-export default function AnimatedBar({
+function AnimatedBar({
   targetHeight,
   index,
   isInitialMount,
@@ -53,6 +60,10 @@ export default function AnimatedBar({
   const tooltipScale = useSharedValue(0);
   const tooltipOpacity = useSharedValue(0);
   const hasAnimatedOnce = useRef(false);
+
+  const handlePress = useCallback(() => {
+    onPress(index);
+  }, [onPress, index]);
 
   // Animate bar height: stagger on mount, morph on data change
   useEffect(() => {
@@ -107,19 +118,19 @@ export default function AnimatedBar({
   return (
     <Pressable
       style={styles.barColumn}
-      onPressIn={onPress}
+      onPressIn={handlePress}
       onPressOut={onPressOut}
-      onHoverIn={onPress}
+      onHoverIn={handlePress}
       onHoverOut={onPressOut}
       accessibilityRole="button"
-      accessibilityLabel={`${monthLabel} ${year}: $${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+      accessibilityLabel={`${monthLabel} ${year}: ${tooltipFormatter.format(total)}`}
     >
       {/* Tooltip */}
       {total > 0 && (
         <Animated.View style={tooltipAnimatedStyle} pointerEvents="none">
           <View style={styles.barTooltip}>
             <Text style={styles.barTooltipText}>
-              ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              {tooltipFormatter.format(total)}
             </Text>
           </View>
           <View style={styles.barTooltipArrow} />
@@ -139,3 +150,5 @@ export default function AnimatedBar({
     </Pressable>
   );
 }
+
+export default memo(AnimatedBar);

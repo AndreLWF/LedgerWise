@@ -3,28 +3,26 @@ import { Text, type TextStyle } from 'react-native';
 
 interface Props {
   value: number;
-  prefix?: string;
   style?: TextStyle;
 }
 
-function formatCurrency(n: number, prefix: string): string {
-  const rounded = Math.round(n);
-  const abs = Math.abs(rounded);
-  const str = abs.toString();
-  let formatted = '';
-  for (let i = str.length - 1, count = 0; i >= 0; i--, count++) {
-    if (count > 0 && count % 3 === 0) formatted = ',' + formatted;
-    formatted = str[i] + formatted;
-  }
-  return `${prefix}${rounded < 0 ? '-' : ''}${formatted}`;
+const wholeNumberFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+function formatWholeAmount(n: number): string {
+  return wholeNumberFormatter.format(Math.round(n));
 }
 
 /**
  * Animated count-up number display.
  * Uses requestAnimationFrame for a smooth JS-thread counting animation.
  */
-export default function AnimatedAmount({ value, prefix = '$', style }: Props) {
-  const [display, setDisplay] = useState(() => formatCurrency(value, prefix));
+export default function AnimatedAmount({ value, style }: Props) {
+  const [display, setDisplay] = useState(() => formatWholeAmount(value));
   const currentRef = useRef(0);
   const rafRef = useRef<number | null>(null);
 
@@ -41,7 +39,7 @@ export default function AnimatedAmount({ value, prefix = '$', style }: Props) {
       const eased = 1 - Math.pow(1 - t, 3);
       const current = start + (end - start) * eased;
       currentRef.current = current;
-      setDisplay(formatCurrency(current, prefix));
+      setDisplay(formatWholeAmount(current));
 
       if (t < 1) {
         rafRef.current = requestAnimationFrame(tick);
@@ -52,7 +50,7 @@ export default function AnimatedAmount({ value, prefix = '$', style }: Props) {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [value, prefix]);
+  }, [value]);
 
   return (
     <Text style={style} numberOfLines={1} adjustsFontSizeToFit>
