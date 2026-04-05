@@ -49,8 +49,8 @@ class CategoryUpdateRequest(BaseModel):
 class AccountResponse(BaseModel):
     id: str
     teller_account_id: str
-    institution_name: str | None
-    account_name: str | None
-    account_type: str | None
-    account_subtype: str | None
+    institution_name: str | None = None
+    account_name: str | None = None
+    account_type: str | None = None
+    account_subtype: str | None = None
     created_at: datetime | None = None

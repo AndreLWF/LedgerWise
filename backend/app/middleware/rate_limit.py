@@ -23,6 +23,12 @@ DATA_PATHS = {
     "/api/v1/spending/summary",
 }
 
+# Max unique keys per store before forced eviction (prevents unbounded growth)
+_MAX_KEYS = 10_000
+# Cleanup stale entries every N requests
+_CLEANUP_INTERVAL = 500
+_request_counter = 0
+
 # In-memory stores — keyed by (ip,) or (ip, path)
 _global_hits: dict[str, list[float]] = defaultdict(list)
 _sensitive_hits: dict[str, list[float]] = defaultdict(list)
@@ -34,12 +40,37 @@ def _prune(hits: list[float], window: float, now: float) -> list[float]:
     return [t for t in hits if t > cutoff]
 
 
+def _cleanup_stale_entries(now: float) -> None:
+    """Remove keys with no recent hits to prevent unbounded memory growth."""
+    max_window = max(
+        GLOBAL_RATE_LIMIT["window_seconds"],
+        SENSITIVE_RATE_LIMIT["window_seconds"],
+        DATA_RATE_LIMIT["window_seconds"],
+    )
+    for store in (_global_hits, _sensitive_hits, _data_hits):
+        stale_keys = [k for k, v in store.items() if not v or v[-1] < now - max_window]
+        for k in stale_keys:
+            del store[k]
+        # Hard cap: if store still exceeds max keys, evict oldest entries
+        if len(store) > _MAX_KEYS:
+            sorted_keys = sorted(store, key=lambda k: store[k][-1] if store[k] else 0)
+            for k in sorted_keys[: len(store) - _MAX_KEYS]:
+                del store[k]
+
+
 async def rate_limit_middleware(
     request: Request,
     call_next: Callable[[Request], Awaitable[Response]],
 ) -> Response:
+    global _request_counter
     client_ip = request.client.host if request.client else "unknown"
     now = time.time()
+
+    # Periodic cleanup of stale entries
+    _request_counter += 1
+    if _request_counter >= _CLEANUP_INTERVAL:
+        _request_counter = 0
+        _cleanup_stale_entries(now)
 
     # --- global per-IP check ---
     gw = GLOBAL_RATE_LIMIT["window_seconds"]

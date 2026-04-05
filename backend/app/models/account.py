@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Index, Numeric, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,6 +12,7 @@ class Account(Base):
     __tablename__ = "accounts"
     __table_args__ = (
         UniqueConstraint("teller_account_id", "user_id", name="uq_account_per_user"),
+        Index("ix_accounts_user_id", "user_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

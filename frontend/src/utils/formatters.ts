@@ -1,9 +1,13 @@
-/** Format a number as USD currency string (e.g. "$1,234.56"). */
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** Format a number as USD currency string (e.g. "$1,234.56", "-$45.00"). */
 export function formatCurrency(value: number): string {
-  return `$${value.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return currencyFormatter.format(value);
 }
 
 /**

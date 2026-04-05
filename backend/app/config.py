@@ -41,3 +41,29 @@ class Settings(BaseSettings):
 
 settings = Settings()
 settings.write_teller_certs()
+
+
+def _validate_startup() -> None:
+    """Fail fast if critical secrets are missing or malformed."""
+    missing = []
+    if not settings.database_url:
+        missing.append("DATABASE_URL")
+    if not settings.supabase_url:
+        missing.append("SUPABASE_URL")
+    if not settings.supabase_key:
+        missing.append("SUPABASE_KEY")
+    if missing:
+        raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
+
+    key = settings.encryption_key
+    if not key:
+        raise RuntimeError("ENCRYPTION_KEY env var is not set")
+    try:
+        key_bytes = bytes.fromhex(key)
+    except ValueError:
+        raise RuntimeError("ENCRYPTION_KEY must be valid hex characters")
+    if len(key_bytes) != 32:
+        raise RuntimeError("ENCRYPTION_KEY must be exactly 64 hex chars (256 bits)")
+
+
+_validate_startup()

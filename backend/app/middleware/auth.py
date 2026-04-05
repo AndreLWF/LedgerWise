@@ -36,7 +36,7 @@ async def get_current_user_id(
         log_auth_failure("expired_token", ip=client_ip)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
+            detail="Invalid token",
         )
     except jwt.InvalidTokenError:
         log_auth_failure("invalid_token", ip=client_ip)
@@ -50,7 +50,7 @@ async def get_current_user_id(
         log_auth_failure("missing_subject", ip=client_ip)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token missing subject",
+            detail="Invalid token",
         )
 
     # Store user_id on request state for audit logging middleware

@@ -18,7 +18,7 @@ router = APIRouter(prefix="/spending", tags=["spending"])
 async def spending_summary(
     start_date: date | None = Query(None, description="Filter from this date (inclusive)"),
     end_date: date | None = Query(None, description="Filter up to this date (inclusive)"),
-    account_type: str | None = Query(None, description="Filter by account type (e.g. credit)"),
+    account_type: str | None = Query(None, max_length=50, description="Filter by account type (e.g. credit)"),
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ) -> SpendingSummaryResponse:

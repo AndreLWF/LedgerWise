@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import logging
 from datetime import date as date_type
@@ -132,8 +133,12 @@ async def update_transaction_category(
         return None
 
     txn.category = category.lower()
-    await db.commit()
-    await db.refresh(txn)
+    try:
+        await db.commit()
+        await db.refresh(txn)
+    except Exception:
+        await db.rollback()
+        raise
     return _map_transactions([txn])[0]
 
 
@@ -144,9 +149,10 @@ async def enroll_accounts(
     teller_accounts = await get_accounts(access_token)
 
     saved_accounts: list[AccountResponse] = []
-
     encrypted_token = encrypt(access_token)
 
+    # Upsert accounts first to get DB IDs
+    account_ids: list[tuple[Any, dict[str, Any]]] = []
     for acct in teller_accounts:
         stmt = pg_insert(Account).values(
             teller_account_id=acct["id"],
@@ -168,10 +174,10 @@ async def enroll_accounts(
 
         result = await db.execute(stmt)
         row = result.fetchone()
-        account_db_id = row.id
+        account_ids.append((row.id, acct))
 
         saved_accounts.append(AccountResponse(
-            id=str(account_db_id),
+            id=str(row.id),
             teller_account_id=acct["id"],
             institution_name=acct.get("institution", {}).get("name"),
             account_name=acct.get("name"),
@@ -180,7 +186,13 @@ async def enroll_accounts(
             created_at=row.created_at,
         ))
 
-        teller_txns = await get_transactions(access_token, acct["id"])
+    # Fetch transactions for all accounts in parallel
+    txn_results = await asyncio.gather(
+        *(get_transactions(access_token, acct["id"]) for _, acct in account_ids)
+    )
+
+    # Persist all transactions
+    for (account_db_id, _), teller_txns in zip(account_ids, txn_results):
         for txn in teller_txns:
             txn_stmt = pg_insert(Transaction).values(
                 account_id=account_db_id,
@@ -202,6 +214,10 @@ async def enroll_accounts(
             )
             await db.execute(txn_stmt)
 
-    await db.commit()
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
     log_enrollment(user_id, len(saved_accounts))
     return saved_accounts

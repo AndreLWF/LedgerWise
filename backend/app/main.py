@@ -1,7 +1,10 @@
+import logging
 from collections.abc import Awaitable, Callable
 
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from app.config import settings
 from app.middleware.auth import get_current_user_id
@@ -9,7 +12,24 @@ from app.middleware.rate_limit import rate_limit_middleware
 from app.routers import spending, teller
 from app.utils.logging import audit_logging_middleware
 
+logger = logging.getLogger("ledgerwise.audit")
+
 app = FastAPI(title="LedgerWise API", version="0.1.0")
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Catch-all handler — log full details, return generic message to client."""
+    logger.error(
+        "UNHANDLED_ERROR method=%s path=%s",
+        request.method,
+        request.url.path,
+        exc_info=exc,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred. Please try again later."},
+    )
 
 # --- Middleware (order matters: last added = first executed) ---
 
@@ -41,17 +61,26 @@ async def security_headers_middleware(
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
     return response
 
 app.include_router(teller.router, prefix="/api/v1")
 app.include_router(spending.router, prefix="/api/v1")
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+class HealthResponse(BaseModel):
+    status: str
 
 
-@app.get("/api/v1/me")
-async def me(user_id: str = Depends(get_current_user_id)) -> dict:
-    return {"user_id": user_id}
+class MeResponse(BaseModel):
+    user_id: str
+
+
+@app.get("/health", response_model=HealthResponse)
+async def health() -> HealthResponse:
+    return HealthResponse(status="ok")
+
+
+@app.get("/api/v1/me", response_model=MeResponse)
+async def me(user_id: str = Depends(get_current_user_id)) -> MeResponse:
+    return MeResponse(user_id=user_id)

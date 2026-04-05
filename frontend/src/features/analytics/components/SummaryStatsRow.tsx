@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
@@ -21,7 +22,7 @@ interface Props {
   timePeriod: AnalyticsTimePeriod;
 }
 
-export default function SummaryStatsRow({ summary, timePeriod }: Props) {
+function SummaryStatsRow({ summary, timePeriod }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createAnalyticsStyles);
   const cardStyles = useThemeStyles(createStatCardStyles);
@@ -65,3 +66,5 @@ export default function SummaryStatsRow({ summary, timePeriod }: Props) {
     </View>
   );
 }
+
+export default memo(SummaryStatsRow);

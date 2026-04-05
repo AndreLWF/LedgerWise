@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { memo, useEffect, useCallback, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
@@ -35,14 +35,15 @@ function formatAxisLabel(value: number): string {
   return axisFormatter.format(value);
 }
 
-export default function BarChart({ months, categoryLabel, barColor, timePeriod, onTimePeriodChange }: Props) {
+function BarChart({ months, categoryLabel, barColor, timePeriod, onTimePeriodChange }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createAnalyticsStyles);
   const [activeBar, setActiveBar] = useState<number | null>(null);
   const isInitialMountRef = useRef(true);
 
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
   const peakTotal = Math.max(...months.map((m) => m.total), 1);
 
   // Grid step rounded to a nice number
@@ -163,3 +164,5 @@ export default function BarChart({ months, categoryLabel, barColor, timePeriod, 
     </View>
   );
 }
+
+export default memo(BarChart);

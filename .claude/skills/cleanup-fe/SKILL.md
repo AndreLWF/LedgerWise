@@ -1,5 +1,5 @@
 ---
-name: cleanup
+name: cleanup-fe
 description: Post-feature frontend cleanup — enforce CLAUDE.md standards + RN performance, fintech data correctness, memory safety, accessibility, and security
 disable-model-invocation: true
 argument-hint: [scope e.g. src/features/analytics, or blank for changed files]
