@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
-from plaid.exceptions import PlaidApiException
+from plaid.exceptions import ApiException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
@@ -28,7 +28,7 @@ async def create_link_token(
     log_data_access(user_id, "plaid_link_token_create")
     try:
         link_token = await plaid_service.create_link_token(user_id)
-    except PlaidApiException:
+    except ApiException:
         logger.error("Plaid link token creation failed for user=%s", user_id, exc_info=True)
         raise HTTPException(
             status_code=502,
@@ -55,7 +55,7 @@ async def exchange_token(
         plaid_item, accounts = await plaid_service.exchange_public_token(
             db, user_id, body.public_token
         )
-    except PlaidApiException:
+    except ApiException:
         logger.warning(
             "Plaid API error during token exchange for user=%s",
             user_id,
