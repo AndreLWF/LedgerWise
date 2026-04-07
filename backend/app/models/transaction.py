@@ -12,6 +12,7 @@ class Transaction(Base):
     __tablename__ = "transactions"
     __table_args__ = (
         UniqueConstraint("teller_transaction_id", "account_id", name="uq_transaction_per_account"),
+        UniqueConstraint("plaid_transaction_id", "account_id", name="uq_plaid_transaction_per_account"),
         Index("ix_transactions_account_id", "account_id"),
         Index("ix_transactions_date", "date"),
     )

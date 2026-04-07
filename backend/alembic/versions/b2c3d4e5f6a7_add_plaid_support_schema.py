@@ -60,6 +60,9 @@ def upgrade() -> None:
     # Index on item_id for Plaid item lookups
     op.create_index('ix_accounts_item_id', 'accounts', ['item_id'])
 
+    # Unique constraint for Plaid account upserts
+    op.create_unique_constraint('uq_plaid_account_per_item', 'accounts', ['item_id', 'persistent_account_id'])
+
     # Make Teller-specific columns nullable (they were NOT NULL before)
     op.alter_column('accounts', 'teller_account_id', nullable=True)
     op.alter_column('accounts', 'teller_access_token', nullable=True)
@@ -77,6 +80,9 @@ def upgrade() -> None:
 
     # CHECK constraint: provider must be 'teller' or 'plaid'
     op.create_check_constraint('ck_transactions_provider', 'transactions', "provider IN ('teller', 'plaid')")
+
+    # Unique constraint for Plaid transaction upserts
+    op.create_unique_constraint('uq_plaid_transaction_per_account', 'transactions', ['plaid_transaction_id', 'account_id'])
 
     # Make Teller-specific column nullable
     op.alter_column('transactions', 'teller_transaction_id', nullable=True)
@@ -99,6 +105,7 @@ def downgrade() -> None:
     op.execute('ALTER TABLE plaid_items DISABLE ROW LEVEL SECURITY')
 
     # ── transactions — revert ─────────────────────────────────────────
+    op.drop_constraint('uq_plaid_transaction_per_account', 'transactions', type_='unique')
     op.alter_column('transactions', 'teller_transaction_id', nullable=False)
     op.drop_constraint('ck_transactions_provider', 'transactions', type_='check')
     op.drop_column('transactions', 'authorized_date')
@@ -110,6 +117,7 @@ def downgrade() -> None:
     op.drop_column('transactions', 'provider')
 
     # ── accounts — revert ─────────────────────────────────────────────
+    op.drop_constraint('uq_plaid_account_per_item', 'accounts', type_='unique')
     op.alter_column('accounts', 'teller_access_token', nullable=False)
     op.alter_column('accounts', 'teller_account_id', nullable=False)
     op.drop_index('ix_accounts_item_id', table_name='accounts')

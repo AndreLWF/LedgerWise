@@ -76,3 +76,28 @@ class PlaidItemResponse(BaseModel):
     institution_name: str | None = None
     last_synced_at: datetime | None = None
     created_at: datetime | None = None
+
+
+class LinkTokenResponse(BaseModel):
+    link_token: str
+
+
+class ExchangeTokenResponse(BaseModel):
+    item: PlaidItemResponse
+    accounts: list[AccountResponse]
+
+
+class PublicTokenRequest(BaseModel):
+    public_token: str
+
+    @field_validator("public_token")
+    @classmethod
+    def validate_public_token(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("public_token must not be empty")
+        if len(v) > 512:
+            raise ValueError("public_token exceeds maximum length")
+        if not re.match(r"^[a-zA-Z0-9_\-]+$", v):
+            raise ValueError("public_token contains invalid characters")
+        return v

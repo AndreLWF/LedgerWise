@@ -12,8 +12,8 @@ from app.schemas import AccountResponse, CategoryUpdateRequest, TokenRequest, Tr
 from app.services import teller as teller_service
 from app.utils.logging import log_data_access
 
-# Teller IDs are alphanumeric with underscores/hyphens
-_TELLER_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_\-]+$")
+# Transaction IDs (Teller and Plaid) are alphanumeric with underscores/hyphens
+_TRANSACTION_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_\-]+$")
 
 logger = logging.getLogger("ledgerwise.audit")
 
@@ -36,11 +36,16 @@ async def get_my_accounts(
     return [
         AccountResponse(
             id=str(acct.id),
+            provider=acct.provider,
             teller_account_id=acct.teller_account_id,
             institution_name=acct.institution_name,
             account_name=acct.account_name,
             account_type=acct.account_type,
             account_subtype=acct.account_subtype,
+            balance_current=float(acct.balance_current) if acct.balance_current is not None else None,
+            balance_limit=float(acct.balance_limit) if acct.balance_limit is not None else None,
+            item_id=acct.item_id,
+            persistent_account_id=acct.persistent_account_id,
             created_at=acct.created_at,
         )
         for acct in accounts
@@ -74,7 +79,7 @@ async def update_category(
     db: AsyncSession = Depends(get_db),
 ) -> TransactionResponse:
     """Update the category of a single transaction."""
-    if not _TELLER_ID_PATTERN.match(transaction_id):
+    if not _TRANSACTION_ID_PATTERN.match(transaction_id):
         raise HTTPException(status_code=400, detail="Invalid transaction ID format.")
     log_data_access(user_id, f"transaction_category_update:{transaction_id}")
     result = await teller_service.update_transaction_category(

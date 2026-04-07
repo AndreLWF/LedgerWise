@@ -12,6 +12,7 @@ class Account(Base):
     __tablename__ = "accounts"
     __table_args__ = (
         UniqueConstraint("teller_account_id", "user_id", name="uq_account_per_user"),
+        UniqueConstraint("item_id", "persistent_account_id", name="uq_plaid_account_per_item"),
         Index("ix_accounts_user_id", "user_id"),
         Index("ix_accounts_item_id", "item_id"),
     )

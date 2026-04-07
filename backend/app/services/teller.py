@@ -102,13 +102,30 @@ def _map_transactions(rows: list[Transaction]) -> list[TransactionResponse]:
         amount = txn.amount
         if category == "Refund":
             amount = abs(amount)
+
+        # Use the appropriate provider-specific ID, fall back to DB primary key
+        if txn.provider == "plaid" and txn.plaid_transaction_id:
+            txn_id = txn.plaid_transaction_id
+        elif txn.teller_transaction_id:
+            txn_id = txn.teller_transaction_id
+        else:
+            txn_id = str(txn.id)
+
         results.append(TransactionResponse(
-            id=str(txn.teller_transaction_id),
+            id=txn_id,
             date=txn.date.isoformat(),
             description=txn.description,
             amount=str(amount),
             account_name=txn.account.account_name or "Unknown",
             category=category,
+            provider=txn.provider,
+            merchant_name=txn.merchant_name,
+            personal_finance_category_primary=txn.personal_finance_category_primary,
+            personal_finance_category_detailed=txn.personal_finance_category_detailed,
+            payment_channel=txn.payment_channel,
+            pending=txn.pending,
+            authorized_date=txn.authorized_date.isoformat() if txn.authorized_date else None,
+            plaid_transaction_id=txn.plaid_transaction_id,
         ))
     return results
 
@@ -124,7 +141,10 @@ async def update_transaction_category(
         select(Transaction)
         .join(Account)
         .where(Account.user_id == user_id)
-        .where(Transaction.teller_transaction_id == transaction_id)
+        .where(
+            (Transaction.teller_transaction_id == transaction_id)
+            | (Transaction.plaid_transaction_id == transaction_id)
+        )
         .options(joinedload(Transaction.account))
     )
     result = await db.execute(stmt)
@@ -209,6 +229,7 @@ async def enroll_accounts(
                     "amount": Decimal(txn["amount"]),
                     "description": txn.get("description", ""),
                     "category": txn.get("details", {}).get("category"),
+                    "merchant_name": txn.get("merchant_name"),
                     "status": txn.get("status", "posted"),
                 },
             )

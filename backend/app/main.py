@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from app.config import settings
 from app.middleware.auth import get_current_user_id
 from app.middleware.rate_limit import rate_limit_middleware
-from app.routers import spending, teller
+from app.routers import plaid, spending, teller
 from app.utils.logging import audit_logging_middleware
 
 logger = logging.getLogger("ledgerwise.audit")
@@ -65,6 +65,7 @@ async def security_headers_middleware(
     return response
 
 app.include_router(teller.router, prefix="/api/v1")
+app.include_router(plaid.router, prefix="/api/v1")
 app.include_router(spending.router, prefix="/api/v1")
 
 

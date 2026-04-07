@@ -16,11 +16,13 @@ GLOBAL_RATE_LIMIT = {"window_seconds": 60, "max_requests": 60}
 SENSITIVE_RATE_LIMIT = {"window_seconds": 60, "max_requests": 5}
 DATA_RATE_LIMIT = {"window_seconds": 60, "max_requests": 30}
 
-SENSITIVE_PATHS = {"/api/v1/teller/enroll"}
+SENSITIVE_PATHS = {"/api/v1/teller/enroll", "/api/v1/plaid/exchange-token"}
 DATA_PATHS = {
     "/api/v1/teller/accounts",
     "/api/v1/teller/transactions",
     "/api/v1/spending/summary",
+    "/api/v1/plaid/items",
+    "/api/v1/plaid/create-link-token",
 }
 
 # Max unique keys per store before forced eviction (prevents unbounded growth)
