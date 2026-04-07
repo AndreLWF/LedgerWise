@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Index, Numeric, String, UniqueConstraint, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Numeric, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,9 +24,20 @@ class Transaction(Base):
         ForeignKey("accounts.id", ondelete="CASCADE"),
         nullable=False,
     )
-    teller_transaction_id: Mapped[str] = mapped_column(
-        String(255), nullable=False
-    )
+    provider: Mapped[str] = mapped_column(String(20), nullable=False, server_default="teller")
+
+    # Teller-specific (nullable for Plaid-only transactions)
+    teller_transaction_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Plaid-specific
+    plaid_transaction_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    personal_finance_category_primary: Mapped[str | None] = mapped_column(String(100))
+    personal_finance_category_detailed: Mapped[str | None] = mapped_column(String(100))
+    payment_channel: Mapped[str | None] = mapped_column(String(20))
+    pending: Mapped[bool] = mapped_column(Boolean, server_default="false", nullable=False)
+    authorized_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    # Shared fields
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     date: Mapped[date] = mapped_column(Date, nullable=False)
     description: Mapped[str] = mapped_column(String(500), nullable=False)

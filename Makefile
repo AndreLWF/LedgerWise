@@ -1,4 +1,4 @@
-.PHONY: backend frontend install
+.PHONY: backend frontend install migrate
 
 LAN_IP := $(shell ipconfig getifaddr en0)
 
@@ -14,6 +14,10 @@ backend:
 # Start the Expo frontend (auto-detects LAN IP for web + mobile)
 frontend:
 	cd frontend && EXPO_PUBLIC_API_URL=http://$(LAN_IP):8000 npx expo start --clear
+
+# Run Alembic migrations
+migrate:
+	cd backend && . venv/bin/activate && alembic upgrade head
 
 # Install all dependencies (backend venv + frontend node_modules)
 install:

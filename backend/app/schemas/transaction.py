@@ -28,6 +28,14 @@ class TransactionResponse(BaseModel):
     amount: str
     account_name: str
     category: str
+    provider: str = "teller"
+    merchant_name: str | None = None
+    personal_finance_category_primary: str | None = None
+    personal_finance_category_detailed: str | None = None
+    payment_channel: str | None = None
+    pending: bool = False
+    authorized_date: str | None = None
+    plaid_transaction_id: str | None = None
 
 
 class CategoryUpdateRequest(BaseModel):
@@ -48,9 +56,23 @@ class CategoryUpdateRequest(BaseModel):
 
 class AccountResponse(BaseModel):
     id: str
-    teller_account_id: str
+    provider: str = "teller"
+    teller_account_id: str | None = None
     institution_name: str | None = None
     account_name: str | None = None
     account_type: str | None = None
     account_subtype: str | None = None
+    balance_current: float | None = None
+    balance_limit: float | None = None
+    item_id: str | None = None
+    persistent_account_id: str | None = None
+    created_at: datetime | None = None
+
+
+class PlaidItemResponse(BaseModel):
+    id: str
+    item_id: str
+    institution_id: str | None = None
+    institution_name: str | None = None
+    last_synced_at: datetime | None = None
     created_at: datetime | None = None
