@@ -13,6 +13,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.ledgerwise.app",
       "supportsTablet": true,
       "infoPlist": {
         "NSAppTransportSecurity": {
@@ -37,6 +38,13 @@
       "expo-web-browser",
       "expo-router",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c8e8845d-8ac9-4509-aadd-493c46e2c639"
+      }
+    },
+    "owner": "ledgerwise"
   }
 }

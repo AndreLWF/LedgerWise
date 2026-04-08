@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Account, PlaidItem, Transaction
 from app.schemas import AccountResponse
 from app.schemas.transaction import PlaidItemResponse
+from app.config import settings
 from app.services.plaid_client import get_plaid_client
 from app.utils.encryption import encrypt
 from app.utils.logging import log_data_access, log_enrollment
@@ -34,13 +35,16 @@ logger = logging.getLogger("ledgerwise.audit")
 async def create_link_token(user_id: str) -> str:
     """Create a Plaid Link token for the frontend widget."""
     client = get_plaid_client()
-    request = LinkTokenCreateRequest(
-        user=LinkTokenCreateRequestUser(client_user_id=user_id),
-        client_name="LedgerWise",
-        products=[Products("transactions")],
-        country_codes=[CountryCode("US")],
-        language="en",
-    )
+    kwargs = {
+        "user": LinkTokenCreateRequestUser(client_user_id=user_id),
+        "client_name": "LedgerWise",
+        "products": [Products("transactions")],
+        "country_codes": [CountryCode("US")],
+        "language": "en",
+    }
+    if settings.plaid_redirect_uri:
+        kwargs["redirect_uri"] = settings.plaid_redirect_uri
+    request = LinkTokenCreateRequest(**kwargs)
     response = await asyncio.to_thread(client.link_token_create, request)
     return response.link_token
 
