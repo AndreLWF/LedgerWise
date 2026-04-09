@@ -97,7 +97,6 @@ export const createCategorizeStyles = (deps: StyleDeps) => StyleSheet.create({
     borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: deps.colors.border.default,
-    overflow: 'hidden',
     ...deps.shadows.md,
     ...(isNarrow ? { minHeight: 300 } : {}),
   },
@@ -108,6 +107,9 @@ export const createCategorizeStyles = (deps: StyleDeps) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: deps.colors.border.default,
     backgroundColor: deps.colors.surface.elevated,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    zIndex: 10,
   },
   panelHeaderRow: {
     flexDirection: 'row',
@@ -132,6 +134,11 @@ export const createCategorizeStyles = (deps: StyleDeps) => StyleSheet.create({
     borderRadius: radius.sm,
     overflow: 'hidden',
   },
+  filterSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 8,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -154,6 +161,9 @@ export const createCategorizeStyles = (deps: StyleDeps) => StyleSheet.create({
   },
   transactionList: {
     flex: 1,
+    overflow: 'hidden',
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
   },
   transactionListContent: {
     paddingBottom: 8,
@@ -360,6 +370,142 @@ export const createCategorizeStyles = (deps: StyleDeps) => StyleSheet.create({
   },
   createCategoryTextHovered: {
     color: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[600],
+  },
+
+  // --- Filter Dropdown ---
+  filterContainer: {
+    position: 'relative' as const,
+    zIndex: 100,
+  },
+  filterTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: deps.colors.border.default,
+    backgroundColor: deps.colors.surface.bg,
+  },
+  filterTriggerActive: {
+    borderColor: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[600],
+    backgroundColor: deps.colors.isDark
+      ? deps.colors.purple[900] + '20'
+      : deps.colors.purple[50],
+  },
+  filterIcon: {
+    marginRight: 2,
+  },
+  filterLabel: {
+    fontFamily: typography.fontFamily.semiBold,
+    fontSize: 13,
+    fontWeight: '600',
+    color: deps.colors.text.primary,
+    maxWidth: 140,
+  },
+  filterLabelActive: {
+    color: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[600],
+  },
+  filterChevron: {
+    marginLeft: 2,
+  },
+  filterBackdrop: {
+    ...(Platform.OS === 'web' ? {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    } as Record<string, unknown> : {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    }),
+    zIndex: 99,
+  },
+  filterDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    marginTop: 4,
+    width: 240,
+    maxHeight: 320,
+    backgroundColor: deps.colors.surface.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: deps.colors.border.default,
+    ...deps.shadows.lg,
+    zIndex: 100,
+    overflow: 'hidden',
+  },
+  filterDropdownScroll: {
+    maxHeight: 310,
+  },
+  filterDropdownContent: {
+    paddingVertical: 4,
+  },
+  filterOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  filterOptionHovered: {
+    backgroundColor: deps.colors.surface.elevated,
+  },
+  filterOptionSelected: {
+    backgroundColor: deps.colors.isDark
+      ? deps.colors.purple[900] + '30'
+      : deps.colors.purple[50],
+  },
+  filterOptionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  filterOptionLabel: {
+    flex: 1,
+    fontFamily: typography.fontFamily.medium,
+    fontSize: 13,
+    fontWeight: '500',
+    color: deps.colors.text.primary,
+  },
+  filterOptionLabelSelected: {
+    color: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[600],
+  },
+  filterOptionCount: {
+    ...typography.amount,
+    fontSize: 11,
+    fontWeight: '600',
+    color: deps.colors.text.tertiary,
+    backgroundColor: deps.colors.surface.bg,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+  },
+  filterDivider: {
+    height: 1,
+    backgroundColor: deps.colors.border.default,
+    marginVertical: 4,
+    marginHorizontal: 10,
+  },
+  filterOptionDotPlaceholder: {
+    width: 8,
+  },
+  searchContainerFlex: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: deps.colors.surface.bg,
+    borderWidth: 1,
+    borderColor: deps.colors.border.default,
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
   },
 
   // --- Empty State ---

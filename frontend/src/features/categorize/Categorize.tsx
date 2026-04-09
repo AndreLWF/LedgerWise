@@ -19,6 +19,7 @@ import useCategorizeData from './useCategorizeData';
 import TransactionRow from './components/TransactionRow';
 import CategoryTarget from './components/CategoryTarget';
 import ProgressHeader from './components/ProgressHeader';
+import TransactionFilterDropdown from './components/TransactionFilterDropdown';
 import MobileCategorizeList from './components/MobileCategorizeList';
 import type { Transaction } from '../../types/transaction';
 import type { CategoryInfo } from '../../types/categorize';
@@ -44,16 +45,21 @@ export default function Categorize() {
   const {
     transactions,
     categories,
+    allCategories,
     categorizedCount,
     totalTransactions,
     totalSpendingAmount,
     loading,
+    filterMode,
+    setFilterMode,
     transactionSearch,
     categorySearch,
     setTransactionSearch,
     setCategorySearch,
     assignToCategory,
   } = useCategorizeData();
+
+  const uncategorizedCount = totalTransactions - categorizedCount;
 
   const isMobile = windowWidth < SIDEBAR_BREAKPOINT;
 
@@ -106,17 +112,29 @@ export default function Categorize() {
   const keyExtractorTx = useCallback((item: Transaction) => item.id, []);
   const keyExtractorCat = useCallback((item: CategoryListItem) => item.id, []);
 
+  const emptyTitle = transactionSearch
+    ? 'No matches found'
+    : filterMode === 'uncategorized'
+      ? 'All done!'
+      : 'No transactions';
+
+  const emptySubtitle = transactionSearch
+    ? 'Try a different search term'
+    : filterMode === 'uncategorized'
+      ? 'All transactions have been categorized'
+      : filterMode === 'all'
+        ? 'No spending transactions found'
+        : `No transactions in ${filterMode}`;
+
   const transactionEmptyState = (
     <View style={styles.emptyContainer}>
-      <Ionicons name="checkmark-circle-outline" size={48} color={colors.text.tertiary} />
-      <Text style={styles.emptyTitle}>
-        {transactionSearch ? 'No matches found' : 'All done!'}
-      </Text>
-      <Text style={styles.emptyText}>
-        {transactionSearch
-          ? 'Try a different search term'
-          : 'All transactions have been categorized'}
-      </Text>
+      <Ionicons
+        name={filterMode === 'uncategorized' && !transactionSearch ? 'checkmark-circle-outline' : 'search-outline'}
+        size={48}
+        color={colors.text.tertiary}
+      />
+      <Text style={styles.emptyTitle}>{emptyTitle}</Text>
+      <Text style={styles.emptyText}>{emptySubtitle}</Text>
     </View>
   );
 
@@ -192,24 +210,39 @@ export default function Categorize() {
             <View style={styles.transactionsPanel}>
               <View style={styles.panelHeader}>
                 <View style={styles.panelHeaderRow}>
-                  <Text style={styles.panelTitle}>Uncategorized Transactions</Text>
+                  <Text style={styles.panelTitle}>
+                    {filterMode === 'uncategorized'
+                      ? 'Uncategorized Transactions'
+                      : filterMode === 'all'
+                        ? 'All Transactions'
+                        : `${filterMode} Transactions`}
+                  </Text>
                   <Text style={styles.countBadge}>{transactions.length}</Text>
                 </View>
-                <View style={styles.searchContainer}>
-                  <Ionicons
-                    name="search"
-                    size={16}
-                    color={colors.text.tertiary}
-                    style={styles.searchIcon}
+                <View style={styles.filterSearchRow}>
+                  <TransactionFilterDropdown
+                    filterMode={filterMode}
+                    onFilterChange={setFilterMode}
+                    categories={allCategories}
+                    uncategorizedCount={uncategorizedCount}
+                    totalCount={totalTransactions}
                   />
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search transactions..."
-                    placeholderTextColor={colors.text.tertiary}
-                    value={transactionSearch}
-                    onChangeText={setTransactionSearch}
-                    accessibilityLabel="Search transactions"
-                  />
+                  <View style={styles.searchContainerFlex}>
+                    <Ionicons
+                      name="search"
+                      size={16}
+                      color={colors.text.tertiary}
+                      style={styles.searchIcon}
+                    />
+                    <TextInput
+                      style={styles.searchInput}
+                      placeholder="Search transactions..."
+                      placeholderTextColor={colors.text.tertiary}
+                      value={transactionSearch}
+                      onChangeText={setTransactionSearch}
+                      accessibilityLabel="Search transactions"
+                    />
+                  </View>
                 </View>
               </View>
 
@@ -223,6 +256,9 @@ export default function Categorize() {
                 }
                 ListEmptyComponent={transactionEmptyState}
                 showsVerticalScrollIndicator={true}
+                initialNumToRender={15}
+                maxToRenderPerBatch={15}
+                windowSize={5}
               />
             </View>
           </StaggeredView>

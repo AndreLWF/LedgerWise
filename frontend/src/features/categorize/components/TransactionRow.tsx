@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
@@ -12,7 +12,7 @@ interface Props {
   transaction: Transaction;
 }
 
-export default function TransactionRow({ transaction }: Props) {
+function TransactionRow({ transaction }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createCategorizeStyles);
 
@@ -60,3 +60,5 @@ export default function TransactionRow({ transaction }: Props) {
     </View>
   );
 }
+
+export default memo(TransactionRow);

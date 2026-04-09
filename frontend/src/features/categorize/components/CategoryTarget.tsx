@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
@@ -16,7 +16,7 @@ interface Props {
   compact?: boolean;
 }
 
-export default function CategoryTarget({ category, totalSpending, onDrop, compact }: Props) {
+function CategoryTarget({ category, totalSpending, onDrop, compact }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createCategorizeStyles);
 
@@ -82,3 +82,5 @@ export default function CategoryTarget({ category, totalSpending, onDrop, compac
     </View>
   );
 }
+
+export default memo(CategoryTarget);

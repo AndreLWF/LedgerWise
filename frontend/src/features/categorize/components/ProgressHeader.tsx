@@ -30,7 +30,12 @@ export default function ProgressHeader({ categorizedCount, totalCount }: Props) 
         </View>
         <Text style={styles.progressPercentage}>{percentage}%</Text>
       </View>
-      <View style={styles.progressTrack}>
+      <View
+        style={styles.progressTrack}
+        accessibilityRole="progressbar"
+        accessibilityLabel={`${categorizedCount} of ${totalCount} transactions categorized, ${percentage} percent`}
+        accessibilityValue={{ min: 0, max: totalCount, now: categorizedCount }}
+      >
         <LinearGradient
           colors={[colors.purple[600], colors.purple[500]]}
           start={{ x: 0, y: 0 }}

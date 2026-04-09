@@ -6,7 +6,7 @@ import { isSpending } from '../../utils/transactionFilters';
 import { getCategoryColor } from '../../utils/categoryColors';
 import { normalizeCategory } from '../../utils/normalizeCategory';
 import type { Transaction } from '../../types/transaction';
-import type { CategoryInfo } from '../../types/categorize';
+import type { CategoryInfo, TransactionFilter } from '../../types/categorize';
 
 export default function useCategorizeData() {
   const { allTransactions, transactionsLoading, updateTransactionLocally } = useTransactionData();
@@ -76,6 +76,21 @@ export default function useCategorizeData() {
   const totalSpending = spendingTransactions.length;
   const categorizedCount = totalSpending - uncategorized.length;
 
+  // Filter mode: 'uncategorized' (default), 'all', or a specific category name
+  const [filterMode, setFilterMode] = useState<TransactionFilter>('uncategorized');
+
+  const filteredByMode = useMemo(() => {
+    if (filterMode === 'uncategorized') return uncategorized;
+    if (filterMode === 'all') return spendingTransactions;
+    // Specific category — match by normalized name
+    return spendingTransactions.filter((tx) => {
+      const name = reassigned.has(tx.id)
+        ? reassigned.get(tx.id)!
+        : normalizeCategory(tx.category);
+      return name === filterMode;
+    });
+  }, [filterMode, uncategorized, spendingTransactions, reassigned]);
+
   const assignToCategory = useCallback(
     (transactionId: string, categoryName: string) => {
       // Find the original category before any updates (needed for revert on failure)
@@ -121,14 +136,14 @@ export default function useCategorizeData() {
   const [categorySearch, setCategorySearch] = useState('');
 
   const filteredTransactions = useMemo(() => {
-    if (!transactionSearch) return uncategorized;
+    if (!transactionSearch) return filteredByMode;
     const search = transactionSearch.toLowerCase();
-    return uncategorized.filter(
+    return filteredByMode.filter(
       (t: Transaction) =>
         t.description.toLowerCase().includes(search) ||
         t.amount.includes(search),
     );
-  }, [uncategorized, transactionSearch]);
+  }, [filteredByMode, transactionSearch]);
 
   const filteredCategories = useMemo(() => {
     if (!categorySearch) return categories;
@@ -139,10 +154,13 @@ export default function useCategorizeData() {
   return {
     transactions: filteredTransactions,
     categories: filteredCategories,
+    allCategories: categories,
     categorizedCount,
     totalTransactions: totalSpending,
     totalSpendingAmount,
     loading: transactionsLoading,
+    filterMode,
+    setFilterMode,
     transactionSearch,
     categorySearch,
     setTransactionSearch,
