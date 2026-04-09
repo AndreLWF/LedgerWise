@@ -174,8 +174,11 @@ export default function Categorize() {
       <MobileCategorizeList
         transactions={transactions}
         categories={categories}
+        allCategories={allCategories}
         categorizedCount={categorizedCount}
         totalTransactions={totalTransactions}
+        filterMode={filterMode}
+        setFilterMode={setFilterMode}
         transactionSearch={transactionSearch}
         setTransactionSearch={setTransactionSearch}
         assignToCategory={assignToCategory}

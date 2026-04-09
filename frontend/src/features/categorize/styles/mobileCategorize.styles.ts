@@ -74,6 +74,54 @@ export const createMobileCategorizeStyles = (deps: StyleDeps) => StyleSheet.crea
     backgroundColor: deps.colors.purple[600],
   },
 
+  // --- Filter Pills ---
+  filterPillsScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  filterPillsContent: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: deps.colors.surface.card,
+    borderWidth: 1,
+    borderColor: deps.colors.border.default,
+  },
+  filterPillActive: {
+    backgroundColor: deps.colors.isDark ? deps.colors.purple[900] + '40' : deps.colors.purple[50],
+    borderColor: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[600],
+  },
+  filterPillDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  filterPillText: {
+    fontFamily: typography.fontFamily.semiBold,
+    fontSize: 13,
+    fontWeight: '600',
+    color: deps.colors.text.secondary,
+  },
+  filterPillTextActive: {
+    color: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[600],
+  },
+  filterPillCount: {
+    fontFamily: typography.fontFamily.medium,
+    fontSize: 11,
+    fontWeight: '500',
+    color: deps.colors.text.tertiary,
+  },
+  filterPillCountActive: {
+    color: deps.colors.isDark ? deps.colors.purple[400] : deps.colors.purple[600],
+  },
+
   // --- Search ---
   searchContainer: {
     flexDirection: 'row',

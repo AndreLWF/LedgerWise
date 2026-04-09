@@ -17,8 +17,9 @@ import StaggeredView from '../../../components/StaggeredView';
 import CategoryGridOverlay from './CategoryGridOverlay';
 import MobileDraggableRow from './MobileDraggableRow';
 import useCategorizeDrag from '../useCategorizeDrag';
+import MobileFilterPills from './MobileFilterPills';
 import type { Transaction } from '../../../types/transaction';
-import type { CategoryInfo } from '../../../types/categorize';
+import type { CategoryInfo, TransactionFilter } from '../../../types/categorize';
 
 interface ToastData {
   categoryName: string;
@@ -29,8 +30,11 @@ interface ToastData {
 interface Props {
   transactions: Transaction[];
   categories: CategoryInfo[];
+  allCategories: CategoryInfo[];
   categorizedCount: number;
   totalTransactions: number;
+  filterMode: TransactionFilter;
+  setFilterMode: (filter: TransactionFilter) => void;
   transactionSearch: string;
   setTransactionSearch: (text: string) => void;
   assignToCategory: (transactionId: string, categoryName: string) => void;
@@ -39,8 +43,11 @@ interface Props {
 export default function MobileCategorizeList({
   transactions,
   categories,
+  allCategories,
   categorizedCount,
   totalTransactions,
+  filterMode,
+  setFilterMode,
   transactionSearch,
   setTransactionSearch,
   assignToCategory,
@@ -57,7 +64,7 @@ export default function MobileCategorizeList({
     ? Math.round((categorizedCount / totalTransactions) * 100)
     : 0;
 
-  const progressFillWidth = useMemo(() => ({ width: `${percentage}%` as unknown as number }), [percentage]);
+  const progressFillWidth = useMemo(() => ({ width: `${percentage}%` as `${number}%` }), [percentage]);
 
   const clearToast = useCallback(() => setToast(null), []);
 
@@ -147,19 +154,31 @@ export default function MobileCategorizeList({
     transform: [{ scale: listScale.value }],
   }));
 
+  const emptyTitle = transactionSearch
+    ? 'No matches found'
+    : filterMode === 'uncategorized'
+      ? 'All done!'
+      : 'No transactions';
+
+  const emptySubtitle = transactionSearch
+    ? 'Try a different search term'
+    : filterMode === 'uncategorized'
+      ? 'All transactions have been categorized'
+      : filterMode === 'all'
+        ? 'No spending transactions found'
+        : `No transactions in ${filterMode}`;
+
+  const emptyIcon = filterMode === 'uncategorized' && !transactionSearch
+    ? 'checkmark-circle-outline' as const
+    : 'search-outline' as const;
+
   const emptyState = useMemo(() => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="checkmark-circle-outline" size={48} color={colors.text.tertiary} />
-      <Text style={styles.emptyTitle}>
-        {transactionSearch ? 'No matches found' : 'All done!'}
-      </Text>
-      <Text style={styles.emptyText}>
-        {transactionSearch
-          ? 'Try a different search term'
-          : 'All transactions have been categorized'}
-      </Text>
+      <Ionicons name={emptyIcon} size={48} color={colors.text.tertiary} />
+      <Text style={styles.emptyTitle}>{emptyTitle}</Text>
+      <Text style={styles.emptyText}>{emptySubtitle}</Text>
     </View>
-  ), [transactionSearch, styles, colors]);
+  ), [emptyTitle, emptySubtitle, emptyIcon, styles, colors]);
 
   return (
     <View style={styles.container}>
@@ -190,6 +209,15 @@ export default function MobileCategorizeList({
                 <View style={[styles.progressFill, progressFillWidth]} />
               </View>
             </View>
+
+            {/* Filter Pills */}
+            <MobileFilterPills
+              filterMode={filterMode}
+              onFilterChange={setFilterMode}
+              categories={allCategories}
+              uncategorizedCount={totalTransactions - categorizedCount}
+              totalCount={totalTransactions}
+            />
 
             {/* Search */}
             <View style={styles.searchContainer}>

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
@@ -62,7 +62,7 @@ export default function TransactionFilterDropdown({
         ? 'All Transactions'
         : filterMode;
 
-  const listData: FilterListItem[] = [
+  const listData = useMemo((): FilterListItem[] => [
     { key: 'uncategorized', label: 'Uncategorized Only', filter: 'uncategorized', count: uncategorizedCount },
     { key: 'all', label: 'All Transactions', filter: 'all', count: totalCount },
     ...(categories.length > 0
@@ -79,7 +79,7 @@ export default function TransactionFilterDropdown({
           ),
         ]
       : []),
-  ];
+  ], [categories, uncategorizedCount, totalCount]);
 
   const renderItem = useCallback(
     ({ item }: { item: FilterListItem }) => {
