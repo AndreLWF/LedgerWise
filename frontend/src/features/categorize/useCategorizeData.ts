@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { updateTransactionCategory } from '../../api/client';
 import { isSpending } from '../../utils/transactionFilters';
 import { getCategoryColor } from '../../utils/categoryColors';
-import { normalizeCategory } from './utils/normalizeCategory';
+import { normalizeCategory } from '../../utils/normalizeCategory';
 import type { Transaction } from '../../types/transaction';
 import type { CategoryInfo } from '../../types/categorize';
 
