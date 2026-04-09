@@ -5,6 +5,7 @@ import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { createSpendingStyles } from '../styles/spending.styles';
 import type { CategoryData } from '../../../types/spending';
 import { getCategoryColor } from '../../../utils/categoryColors';
+import { formatCurrency } from '../../../utils/formatters';
 import { isNarrow } from '../../../utils/responsive';
 
 interface ProportionBarProps {
@@ -51,7 +52,7 @@ export default function ProportionBar({ categories, accountCount = 0 }: Proporti
         {Math.round(cat.percentage)}%
       </Text>
     </View>
-  ), [styles]);
+  ), [styles, setHoveredIndex]);
 
   return (
     <View style={styles.proportionBarContainer}>
@@ -96,7 +97,8 @@ export default function ProportionBar({ categories, accountCount = 0 }: Proporti
                 i === 0 && styles.proportionSegmentFirst,
                 i === sorted.length - 1 && styles.proportionSegmentLast,
               ]}
-              accessibilityLabel={`${cat.name}, $${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}, ${cat.percentage.toFixed(1)}%`}
+              accessibilityRole="button"
+              accessibilityLabel={`${cat.name}, ${formatCurrency(cat.total)}, ${cat.percentage.toFixed(1)}%`}
             >
               {/* Brighten overlay on hovered segment */}
               {isHovered && (
@@ -115,7 +117,7 @@ export default function ProportionBar({ categories, accountCount = 0 }: Proporti
                 <View style={styles.proportionTooltip}>
                   <Text style={styles.proportionTooltipText}>
                     {cat.name === 'General' ? 'General / Uncategorized' : cat.name}:{' '}
-                    ${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}{' '}
+                    {formatCurrency(cat.total)}{' '}
                     ({cat.percentage.toFixed(1)}%)
                   </Text>
                 </View>
@@ -127,10 +129,10 @@ export default function ProportionBar({ categories, accountCount = 0 }: Proporti
 
       <View style={styles.legend}>
         <View style={styles.legendColumn}>
-          {leftColumn.map((cat) => renderLegendItem(cat, sorted.indexOf(cat)))}
+          {leftColumn.map((cat, i) => renderLegendItem(cat, i))}
         </View>
         <View style={styles.legendColumn}>
-          {rightColumn.map((cat) => renderLegendItem(cat, sorted.indexOf(cat)))}
+          {rightColumn.map((cat, i) => renderLegendItem(cat, midpoint + i))}
         </View>
       </View>
     </View>

@@ -42,6 +42,8 @@ interface TransactionDataContextValue {
   updateTransactionLocally: (transactionId: string, updates: Partial<Transaction>) => void;
   selectedPeriod: TimePeriod;
   setSelectedPeriod: (period: TimePeriod) => void;
+  highlightCategory: string | null;
+  setHighlightCategory: (category: string | null) => void;
 }
 
 const TransactionDataContext = createContext<TransactionDataContextValue | null>(null);
@@ -60,6 +62,7 @@ export function TransactionDataProvider({ token, children }: ProviderProps) {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(DEFAULT_PERIOD);
+  const [highlightCategory, setHighlightCategory] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     clearApiCache();
@@ -167,8 +170,10 @@ export function TransactionDataProvider({ token, children }: ProviderProps) {
       updateTransactionLocally,
       selectedPeriod,
       setSelectedPeriod,
+      highlightCategory,
+      setHighlightCategory,
     }),
-    [accounts, allTransactions, hasAccounts, accountsLoading, transactionsLoading, error, refresh, updateTransactionLocally, selectedPeriod],
+    [accounts, allTransactions, hasAccounts, accountsLoading, transactionsLoading, error, refresh, updateTransactionLocally, selectedPeriod, highlightCategory],
   );
 
   return (

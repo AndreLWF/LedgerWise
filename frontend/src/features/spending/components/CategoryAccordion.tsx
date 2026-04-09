@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
@@ -7,6 +7,7 @@ import { createSpendingStyles } from '../styles/spending.styles';
 import type { SpendingSummaryData } from '../../../types/spending';
 import type { Transaction } from '../../../types/transaction';
 import { getCategoryColor } from '../../../utils/categoryColors';
+import { normalizeCategory } from '../../../utils/normalizeCategory';
 import { formatCurrency, formatLocalDate } from '../../../utils/formatters';
 import { isPayment } from '../../../utils/transactionFilters';
 import { isHovered } from '../../../utils/pressable';
@@ -17,24 +18,42 @@ interface CategoryAccordionProps {
   data: SpendingSummaryData;
   transactions: Transaction[];
   variant?: 'default' | 'refund';
+  initialOpenCategory?: string | null;
+  onInitialOpenConsumed?: (rowRef: View | null) => void;
 }
 
 export default function CategoryAccordion({
   data,
   transactions,
   variant = 'default',
+  initialOpenCategory,
+  onInitialOpenConsumed,
 }: CategoryAccordionProps) {
   const colors = useColors();
   const styles = useThemeStyles(createSpendingStyles);
   const { toggle, getState, handleMeasure } = useAccordionHeight();
   const isRefund = variant === 'refund';
+  const hasAutoOpened = useRef(false);
+  const rowRefs = useRef<Map<string, View | null>>(new Map());
+
+  useEffect(() => {
+    if (!initialOpenCategory || hasAutoOpened.current || isRefund) return;
+    const match = data.categories.find((c) => c.name === initialOpenCategory);
+    if (match) {
+      hasAutoOpened.current = true;
+      requestAnimationFrame(() => {
+        toggle(match.name);
+        onInitialOpenConsumed?.(rowRefs.current.get(match.name) ?? null);
+      });
+    }
+  }, [initialOpenCategory, data.categories, isRefund, toggle, onInitialOpenConsumed]);
 
   const totalAmount = useMemo(
     () => data.categories.reduce((sum, c) => sum + c.total, 0),
     [data.categories],
   );
 
-  function getTransactionsForCategory(categoryName: string): Transaction[] {
+  const getTransactionsForCategory = useCallback((categoryName: string): Transaction[] => {
     if (isRefund) {
       return transactions.filter((t) => {
         const amt = parseFloat(t.amount);
@@ -44,14 +63,14 @@ export default function CategoryAccordion({
       });
     }
     return transactions.filter((t) => {
-      const txnCategory = t.category || 'General';
+      const txnCategory = normalizeCategory(t.category);
       if (txnCategory !== categoryName) return false;
       if (isPayment(t.description)) return false;
       const amt = parseFloat(t.amount);
       if (amt < 0) return false;
       return true;
     });
-  }
+  }, [isRefund, transactions]);
 
   const sorted = useMemo(
     () => [...data.categories].sort((a, b) => b.total - a.total),
@@ -73,7 +92,7 @@ export default function CategoryAccordion({
           : '0';
 
         return (
-          <View key={cat.name}>
+          <View key={cat.name} ref={(ref) => { rowRefs.current.set(cat.name, ref); }} collapsable={false}>
             <Pressable
               style={(state) => [
                 styles.categoryRow,

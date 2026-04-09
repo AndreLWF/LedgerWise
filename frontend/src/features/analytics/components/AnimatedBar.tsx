@@ -38,6 +38,7 @@ interface Props {
   year: number;
   onPress: (index: number) => void;
   onPressOut: () => void;
+  onBarClick?: (index: number) => void;
 }
 
 function AnimatedBar({
@@ -53,6 +54,7 @@ function AnimatedBar({
   year,
   onPress,
   onPressOut,
+  onBarClick,
 }: Props) {
   const styles = useThemeStyles(createAnalyticsStyles);
   const barHeight = useSharedValue(0);
@@ -68,6 +70,19 @@ function AnimatedBar({
     }
     onPress(index);
   }, [onPress, index]);
+
+  const handleClick = useCallback(() => {
+    if (Platform.OS === 'web') {
+      onBarClick?.(index);
+    }
+  }, [onBarClick, index]);
+
+  const handleLongPress = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      onBarClick?.(index);
+    }
+  }, [onBarClick, index]);
 
   // Animate bar height: stagger on mount, morph on data change
   useEffect(() => {
@@ -123,6 +138,9 @@ function AnimatedBar({
   return (
     <Pressable
       style={[styles.barColumn, isActive && styles.barColumnActive]}
+      onPress={handleClick}
+      onLongPress={handleLongPress}
+      delayLongPress={600}
       onPressIn={handlePress}
       onPressOut={onPressOut}
       onHoverIn={handlePress}

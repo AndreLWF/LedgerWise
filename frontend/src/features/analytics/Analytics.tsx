@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { useTransactionData } from '../../contexts/TransactionDataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useColors } from '../../contexts/ThemeContext';
@@ -15,12 +16,13 @@ import { useAnalyticsData } from './useAnalyticsData';
 import SummaryStatsRow from './components/SummaryStatsRow';
 import CategoryDropdown from './components/CategoryDropdown';
 import BarChart from './components/BarChart';
-import type { AnalyticsTimePeriod } from '../../types/analytics';
+import type { AnalyticsTimePeriod, MonthlyAggregate } from '../../types/analytics';
 
 type OpenDropdown = 'none' | 'category';
 
 export default function Analytics() {
-  const { hasAccounts, accountsLoading, refresh } = useTransactionData();
+  const router = useRouter();
+  const { hasAccounts, accountsLoading, refresh, setSelectedPeriod, setHighlightCategory } = useTransactionData();
   const { session } = useAuth();
   const token = session?.access_token ?? null;
   const colors = useColors();
@@ -41,6 +43,12 @@ export default function Analytics() {
   const toggleCategoryDropdown = useCallback(() => {
     setOpenDropdown((prev) => (prev === 'category' ? 'none' : 'category'));
   }, []);
+
+  const handleMonthPress = useCallback((month: MonthlyAggregate) => {
+    setSelectedPeriod({ type: 'month', month: month.month, year: month.year });
+    setHighlightCategory(selectedCategory);
+    router.push('/dashboard/spending');
+  }, [setSelectedPeriod, setHighlightCategory, selectedCategory, router]);
 
   const showDropdowns = hasAccounts && !accountsLoading && !loading;
 
@@ -144,6 +152,7 @@ export default function Analytics() {
             barColor={barColor}
             timePeriod={timePeriod}
             onTimePeriodChange={setTimePeriod}
+            onMonthPress={handleMonthPress}
           />
         </StaggeredView>
       </ScrollView>

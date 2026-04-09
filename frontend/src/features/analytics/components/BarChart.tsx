@@ -21,6 +21,7 @@ interface Props {
   barColor?: string;
   timePeriod: AnalyticsTimePeriod;
   onTimePeriodChange: (period: AnalyticsTimePeriod) => void;
+  onMonthPress?: (month: MonthlyAggregate) => void;
 }
 
 const axisFormatter = new Intl.NumberFormat('en-US', {
@@ -35,7 +36,7 @@ function formatAxisLabel(value: number): string {
   return axisFormatter.format(value);
 }
 
-function BarChart({ months, categoryLabel, barColor, timePeriod, onTimePeriodChange }: Props) {
+function BarChart({ months, categoryLabel, barColor, timePeriod, onTimePeriodChange, onMonthPress }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createAnalyticsStyles);
   const [activeBar, setActiveBar] = useState<number | null>(null);
@@ -67,6 +68,10 @@ function BarChart({ months, categoryLabel, barColor, timePeriod, onTimePeriodCha
   const handleBarPress = useCallback((index: number) => {
     setActiveBar(index);
   }, []);
+
+  const handleBarClick = useCallback((index: number) => {
+    onMonthPress?.(months[index]);
+  }, [onMonthPress, months]);
 
   const handleBarPressOut = useCallback(() => {
     setActiveBar(null);
@@ -133,6 +138,7 @@ function BarChart({ months, categoryLabel, barColor, timePeriod, onTimePeriodCha
                 year={month.year}
                 onPress={handleBarPress}
                 onPressOut={handleBarPressOut}
+                onBarClick={handleBarClick}
               />
             );
           })}

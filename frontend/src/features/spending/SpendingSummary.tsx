@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '../../contexts/ThemeContext';
@@ -14,6 +14,7 @@ import StatCard from '../../components/StatCard';
 import StaggeredView from '../../components/StaggeredView';
 import CategoryAccordion from './components/CategoryAccordion';
 import ProportionBar from './components/ProportionBar';
+import { formatCurrency } from '../../utils/formatters';
 import { isHovered } from '../../utils/pressable';
 import { isNarrow } from '../../utils/responsive';
 import { useRouter } from 'expo-router';
@@ -27,6 +28,8 @@ interface Props {
   availableYears?: number[];
   accountCount?: number;
   onAddAccount?: () => void;
+  initialOpenCategory?: string | null;
+  onInitialOpenConsumed?: () => void;
 }
 
 export default function SpendingSummary({
@@ -38,11 +41,16 @@ export default function SpendingSummary({
   availableYears,
   accountCount = 0,
   onAddAccount,
+  initialOpenCategory,
+  onInitialOpenConsumed,
 }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createSpendingStyles);
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
+  const categorySectionRef = useRef<View>(null);
+  const scrollContentRef = useRef<View>(null);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasData = data && data.categories.length > 0;
   const topCategory = hasData ? data.categories[0] : null;
   const periodKey = useMemo(
@@ -51,10 +59,35 @@ export default function SpendingSummary({
   );
 
   useEffect(() => {
-    requestAnimationFrame(() => {
+    const raf = requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({ y: 0, animated: true });
     });
+    return () => cancelAnimationFrame(raf);
   }, [periodKey]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimerRef.current !== null) clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
+
+  const handleInitialOpenConsumed = useCallback((rowRef: View | null) => {
+    onInitialOpenConsumed?.();
+    const target = rowRef ?? categorySectionRef.current;
+    scrollTimerRef.current = setTimeout(() => {
+      scrollTimerRef.current = null;
+      const scrollNode = scrollContentRef.current;
+      if (target && scrollNode) {
+        target.measureLayout(
+          scrollNode as any,
+          (_x, y) => {
+            scrollRef.current?.scrollTo({ y: Math.max(0, y - 20), animated: true });
+          },
+          () => {},
+        );
+      }
+    }, 150);
+  }, [onInitialOpenConsumed]);
 
   const iconBgPurple = colors.isDark ? colors.purple[900] + '60' : colors.purple[100];
   const iconBgGold = colors.isDark ? colors.gold[900] + '40' : colors.gold[100];
@@ -103,6 +136,7 @@ export default function SpendingSummary({
       />
 
       <ScrollView ref={scrollRef} style={styles.scrollArea} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View ref={scrollContentRef} collapsable={false}>
         {loading && (
           <ActivityIndicator
             size="large"
@@ -120,7 +154,7 @@ export default function SpendingSummary({
             <StaggeredView index={1} trigger={periodKey}>
               <View style={styles.summaryStrip}>
                 <StatCard
-                  value={`$${data.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  value={formatCurrency(data.total_spent)}
                   subtitle={getDisplayText(selectedPeriod)}
                   icon="trending-up"
                   iconColor={colors.purple[700]}
@@ -135,7 +169,7 @@ export default function SpendingSummary({
                 />
                 <StatCard
                   value={topCategory.name}
-                  subtitle={`$${topCategory.total.toLocaleString(undefined, { minimumFractionDigits: 2 })} \u00B7 ${topCategory.percentage}% of total`}
+                  subtitle={`${formatCurrency(topCategory.total)} \u00B7 ${topCategory.percentage}% of total`}
                   icon="pie-chart-outline"
                   iconColor={colors.purple[700]}
                   iconBgColor={iconBgPurple}
@@ -155,9 +189,16 @@ export default function SpendingSummary({
               <ProportionBar categories={data.categories} accountCount={accountCount} />
             </StaggeredView>
 
-            <StaggeredView index={3} trigger={periodKey}>
-              <CategoryAccordion data={data} transactions={transactions} />
-            </StaggeredView>
+            <View ref={categorySectionRef} collapsable={false}>
+              <StaggeredView index={3} trigger={periodKey}>
+                <CategoryAccordion
+                  data={data}
+                  transactions={transactions}
+                  initialOpenCategory={initialOpenCategory}
+                  onInitialOpenConsumed={handleInitialOpenConsumed}
+                />
+              </StaggeredView>
+            </View>
 
             {data.refund_count > 0 && (
               <StaggeredView index={4} trigger={periodKey}>
@@ -178,6 +219,7 @@ export default function SpendingSummary({
             )}
           </>
         )}
+        </View>
       </ScrollView>
     </View>
   );

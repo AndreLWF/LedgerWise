@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { periodToDateRange } from '../../src/components/TimePeriodSelector';
@@ -21,7 +21,11 @@ export default function SpendingScreen() {
   const colors = useColors();
   const styles = useThemeStyles(createSpendingScreenStyles);
 
-  const { hasAccounts, accounts, accountsLoading, allTransactions, error: dataError, refresh, selectedPeriod, setSelectedPeriod } = useTransactionData();
+  const { hasAccounts, accounts, accountsLoading, allTransactions, error: dataError, refresh, selectedPeriod, setSelectedPeriod, highlightCategory, setHighlightCategory } = useTransactionData();
+
+  const clearHighlight = useCallback(() => {
+    setHighlightCategory(null);
+  }, [setHighlightCategory]);
   const dateRange = useMemo(() => periodToDateRange(selectedPeriod), [selectedPeriod]);
 
   const { transactions, summaryData, loading: sliceLoading } = useDataSlice(dateRange);
@@ -83,6 +87,8 @@ export default function SpendingScreen() {
           availableYears={availableYears}
           accountCount={accounts.length}
           onAddAccount={openPlaidLink}
+          initialOpenCategory={highlightCategory}
+          onInitialOpenConsumed={clearHighlight}
         />
       )}
 
