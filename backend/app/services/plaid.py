@@ -6,6 +6,7 @@ All Plaid SDK calls are synchronous and run via asyncio.to_thread().
 
 import asyncio
 import logging
+import uuid
 from decimal import Decimal
 
 from plaid.model.accounts_get_request import AccountsGetRequest
@@ -107,7 +108,7 @@ async def exchange_public_token(
 
     saved_accounts: list[AccountResponse] = []
     # Map Plaid account_id → DB account UUID (for transaction sync lookups)
-    plaid_acct_id_map: dict[str, object] = {}
+    plaid_acct_id_map: dict[str, uuid.UUID] = {}
     for acct in accounts_response.accounts:
         balance = acct.balances
         acct_stmt = pg_insert(Account).values(
@@ -177,7 +178,7 @@ async def sync_transactions(
     user_id: str,
     item_id: str,
     access_token: str,
-    account_map: dict[str, object] | None = None,
+    account_map: dict[str, uuid.UUID] | None = None,
 ) -> int:
     """Sync transactions using Plaid's /transactions/sync endpoint.
 

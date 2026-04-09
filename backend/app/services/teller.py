@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import logging
+import uuid
 from datetime import date as date_type
 from decimal import Decimal
 from typing import Any
@@ -172,7 +173,7 @@ async def enroll_accounts(
     encrypted_token = encrypt(access_token)
 
     # Upsert accounts first to get DB IDs
-    account_ids: list[tuple[Any, dict[str, Any]]] = []
+    account_ids: list[tuple[uuid.UUID, dict[str, Any]]] = []
     for acct in teller_accounts:
         stmt = pg_insert(Account).values(
             teller_account_id=acct["id"],
