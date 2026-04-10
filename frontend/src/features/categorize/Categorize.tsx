@@ -155,9 +155,10 @@ export default function Categorize() {
     [],
   );
 
+  const newCard = useMemo<CategoryListItem>(() => ({ id: '__new__', _newCard: true }), []);
+
   // Build category grid data: categories + "New Category" card + optional spacer
   const categoryData: CategoryListItem[] = useMemo(() => {
-    const newCard: CategoryListItem = { id: '__new__', _newCard: true };
     const items: CategoryListItem[] = [...categories, newCard];
     // Pad to even count for 2-column grid
     if (items.length % 2 !== 0) {

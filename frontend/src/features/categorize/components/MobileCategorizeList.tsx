@@ -20,12 +20,7 @@ import useCategorizeDrag from '../useCategorizeDrag';
 import MobileFilterPills from './MobileFilterPills';
 import type { Transaction } from '../../../types/transaction';
 import type { CategoryInfo, TransactionFilter } from '../../../types/categorize';
-
-interface ToastData {
-  categoryName: string;
-  merchant: string;
-  amount: string;
-}
+import type { ToastData } from '../../../components/BrandedToast';
 
 interface Props {
   transactions: Transaction[];
@@ -247,7 +242,6 @@ export default function MobileCategorizeList({
           keyExtractor={keyExtractor}
           ListEmptyComponent={emptyState}
           showsVerticalScrollIndicator={true}
-          style={styles.transactionList}
           contentContainerStyle={transactions.length === 0 ? styles.listEmptyContent : undefined}
           initialNumToRender={10}
           maxToRenderPerBatch={15}

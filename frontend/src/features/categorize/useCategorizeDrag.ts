@@ -5,10 +5,8 @@ import * as Haptics from 'expo-haptics';
 import type { Transaction } from '../../types/transaction';
 import type { CategoryInfo } from '../../types/categorize';
 
-// Hover spring config
 export const HOVER_SPRING = { damping: 12, stiffness: 200 };
 
-// --- Animation constants ---
 const CROSSFADE_EASING = Easing.out(Easing.cubic);
 const CROSSFADE_LIST_MS = 200;
 const CROSSFADE_GRID_MS = 250;
@@ -36,14 +34,11 @@ export default function useCategorizeDrag(
   categories: CategoryInfo[],
   onAssign: (transactionId: string, categoryName: string) => void,
 ) {
-  // React state for discrete events
   const [draggedTransaction, setDraggedTransaction] = useState<Transaction | null>(null);
   const [overlayVisible, setOverlayVisible] = useState(false);
 
-  // Shared value for active tile — drives animations on UI thread without React re-renders
   const activeTileSV = useSharedValue(-1);
 
-  // Shared values for UI-thread position tracking
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
   const isDragActive = useSharedValue(false);
@@ -52,13 +47,10 @@ export default function useCategorizeDrag(
   const sourceRowOpacity = useSharedValue(1);
   const sourceRowScale = useSharedValue(1);
 
-  // Cancel zone hover animation (0 → 1)
   const cancelHoverSV = useSharedValue(0);
 
-  // Tile pulse after successful drop
   const [pulsingTileIndex, setPulsingTileIndex] = useState<number | null>(null);
 
-  // Crossfade shared values (list ↔ grid transition)
   const listOpacity = useSharedValue(1);
   const listScale = useSharedValue(1);
   const gridOpacity = useSharedValue(0);
@@ -143,12 +135,10 @@ export default function useCategorizeDrag(
     setOverlayVisible(false);
   }, [cancelHoverSV, activeTileSV]);
 
-  // Reverse grid→list crossfade + clean up
   const reverseToList = useCallback(() => {
     sourceRowOpacity.value = withTiming(1, { duration: SOURCE_ROW_MS });
     sourceRowScale.value = withTiming(1, { duration: SOURCE_ROW_MS });
 
-    // Reset drag card visuals for next drag
     dragCardOpacity.value = 1;
 
     const exitConfig = { duration: CROSSFADE_EXIT_MS, easing: CROSSFADE_EASING };
@@ -162,7 +152,6 @@ export default function useCategorizeDrag(
     });
   }, [sourceRowOpacity, sourceRowScale, dragCardOpacity, gridOpacity, gridScale, gridTranslateY, listOpacity, listScale, clearAfterExit]);
 
-  // Immediate reset (fallback / cancelDrag export)
   const resetDragState = useCallback(() => {
     isDragActive.value = false;
     reverseToList();
@@ -204,16 +193,13 @@ export default function useCategorizeDrag(
     hitTest(pageX, pageY);
   }, [hitTest]);
 
-  // Called on JS thread after absorb animation completes
   const handleSuccessfulDrop = useCallback((txId: string, categoryName: string, tileIdx: number) => {
     triggerSuccessHaptic();
     setPulsingTileIndex(tileIdx);
-    // Optimistic update removes tx from list data before list fades back in
     onAssign(txId, categoryName);
     reverseToList();
   }, [triggerSuccessHaptic, onAssign, reverseToList]);
 
-  // Called on JS thread after cancel/fall-away animation completes
   const handleCancelComplete = useCallback(() => {
     reverseToList();
   }, [reverseToList]);

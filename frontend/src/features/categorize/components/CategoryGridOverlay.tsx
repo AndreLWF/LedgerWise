@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { LayoutChangeEvent, Text, View } from 'react-native';
 import Animated, {
   interpolateColor,
@@ -120,15 +120,17 @@ export default function CategoryGridOverlay({
     ),
   }));
 
-  // Build grid rows (4 columns per row, max 6 rows = 24 tiles)
-  const rows: (CategoryInfo | null)[][] = [];
-  for (let i = 0; i < Math.min(categories.length, 24); i += GRID_COLUMNS) {
-    const row: (CategoryInfo | null)[] = [];
-    for (let j = 0; j < GRID_COLUMNS; j++) {
-      row.push(i + j < categories.length ? categories[i + j] : null);
+  const rows = useMemo(() => {
+    const result: (CategoryInfo | null)[][] = [];
+    for (let i = 0; i < Math.min(categories.length, 24); i += GRID_COLUMNS) {
+      const row: (CategoryInfo | null)[] = [];
+      for (let j = 0; j < GRID_COLUMNS; j++) {
+        row.push(i + j < categories.length ? categories[i + j] : null);
+      }
+      result.push(row);
     }
-    rows.push(row);
-  }
+    return result;
+  }, [categories]);
 
   return (
     <View

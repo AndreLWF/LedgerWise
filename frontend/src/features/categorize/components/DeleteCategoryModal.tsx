@@ -41,12 +41,8 @@ function DeleteCategoryModal({ visible, onClose, onConfirm, categoryName, transa
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close modal">
-        <Pressable
-          style={styles.card}
-          onPress={() => {}}
-          accessibilityRole="none"
-        >
+      <View style={styles.backdrop}>
+        <View style={styles.card}>
           {/* Warning Icon */}
           <View style={styles.deleteIconContainer}>
             <Ionicons name="warning-outline" size={32} color={colors.semantic.error} />
@@ -98,8 +94,8 @@ function DeleteCategoryModal({ visible, onClose, onConfirm, categoryName, transa
               )}
             </Pressable>
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }

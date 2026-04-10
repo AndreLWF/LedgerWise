@@ -69,12 +69,8 @@ function CategoryModal({ visible, onClose, onSave, initialName, initialColor, ex
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close modal">
-        <Pressable
-          style={styles.card}
-          onPress={() => {}}
-          accessibilityRole="none"
-        >
+      <View style={styles.backdrop}>
+        <View style={styles.card}>
           {/* Title */}
           <Text style={styles.title}>
             {isEditing ? 'Edit Category' : 'New Category'}
@@ -172,8 +168,8 @@ function CategoryModal({ visible, onClose, onSave, initialName, initialColor, ex
               )}
             </Pressable>
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
