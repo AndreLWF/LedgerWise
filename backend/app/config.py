@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     plaid_env: str = "sandbox"
     plaid_redirect_uri: str = ""
 
+    # Stripe
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_id_monthly: str = ""
+    stripe_price_id_yearly: str = ""
+
     # Encryption — 256-bit hex key for AES-GCM (generate with: python -c "import os; print(os.urandom(32).hex())")
     encryption_key: str = ""
 
@@ -60,6 +66,20 @@ def _validate_startup() -> None:
         missing.append("SUPABASE_KEY")
     if missing:
         raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
+
+    # Stripe billing — all four are required when any one is set
+    stripe_vars = {
+        "STRIPE_SECRET_KEY": settings.stripe_secret_key,
+        "STRIPE_WEBHOOK_SECRET": settings.stripe_webhook_secret,
+        "STRIPE_PRICE_ID_MONTHLY": settings.stripe_price_id_monthly,
+        "STRIPE_PRICE_ID_YEARLY": settings.stripe_price_id_yearly,
+    }
+    stripe_set = {k for k, v in stripe_vars.items() if v}
+    if stripe_set and stripe_set != set(stripe_vars.keys()):
+        missing_stripe = set(stripe_vars.keys()) - stripe_set
+        raise RuntimeError(
+            f"Partial Stripe config — missing: {', '.join(sorted(missing_stripe))}"
+        )
 
     key = settings.encryption_key
     if not key:

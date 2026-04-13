@@ -17,6 +17,7 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  isPro: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -33,6 +34,7 @@ function buildIosRedirectUri(): string | undefined {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPro, setIsPro] = useState(false);
 
   const [, response, promptAsync] = Google.useAuthRequest({
     webClientId: GOOGLE_WEB_CLIENT_ID,
@@ -52,6 +54,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch is_pro from the users table when session changes
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setIsPro(false);
+      return;
+    }
+    let stale = false;
+    supabase
+      .from('users')
+      .select('is_pro')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (!stale) setIsPro(data?.is_pro ?? false);
+      });
+    return () => { stale = true; };
+  }, [session?.user?.id]);
 
   // Exchange Google ID token for a Supabase session (native only)
   useEffect(() => {
@@ -86,10 +106,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       loading,
+      isPro,
       signInWithGoogle,
       signOut,
     }),
-    [session, loading, signInWithGoogle, signOut],
+    [session, loading, isPro, signInWithGoogle, signOut],
   );
 
   return (

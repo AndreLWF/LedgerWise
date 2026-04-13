@@ -14,4 +14,11 @@ export const createPlaceholderStyles = (deps: StyleDeps) => StyleSheet.create({
   },
   ...pageHeaderDefs(deps),
   ...placeholderDefs(deps),
+  upgradeCardBorder: {
+    borderColor: deps.colors.gold[400],
+    borderWidth: 1,
+  },
+  upgradeCardBorderHovered: {
+    borderColor: deps.colors.gold[500],
+  },
 });

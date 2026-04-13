@@ -6,10 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useColors } from '../../src/contexts/ThemeContext';
 import { TransactionDataProvider } from '../../src/contexts/TransactionDataContext';
+import { UpgradeProvider } from '../../src/contexts/UpgradeContext';
 import { useThemeStyles } from '../../src/hooks/useThemeStyles';
 import { createDashboardLayoutStyles, SIDEBAR_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '../../src/styles/dashboardLayout.styles';
 import LedgerWiseLogo from '../../src/components/icons/LedgerWiseLogo';
 import ThemeToggle from '../../src/components/ThemeToggle';
+import { UpgradeModal } from '../../src/features/billing';
 import { isHovered } from '../../src/utils/pressable';
 import { SIDEBAR_BREAKPOINT } from '../../src/utils/responsive';
 
@@ -36,7 +38,7 @@ const getInitialCollapsed = () => {
 };
 
 export default function DashboardLayout() {
-  const { session, signOut } = useAuth();
+  const { session, signOut, isPro } = useAuth();
   const colors = useColors();
   const styles = useThemeStyles(createDashboardLayoutStyles);
   const pathname = usePathname();
@@ -50,6 +52,9 @@ export default function DashboardLayout() {
   useEffect(() => { setMounted(true); }, []);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialCollapsed);
+  const [upgradeVisible, setUpgradeVisible] = useState(false);
+  const openUpgrade = useCallback(() => setUpgradeVisible(true), []);
+  const closeUpgrade = useCallback(() => setUpgradeVisible(false), []);
 
   const sidebarAnim = useRef(
     new Animated.Value(getInitialCollapsed() ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH)
@@ -83,6 +88,7 @@ export default function DashboardLayout() {
 
   return (
     <TransactionDataProvider token={token}>
+    <UpgradeProvider value={openUpgrade}>
     <View style={styles.root}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + (showSidebar ? 20 : 12) }]}>
@@ -91,18 +97,32 @@ export default function DashboardLayout() {
           <Text style={[styles.headerTitle, !showSidebar && styles.headerTitleMobile]}>LedgerWise</Text>
         </View>
         <View style={styles.headerRight}>
+          {!isPro && (
+            <Pressable
+              style={(state) => [
+                styles.upgradeButton,
+                isHovered(state) && styles.upgradeButtonHovered,
+              ]}
+              onPress={openUpgrade}
+              accessibilityRole="button"
+              accessibilityLabel="Upgrade to Pro"
+            >
+              <Ionicons name="diamond-outline" size={14} color={colors.gold[500]} />
+              <Text style={styles.upgradeButtonText}>Upgrade</Text>
+            </Pressable>
+          )}
           <ThemeToggle />
           <Pressable
             style={(state) => [
-              styles.signOutButton,
+              showSidebar ? styles.signOutButton : styles.signOutButtonMobile,
               isHovered(state) && styles.signOutButtonHovered,
             ]}
             onPress={signOut}
             accessibilityRole="button"
             accessibilityLabel="Sign out"
           >
-            <Ionicons name="log-out-outline" size={16} color={colors.text.secondary} />
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <Ionicons name="log-out-outline" size={showSidebar ? 16 : 20} color={colors.text.secondary} />
+            {showSidebar && <Text style={styles.signOutText}>Sign Out</Text>}
           </Pressable>
         </View>
       </View>
@@ -200,7 +220,14 @@ export default function DashboardLayout() {
           })}
         </View>
       )}
+      {!isPro && (
+        <UpgradeModal
+          visible={upgradeVisible}
+          onClose={closeUpgrade}
+        />
+      )}
     </View>
+    </UpgradeProvider>
     </TransactionDataProvider>
   );
 }

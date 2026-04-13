@@ -56,6 +56,25 @@ export const createDashboardLayoutStyles = (deps: StyleDeps) => StyleSheet.creat
       ? deps.colors.purple[900] + '60'
       : deps.colors.purple[50],
   },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: deps.colors.isDark ? deps.colors.gold[700] + '60' : deps.colors.gold[300],
+  },
+  upgradeButtonHovered: {
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '30' : deps.colors.gold[50],
+  },
+  upgradeButtonText: {
+    fontFamily: typography.fontFamily.medium,
+    fontSize: 14,
+    fontWeight: '500',
+    color: deps.colors.isDark ? deps.colors.gold[400] : deps.colors.gold[600],
+  },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -63,6 +82,13 @@ export const createDashboardLayoutStyles = (deps: StyleDeps) => StyleSheet.creat
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: radius.md,
+  },
+  signOutButtonMobile: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   signOutButtonHovered: {
     backgroundColor: deps.colors.isDark
@@ -173,32 +199,6 @@ export const createDashboardLayoutStyles = (deps: StyleDeps) => StyleSheet.creat
     fontFamily: typography.fontFamily.semiBold,
     color: deps.colors.isDark ? deps.colors.purple[300] : deps.colors.purple[700],
     fontWeight: '600',
-  },
-
-  // --- Pro Tip ---
-  proTipCard: {
-    marginHorizontal: 16,
-    marginBottom: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '30' : deps.colors.gold[50],
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: deps.colors.isDark ? deps.colors.gold[700] + '40' : deps.colors.gold[200],
-    ...deps.shadows.sm,
-  },
-  proTipTitle: {
-    fontFamily: typography.fontFamily.semiBold,
-    fontSize: 13,
-    fontWeight: '600',
-    color: deps.colors.isDark ? deps.colors.gold[300] : deps.colors.gold[900],
-    marginBottom: 2,
-  },
-  proTipText: {
-    fontFamily: typography.fontFamily.regular,
-    fontSize: 12,
-    color: deps.colors.isDark ? deps.colors.gold[400] : deps.colors.gold[800],
-    lineHeight: 18,
   },
 
   // --- Content ---

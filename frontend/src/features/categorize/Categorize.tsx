@@ -226,13 +226,13 @@ export default function Categorize() {
 
   const emptyState = getEmptyStateText(filterMode, !!transactionSearch);
 
-  const transactionEmptyState = (
+  const transactionEmptyState = useMemo(() => (
     <View style={styles.emptyContainer}>
       <Ionicons name={emptyState.icon} size={48} color={colors.text.tertiary} />
       <Text style={styles.emptyTitle}>{emptyState.title}</Text>
       <Text style={styles.emptyText}>{emptyState.subtitle}</Text>
     </View>
-  );
+  ), [emptyState, styles, colors]);
 
   if (loading || accountsLoading || enrolling || linkLoading) {
     return (

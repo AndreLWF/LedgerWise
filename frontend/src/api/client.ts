@@ -238,6 +238,21 @@ export async function fetchMerchantMatchPreview(
   return handleResponse<MerchantMatchPreview>(res);
 }
 
+// --- Billing ---
+
+export async function createCheckoutSession(
+  token: string,
+  priceId: string,
+): Promise<string> {
+  const res = await fetch(`${API_URL}/api/v1/billing/create-checkout-session`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify({ price_id: priceId }),
+  });
+  const data = await handleResponse<{ checkout_url: string }>(res);
+  return data.checkout_url;
+}
+
 export async function createMerchantRule(
   token: string,
   transactionId: string,
