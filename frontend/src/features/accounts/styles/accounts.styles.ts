@@ -208,6 +208,28 @@ export const createAccountsStyles = (deps: StyleDeps) => StyleSheet.create({
     lineHeight: 19,
   },
 
+  // --- Locked Add Account Card (free tier) ---
+  addCardLocked: {
+    borderColor: deps.colors.gold[300],
+    opacity: 0.85,
+  },
+  addCardLockedHovered: {
+    borderColor: deps.colors.gold[500],
+    backgroundColor: deps.colors.isDark
+      ? deps.colors.gold[900] + '20'
+      : deps.colors.gold[50],
+  },
+  addLockIconCircle: {
+    width: isNarrow ? 50 : 56,
+    height: isNarrow ? 50 : 56,
+    borderRadius: isNarrow ? 25 : 28,
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '40' : deps.colors.gold[100],
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+    ...deps.shadows.gold,
+  },
+
   // --- Loading / Error ---
   loadingContainer: {
     alignItems: 'center',

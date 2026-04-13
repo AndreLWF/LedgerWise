@@ -23,7 +23,7 @@ type OpenDropdown = 'none' | 'category';
 export default function Analytics() {
   const router = useRouter();
   const { hasAccounts, accountsLoading, refresh, setSelectedPeriod, setHighlightCategory, userCategories } = useTransactionData();
-  const { session } = useAuth();
+  const { session, isPro } = useAuth();
   const token = session?.access_token ?? null;
   const colors = useColors();
   const styles = useThemeStyles(createAnalyticsStyles);
@@ -125,6 +125,7 @@ export default function Analytics() {
                 onSelect={setSelectedCategory}
                 isOpen={openDropdown === 'category'}
                 onToggle={toggleCategoryDropdown}
+                disabled={!isPro}
               />
             )}
           </View>

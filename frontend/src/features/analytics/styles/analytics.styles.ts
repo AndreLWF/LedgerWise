@@ -344,4 +344,19 @@ export const createAnalyticsStyles = (deps: StyleDeps) => StyleSheet.create({
   pillTextSelected: {
     color: '#FFFFFF',
   },
+
+  // --- Disabled (locked) dropdown ---
+  dropdownTriggerDisabled: {
+    borderColor: deps.colors.isDark ? deps.colors.gold[700] + '60' : deps.colors.gold[300],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '15' : deps.colors.gold[50] + '80',
+    gap: 6,
+  },
+  dropdownTriggerDisabledHovered: {
+    borderColor: deps.colors.gold[500],
+    backgroundColor: deps.colors.isDark ? deps.colors.gold[900] + '30' : deps.colors.gold[50],
+    ...deps.shadows.gold,
+  },
+  dropdownTriggerTextDisabled: {
+    color: deps.colors.isDark ? deps.colors.gold[400] : deps.colors.gold[700],
+  },
 });

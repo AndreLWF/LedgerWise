@@ -9,12 +9,14 @@ import { usePlaidLink } from '../../hooks/usePlaidLink';
 import { createCategorizeStyles } from './styles/categorize.styles';
 import { isHovered } from '../../utils/pressable';
 import { COMPACT_BREAKPOINT, SIDEBAR_BREAKPOINT } from '../../utils/responsive';
+import ProLockOverlay from '../../components/ProLockOverlay';
 import StaggeredView from '../../components/StaggeredView';
 import EmptyState from '../../components/EmptyState';
 import PlaidModal from '../../components/PlaidModal';
 import BrandedToast from '../../components/BrandedToast';
 import type { ToastData } from '../../components/BrandedToast';
 import useCategorizeData from './useCategorizeData';
+import useCategoryModals from './useCategoryModals';
 import TransactionRow from './components/TransactionRow';
 import CategoryTarget from './components/CategoryTarget';
 import ProgressHeader from './components/ProgressHeader';
@@ -46,7 +48,7 @@ export default function Categorize() {
   const { width: windowWidth } = useWindowDimensions();
   const compactCards = windowWidth < COMPACT_BREAKPOINT;
   const { hasAccounts, accountsLoading, refresh } = useTransactionData();
-  const { session } = useAuth();
+  const { session, isPro } = useAuth();
   const token = session?.access_token ?? null;
   const [linkError, setLinkError] = useState<string | null>(null);
   const { openPlaidLink, linkLoading, enrolling, mobileLinkToken, handleMobileSuccess, handleMobileExit } = usePlaidLink(token, refresh, setLinkError);
@@ -84,67 +86,32 @@ export default function Categorize() {
   const [toast, setToast] = useState<ToastData | null>(null);
   const clearToast = useCallback(() => setToast(null), []);
 
-  // --- Category management modal state ---
-  const [createModalVisible, setCreateModalVisible] = useState(false);
-  const [editTarget, setEditTarget] = useState<CategoryInfo | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CategoryInfo | null>(null);
-  const [menuState, setMenuState] = useState<{
-    category: CategoryInfo;
-    position: { top: number; right: number };
-  } | null>(null);
-
-  const existingCategoryNames = useMemo(
-    () => allCategories.map((c) => c.name),
-    [allCategories],
-  );
-
-  const takenColorIds = useMemo(
-    () => userCategories.map((uc) => uc.color_id),
-    [userCategories],
-  );
-
-  const handleOpenCreateModal = useCallback(() => setCreateModalVisible(true), []);
-  const handleCloseCreateModal = useCallback(() => setCreateModalVisible(false), []);
-
-  const handleCreateCategory = useCallback(
-    async (name: string, colorId: number) => {
-      await createCategory(name, colorId);
-    },
-    [createCategory],
-  );
-
-  const handleEditCategory = useCallback(
-    async (name: string, colorId: number) => {
-      if (!editTarget) return;
-      await updateCategory(editTarget.id, { name, color_id: colorId }, editTarget.name);
-    },
-    [editTarget, updateCategory],
-  );
-
-  const handleDeleteCategory = useCallback(async () => {
-    if (!deleteTarget) return;
-    await deleteCategory(deleteTarget.id, deleteTarget.name);
-  }, [deleteTarget, deleteCategory]);
-
-  const handleMenuOpen = useCallback(
-    (category: CategoryInfo, position: { top: number; right: number }) => {
-      setMenuState({ category, position });
-    },
-    [],
-  );
-
-  const handleMenuClose = useCallback(() => setMenuState(null), []);
-
-  const handleMenuEdit = useCallback(() => {
-    if (menuState) setEditTarget(menuState.category);
-  }, [menuState]);
-
-  const handleMenuDelete = useCallback(() => {
-    if (menuState) setDeleteTarget(menuState.category);
-  }, [menuState]);
-
-  const handleCloseEditModal = useCallback(() => setEditTarget(null), []);
-  const handleCloseDeleteModal = useCallback(() => setDeleteTarget(null), []);
+  // --- Category management modal state (extracted to hook) ---
+  const {
+    createModalVisible,
+    editTarget,
+    deleteTarget,
+    menuState,
+    existingCategoryNames,
+    takenColorIds,
+    handleOpenCreateModal,
+    handleCloseCreateModal,
+    handleCreateCategory,
+    handleEditCategory,
+    handleDeleteCategory,
+    handleMenuOpen,
+    handleMenuClose,
+    handleMenuEdit,
+    handleMenuDelete,
+    handleCloseEditModal,
+    handleCloseDeleteModal,
+  } = useCategoryModals({
+    allCategories,
+    userCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+  });
 
   const handleAssignToCategory = useCallback(
     (transactionId: string, categoryName: string) => {
@@ -265,6 +232,44 @@ export default function Categorize() {
     );
   }
 
+  if (isMobile && !isPro) {
+    return (
+      <View style={styles.container}>
+        <StaggeredView index={0}>
+          <View style={styles.pageHeader}>
+            <Text style={styles.pageTitle}>Categorize Transactions</Text>
+            <Text style={styles.pageSubtitle}>
+              Organize your uncategorized transactions to improve insights
+            </Text>
+          </View>
+        </StaggeredView>
+        <ProLockOverlay message="Categorize Transactions is a Pro feature">
+          <MobileCategorizeList
+            transactions={transactions}
+            categories={categories}
+            allCategories={allCategories}
+            categorizedCount={categorizedCount}
+            totalTransactions={totalTransactions}
+            filterMode={filterMode}
+            setFilterMode={setFilterMode}
+            transactionSearch={transactionSearch}
+            setTransactionSearch={setTransactionSearch}
+            assignToCategory={assignToCategory}
+            assignWithRuleCheck={assignWithRuleCheck}
+            rulePrompt={rulePrompt}
+            onRuleApplyAll={handleRuleApplyAll}
+            onRuleJustThisOne={handleRuleJustThisOne}
+            existingCategoryNames={existingCategoryNames}
+            onCreateCategory={handleCreateCategory}
+            onUpdateCategory={updateCategory}
+            onDeleteCategory={deleteCategory}
+            takenColorIds={takenColorIds}
+          />
+        </ProLockOverlay>
+      </View>
+    );
+  }
+
   if (isMobile) {
     return (
       <MobileCategorizeList
@@ -304,38 +309,146 @@ export default function Categorize() {
       </StaggeredView>
 
       {/* Progress Bar + Two Panel Layout */}
-      <View style={styles.panelOuterContainer}>
-        <StaggeredView index={1}>
-          <ProgressHeader
-            categorizedCount={categorizedCount}
-            totalCount={totalTransactions}
-          />
-        </StaggeredView>
-
-        <View style={styles.panelRow}>
-          {/* Left Panel — Uncategorized Transactions */}
-          <StaggeredView index={2} style={styles.transactionsPanelWrapper}>
-            <View style={styles.transactionsPanel}>
-              <View style={styles.panelHeader}>
-                <View style={styles.panelHeaderRow}>
-                  <Text style={styles.panelTitle}>
-                    {filterMode === 'uncategorized'
-                      ? 'Uncategorized Transactions'
-                      : filterMode === 'all'
-                        ? 'All Transactions'
-                        : `${filterMode} Transactions`}
-                  </Text>
-                  <Text style={styles.countBadge}>{transactions.length}</Text>
-                </View>
-                <View style={styles.filterSearchRow}>
-                  <TransactionFilterDropdown
-                    filterMode={filterMode}
-                    onFilterChange={setFilterMode}
-                    categories={allCategories}
-                    uncategorizedCount={uncategorizedCount}
-                    totalCount={totalTransactions}
+      {!isPro ? (
+        <ProLockOverlay message="Categorize Transactions is a Pro feature">
+          <View style={styles.panelOuterContainer}>
+            <ProgressHeader
+              categorizedCount={categorizedCount}
+              totalCount={totalTransactions}
+            />
+            <View style={styles.panelRow}>
+              <View style={styles.transactionsPanelWrapper}>
+                <View style={styles.transactionsPanel}>
+                  <View style={styles.panelHeader}>
+                    <View style={styles.panelHeaderRow}>
+                      <Text style={styles.panelTitle}>Uncategorized Transactions</Text>
+                      <Text style={styles.countBadge}>{transactions.length}</Text>
+                    </View>
+                  </View>
+                  <FlatList
+                    data={transactions}
+                    renderItem={renderTransaction}
+                    keyExtractor={keyExtractorTx}
+                    style={styles.transactionList}
+                    contentContainerStyle={styles.transactionListContent}
+                    showsVerticalScrollIndicator={false}
+                    initialNumToRender={10}
                   />
-                  <View style={styles.searchContainerFlex}>
+                </View>
+              </View>
+              <View style={styles.categoriesPanelWrapper}>
+                <View style={styles.categoriesPanel}>
+                  <View style={styles.panelHeader}>
+                    <View style={styles.panelHeaderRow}>
+                      <Text style={styles.panelTitle}>Categories</Text>
+                    </View>
+                  </View>
+                  <FlatList
+                    data={categoryData}
+                    renderItem={renderCategory}
+                    keyExtractor={keyExtractorCat}
+                    numColumns={2}
+                    style={styles.categoryList}
+                    contentContainerStyle={styles.categoryListContent}
+                    columnWrapperStyle={styles.categoryColumnWrapper}
+                    showsVerticalScrollIndicator={false}
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+        </ProLockOverlay>
+      ) : (
+        <View style={styles.panelOuterContainer}>
+          <StaggeredView index={1}>
+            <ProgressHeader
+              categorizedCount={categorizedCount}
+              totalCount={totalTransactions}
+            />
+          </StaggeredView>
+
+          <View style={styles.panelRow}>
+            {/* Left Panel — Uncategorized Transactions */}
+            <StaggeredView index={2} style={styles.transactionsPanelWrapper}>
+              <View style={styles.transactionsPanel}>
+                <View style={styles.panelHeader}>
+                  <View style={styles.panelHeaderRow}>
+                    <Text style={styles.panelTitle}>
+                      {filterMode === 'uncategorized'
+                        ? 'Uncategorized Transactions'
+                        : filterMode === 'all'
+                          ? 'All Transactions'
+                          : `${filterMode} Transactions`}
+                    </Text>
+                    <Text style={styles.countBadge}>{transactions.length}</Text>
+                  </View>
+                  <View style={styles.filterSearchRow}>
+                    <TransactionFilterDropdown
+                      filterMode={filterMode}
+                      onFilterChange={setFilterMode}
+                      categories={allCategories}
+                      uncategorizedCount={uncategorizedCount}
+                      totalCount={totalTransactions}
+                    />
+                    <View style={styles.searchContainerFlex}>
+                      <Ionicons
+                        name="search"
+                        size={16}
+                        color={colors.text.tertiary}
+                        style={styles.searchIcon}
+                      />
+                      <TextInput
+                        style={styles.searchInput}
+                        placeholder={compactCards ? 'Search...' : 'Search transactions...'}
+                        placeholderTextColor={colors.text.tertiary}
+                        value={transactionSearch}
+                        onChangeText={setTransactionSearch}
+                        accessibilityLabel="Search transactions"
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                <FlatList
+                  data={transactions}
+                  renderItem={renderTransaction}
+                  keyExtractor={keyExtractorTx}
+                  style={styles.transactionList}
+                  contentContainerStyle={
+                    transactions.length === 0 ? styles.transactionListEmpty : styles.transactionListContent
+                  }
+                  ListEmptyComponent={transactionEmptyState}
+                  showsVerticalScrollIndicator={true}
+                  initialNumToRender={15}
+                  maxToRenderPerBatch={15}
+                  windowSize={5}
+                />
+              </View>
+            </StaggeredView>
+
+            {/* Right Panel — Categories */}
+            <StaggeredView index={3} style={styles.categoriesPanelWrapper}>
+              <View style={styles.categoriesPanel}>
+                <View style={styles.panelHeader}>
+                  <View style={styles.panelHeaderRow}>
+                    <Text style={styles.panelTitle}>Categories</Text>
+                    <Pressable
+                      style={(state) => [
+                        styles.addCategoryButton,
+                        isHovered(state) && styles.addCategoryButtonHovered,
+                      ]}
+                      onPress={handleOpenCreateModal}
+                      accessibilityRole="button"
+                      accessibilityLabel="Add category"
+                    >
+                      <Ionicons
+                        name="add"
+                        size={18}
+                        color={colors.isDark ? colors.purple[400] : colors.purple[600]}
+                      />
+                    </Pressable>
+                  </View>
+                  <View style={styles.searchContainer}>
                     <Ionicons
                       name="search"
                       size={16}
@@ -344,87 +457,30 @@ export default function Categorize() {
                     />
                     <TextInput
                       style={styles.searchInput}
-                      placeholder={compactCards ? 'Search...' : 'Search transactions...'}
+                      placeholder={compactCards ? 'Filter...' : 'Filter categories...'}
                       placeholderTextColor={colors.text.tertiary}
-                      value={transactionSearch}
-                      onChangeText={setTransactionSearch}
-                      accessibilityLabel="Search transactions"
+                      value={categorySearch}
+                      onChangeText={setCategorySearch}
+                      accessibilityLabel="Filter categories"
                     />
                   </View>
                 </View>
+
+                <FlatList
+                  data={categoryData}
+                  renderItem={renderCategory}
+                  keyExtractor={keyExtractorCat}
+                  numColumns={2}
+                  style={styles.categoryList}
+                  contentContainerStyle={styles.categoryListContent}
+                  columnWrapperStyle={styles.categoryColumnWrapper}
+                  showsVerticalScrollIndicator={true}
+                />
               </View>
-
-              <FlatList
-                data={transactions}
-                renderItem={renderTransaction}
-                keyExtractor={keyExtractorTx}
-                style={styles.transactionList}
-                contentContainerStyle={
-                  transactions.length === 0 ? styles.transactionListEmpty : styles.transactionListContent
-                }
-                ListEmptyComponent={transactionEmptyState}
-                showsVerticalScrollIndicator={true}
-                initialNumToRender={15}
-                maxToRenderPerBatch={15}
-                windowSize={5}
-              />
-            </View>
-          </StaggeredView>
-
-          {/* Right Panel — Categories */}
-          <StaggeredView index={3} style={styles.categoriesPanelWrapper}>
-            <View style={styles.categoriesPanel}>
-              <View style={styles.panelHeader}>
-                <View style={styles.panelHeaderRow}>
-                  <Text style={styles.panelTitle}>Categories</Text>
-                  <Pressable
-                    style={(state) => [
-                      styles.addCategoryButton,
-                      isHovered(state) && styles.addCategoryButtonHovered,
-                    ]}
-                    onPress={handleOpenCreateModal}
-                    accessibilityRole="button"
-                    accessibilityLabel="Add category"
-                  >
-                    <Ionicons
-                      name="add"
-                      size={18}
-                      color={colors.isDark ? colors.purple[400] : colors.purple[600]}
-                    />
-                  </Pressable>
-                </View>
-                <View style={styles.searchContainer}>
-                  <Ionicons
-                    name="search"
-                    size={16}
-                    color={colors.text.tertiary}
-                    style={styles.searchIcon}
-                  />
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder={compactCards ? 'Filter...' : 'Filter categories...'}
-                    placeholderTextColor={colors.text.tertiary}
-                    value={categorySearch}
-                    onChangeText={setCategorySearch}
-                    accessibilityLabel="Filter categories"
-                  />
-                </View>
-              </View>
-
-              <FlatList
-                data={categoryData}
-                renderItem={renderCategory}
-                keyExtractor={keyExtractorCat}
-                numColumns={2}
-                style={styles.categoryList}
-                contentContainerStyle={styles.categoryListContent}
-                columnWrapperStyle={styles.categoryColumnWrapper}
-                showsVerticalScrollIndicator={true}
-              />
-            </View>
-          </StaggeredView>
+            </StaggeredView>
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Merchant rule prompt — shown when other transactions share the same merchant */}
       <MerchantRulePrompt

@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { Dimensions, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
+import { useUpgrade } from '../../../contexts/UpgradeContext';
 import { useTransactionData } from '../../../contexts/TransactionDataContext';
 import { useThemeStyles } from '../../../hooks/useThemeStyles';
 import { createAnalyticsStyles } from '../styles/analytics.styles';
@@ -17,9 +18,10 @@ interface Props {
   onSelect: (category: string | null) => void;
   isOpen: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }
 
-export default function CategoryDropdown({ categories, selected, onSelect, isOpen, onToggle }: Props) {
+export default function CategoryDropdown({ categories, selected, onSelect, isOpen, onToggle, disabled = false }: Props) {
   const colors = useColors();
   const { userCategories } = useTransactionData();
   const styles = useThemeStyles(createAnalyticsStyles);
@@ -50,6 +52,28 @@ export default function CategoryDropdown({ categories, selected, onSelect, isOpe
     onSelect(value);
     onToggle();
   }, [onSelect, onToggle]);
+
+  const openUpgrade = useUpgrade();
+
+  if (disabled) {
+    return (
+      <Pressable
+        style={(state) => [
+          styles.dropdownTrigger,
+          styles.dropdownTriggerDisabled,
+          isHovered(state) && styles.dropdownTriggerDisabledHovered,
+        ]}
+        onPress={openUpgrade}
+        accessibilityRole="button"
+        accessibilityLabel="Category filter locked — upgrade to Pro"
+      >
+        <Ionicons name="lock-closed" size={14} color={colors.gold[500]} />
+        <Text style={[styles.dropdownTriggerText, styles.dropdownTriggerTextDisabled]}>
+          All categories
+        </Text>
+      </Pressable>
+    );
+  }
 
   return (
     <>

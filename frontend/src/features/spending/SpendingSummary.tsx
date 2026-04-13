@@ -14,6 +14,7 @@ import StatCard from '../../components/StatCard';
 import StaggeredView from '../../components/StaggeredView';
 import CategoryAccordion from './components/CategoryAccordion';
 import ProportionBar from './components/ProportionBar';
+import ProLockOverlay from '../../components/ProLockOverlay';
 import { formatCurrency } from '../../utils/formatters';
 import { isHovered } from '../../utils/pressable';
 import { isNarrow } from '../../utils/responsive';
@@ -30,6 +31,7 @@ interface Props {
   onAddAccount?: () => void;
   initialOpenCategory?: string | null;
   onInitialOpenConsumed?: () => void;
+  isPro?: boolean;
 }
 
 export default function SpendingSummary({
@@ -43,6 +45,7 @@ export default function SpendingSummary({
   onAddAccount,
   initialOpenCategory,
   onInitialOpenConsumed,
+  isPro = true,
 }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createSpendingStyles);
@@ -189,36 +192,50 @@ export default function SpendingSummary({
               </View>
             </StaggeredView>
 
-            <StaggeredView index={2} trigger={periodKey}>
-              <ProportionBar categories={data.categories} accountCount={accountCount} />
-            </StaggeredView>
+            {isPro ? (
+              <>
+                <StaggeredView index={2} trigger={periodKey}>
+                  <ProportionBar categories={data.categories} accountCount={accountCount} />
+                </StaggeredView>
 
-            <View ref={categorySectionRef} collapsable={false}>
-              <StaggeredView index={3} trigger={periodKey}>
-                <CategoryAccordion
-                  data={data}
-                  transactions={transactions}
-                  initialOpenCategory={initialOpenCategory}
-                  onInitialOpenConsumed={handleInitialOpenConsumed}
-                />
-              </StaggeredView>
-            </View>
+                <View ref={categorySectionRef} collapsable={false}>
+                  <StaggeredView index={3} trigger={periodKey}>
+                    <CategoryAccordion
+                      data={data}
+                      transactions={transactions}
+                      initialOpenCategory={initialOpenCategory}
+                      onInitialOpenConsumed={handleInitialOpenConsumed}
+                    />
+                  </StaggeredView>
+                </View>
 
-            {data.refund_count > 0 && (
-              <StaggeredView index={4} trigger={periodKey}>
-                <CategoryAccordion
-                  variant="refund"
-                  data={{
-                    ...data,
-                    categories: [{
-                      name: 'Refunds',
-                      total: data.refund_total,
-                      count: data.refund_count,
-                      percentage: 0,
-                    }],
-                  }}
-                  transactions={transactions}
-                />
+                {data.refund_count > 0 && (
+                  <StaggeredView index={4} trigger={periodKey}>
+                    <CategoryAccordion
+                      variant="refund"
+                      data={{
+                        ...data,
+                        categories: [{
+                          name: 'Refunds',
+                          total: data.refund_total,
+                          count: data.refund_count,
+                          percentage: 0,
+                        }],
+                      }}
+                      transactions={transactions}
+                    />
+                  </StaggeredView>
+                )}
+              </>
+            ) : (
+              <StaggeredView index={2} trigger={periodKey}>
+                <ProLockOverlay message="Upgrade to Pro to see spending by category">
+                  <ProportionBar categories={data.categories} accountCount={accountCount} />
+                  <CategoryAccordion
+                    data={data}
+                    transactions={transactions}
+                  />
+                </ProLockOverlay>
               </StaggeredView>
             )}
           </>

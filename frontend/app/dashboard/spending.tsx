@@ -16,7 +16,7 @@ import PlaidModal from '../../src/components/PlaidModal';
 
 export default function SpendingScreen() {
   const [linkError, setLinkError] = useState<string | null>(null);
-  const { session } = useAuth();
+  const { session, isPro } = useAuth();
   const token = session?.access_token ?? null;
   const colors = useColors();
   const styles = useThemeStyles(createSpendingScreenStyles);
@@ -89,6 +89,7 @@ export default function SpendingScreen() {
           onAddAccount={openPlaidLink}
           initialOpenCategory={highlightCategory}
           onInitialOpenConsumed={clearHighlight}
+          isPro={isPro}
         />
       )}
 

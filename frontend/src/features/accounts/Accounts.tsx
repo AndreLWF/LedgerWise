@@ -4,6 +4,7 @@ import { useThemeStyles } from '../../hooks/useThemeStyles';
 import { createAccountsStyles } from './styles/accounts.styles';
 import { useTransactionData } from '../../contexts/TransactionDataContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUpgrade } from '../../contexts/UpgradeContext';
 import { useColors } from '../../contexts/ThemeContext';
 import { usePlaidLink } from '../../hooks/usePlaidLink';
 import type { Account } from '../../types/account';
@@ -11,6 +12,7 @@ import StaggeredView from '../../components/StaggeredView';
 import AccountCard from './components/AccountCard';
 import StatsSummary from './components/StatsSummary';
 import AddAccountCard from './components/AddAccountCard';
+import LockedAddAccountCard from './components/LockedAddAccountCard';
 import EmptyState from '../../components/EmptyState';
 import PlaidModal from '../../components/PlaidModal';
 import RemoveAccountDialog from './components/RemoveAccountDialog';
@@ -27,9 +29,11 @@ function pairUp<T>(items: T[]): T[][] {
 export default function Accounts() {
   const styles = useThemeStyles(createAccountsStyles);
   const { accounts, accountsLoading, refresh } = useTransactionData();
-  const { session } = useAuth();
+  const { session, isPro } = useAuth();
+  const openUpgrade = useUpgrade();
   const token = session?.access_token ?? null;
   const colors = useColors();
+  const addAccountLocked = !isPro && accounts.length >= 1;
   const [accountToRemove, setAccountToRemove] = useState<Account | null>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
 
@@ -123,7 +127,10 @@ export default function Accounts() {
                 </View>
               ) : (
                 <View key="add" style={styles.cardWrapper}>
-                  <AddAccountCard onPress={openPlaidLink} />
+                  {addAccountLocked
+                    ? <LockedAddAccountCard onPress={openUpgrade} />
+                    : <AddAccountCard onPress={openPlaidLink} />
+                  }
                 </View>
               ),
             )}
