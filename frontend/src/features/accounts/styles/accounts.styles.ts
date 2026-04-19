@@ -109,6 +109,27 @@ export const createAccountsStyles = (deps: StyleDeps) => StyleSheet.create({
     fontWeight: '500',
     color: deps.colors.text.tertiary,
   },
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  syncButton: {
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0,
+  },
+  syncButtonVisible: {
+    opacity: 1,
+  },
+  syncButtonHovered: {
+    backgroundColor: deps.colors.isDark
+      ? 'rgba(139, 92, 246, 0.15)'
+      : 'rgba(139, 92, 246, 0.08)',
+  },
   removeButton: {
     width: 34,
     height: 34,

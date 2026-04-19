@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { ActivityIndicator, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../contexts/ThemeContext';
@@ -38,6 +39,8 @@ export default function PlanCard({
   const styles = useThemeStyles(createBillingStyles);
   const { width } = useWindowDimensions();
   const isMobile = width < NARROW_BREAKPOINT;
+
+  const handlePress = useCallback(() => onSubscribe(priceId), [onSubscribe, priceId]);
 
   return (
     <View style={[styles.planCard, highlighted && styles.planCardHighlighted]}>
@@ -83,7 +86,7 @@ export default function PlanCard({
             : styles.subscribeButtonHovered),
           loading && styles.subscribeButtonDisabled,
         ]}
-        onPress={() => onSubscribe(priceId)}
+        onPress={handlePress}
         disabled={loading}
         accessibilityRole="button"
         accessibilityLabel={`Subscribe to ${name} plan`}

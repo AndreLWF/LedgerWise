@@ -20,8 +20,7 @@ frontend/web-build/
 .claude/settings.local.json
 
 # Admin scripts (contain DB access patterns — keep local)
-backend/grant_pro.py
-backend/revoke_pro.py
+backend/scripts/
 
 # General
 .DS_Store

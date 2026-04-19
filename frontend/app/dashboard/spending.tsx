@@ -13,7 +13,6 @@ import { useThemeStyles } from '../../src/hooks/useThemeStyles';
 import { createSpendingScreenStyles } from '../../src/features/spending/styles/spendingScreen.styles';
 import PlaidModal from '../../src/components/PlaidModal';
 
-
 export default function SpendingScreen() {
   const [linkError, setLinkError] = useState<string | null>(null);
   const { session, isPro } = useAuth();

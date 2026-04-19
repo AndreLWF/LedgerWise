@@ -13,7 +13,18 @@ from app.utils.logging import log_security_event
 
 logger = logging.getLogger("ledgerwise.audit")
 
-stripe_client = stripe.StripeClient(settings.stripe_secret_key)
+_stripe_client: stripe.StripeClient | None = None
+
+
+def _get_stripe_client() -> stripe.StripeClient:
+    """Return a lazily-initialized Stripe client. Fails fast if unconfigured."""
+    global _stripe_client
+    if _stripe_client is None:
+        if not settings.stripe_secret_key:
+            raise RuntimeError("Stripe is not configured — STRIPE_SECRET_KEY is missing")
+        _stripe_client = stripe.StripeClient(settings.stripe_secret_key)
+    return _stripe_client
+
 
 ALLOWED_PRICE_IDS = {
     pid
@@ -45,9 +56,12 @@ async def create_checkout_session(
     else:
         checkout_params["customer_email"] = user.email
 
-    session = await stripe_client.checkout.sessions.create_async(
+    client = _get_stripe_client()
+    session = await client.checkout.sessions.create_async(
         params=checkout_params
     )
+    if not session.url:
+        raise RuntimeError("Stripe returned a checkout session without a URL")
     return session.url
 
 

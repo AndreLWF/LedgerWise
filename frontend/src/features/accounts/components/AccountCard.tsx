@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { memo, useCallback, useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '../../../contexts/ThemeContext';
@@ -11,18 +11,21 @@ import { getAccountTypeLabel, getAccountTypeIcon, formatConnectedDate } from '..
 
 interface Props {
   account: Account;
-  onRemove: () => void;
+  onRemove: (account: Account) => void;
+  onSync: () => void;
+  syncing?: boolean;
 }
 
 const isWeb = Platform.OS === 'web';
 
-export default function AccountCard({ account, onRemove }: Props) {
+function AccountCard({ account, onRemove, onSync, syncing = false }: Props) {
   const colors = useColors();
   const styles = useThemeStyles(createAccountsStyles);
   const [cardHovered, setCardHovered] = useState(false);
 
   const handleMouseEnter = useCallback(() => setCardHovered(true), []);
   const handleMouseLeave = useCallback(() => setCardHovered(false), []);
+  const handleRemove = useCallback(() => onRemove(account), [onRemove, account]);
 
   const webHoverProps = isWeb
     ? { onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave }
@@ -56,18 +59,38 @@ export default function AccountCard({ account, onRemove }: Props) {
             </View>
           </View>
 
-          <Pressable
-            style={(state) => [
-              styles.removeButton,
-              showRemoveButton && styles.removeButtonVisible,
-              (isHovered(state) || state.pressed) && styles.removeButtonHovered,
-            ]}
-            onPress={onRemove}
-            accessibilityRole="button"
-            accessibilityLabel={`Remove ${displayName} account`}
-          >
-            <Ionicons name="trash-outline" size={16} color={colors.semantic.error} />
-          </Pressable>
+          <View style={styles.cardActions}>
+            <Pressable
+              style={(state) => [
+                styles.syncButton,
+                showRemoveButton && styles.syncButtonVisible,
+                (isHovered(state) || state.pressed) && styles.syncButtonHovered,
+              ]}
+              onPress={onSync}
+              disabled={syncing}
+              accessibilityRole="button"
+              accessibilityLabel={`Sync ${displayName} transactions`}
+            >
+              {syncing ? (
+                <ActivityIndicator size={14} color={colors.brand.primary} />
+              ) : (
+                <Ionicons name="sync-outline" size={16} color={colors.brand.primary} />
+              )}
+            </Pressable>
+
+            <Pressable
+              style={(state) => [
+                styles.removeButton,
+                showRemoveButton && styles.removeButtonVisible,
+                (isHovered(state) || state.pressed) && styles.removeButtonHovered,
+              ]}
+              onPress={handleRemove}
+              accessibilityRole="button"
+              accessibilityLabel={`Remove ${displayName} account`}
+            >
+              <Ionicons name="trash-outline" size={16} color={colors.semantic.error} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.statusRow}>
@@ -87,3 +110,5 @@ export default function AccountCard({ account, onRemove }: Props) {
     </View>
   );
 }
+
+export default memo(AccountCard);

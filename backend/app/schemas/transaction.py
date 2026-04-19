@@ -81,6 +81,24 @@ class PlaidItemResponse(BaseModel):
     created_at: datetime | None = None
 
 
+class LinkTokenCreateRequest(BaseModel):
+    received_redirect_uri: str | None = None
+
+    @field_validator("received_redirect_uri")
+    @classmethod
+    def validate_redirect_uri(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        v = v.strip()
+        if not v:
+            return None
+        if len(v) > 2048:
+            raise ValueError("received_redirect_uri exceeds maximum length")
+        if not v.startswith("https://"):
+            raise ValueError("received_redirect_uri must use HTTPS")
+        return v
+
+
 class LinkTokenResponse(BaseModel):
     link_token: str
 
@@ -88,6 +106,14 @@ class LinkTokenResponse(BaseModel):
 class ExchangeTokenResponse(BaseModel):
     item: PlaidItemResponse
     accounts: list[AccountResponse]
+
+
+class SyncResponse(BaseModel):
+    synced: int
+
+
+class BackfillResponse(BaseModel):
+    fetched: int
 
 
 class PublicTokenRequest(BaseModel):

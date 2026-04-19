@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     plaid_secret: str = ""
     plaid_env: str = "sandbox"
     plaid_redirect_uri: str = ""
+    plaid_webhook_url: str = ""
 
     # Stripe
     stripe_secret_key: str = ""

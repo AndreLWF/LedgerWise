@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from pydantic import BaseModel, field_validator
@@ -10,7 +11,6 @@ class UserCategoryCreateRequest(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
-        import re
         v = v.strip()
         if not v:
             raise ValueError("name must not be empty")
@@ -37,7 +37,6 @@ class UserCategoryUpdateRequest(BaseModel):
     def validate_name(cls, v: str | None) -> str | None:
         if v is None:
             return v
-        import re
         v = v.strip()
         if not v:
             raise ValueError("name must not be empty")

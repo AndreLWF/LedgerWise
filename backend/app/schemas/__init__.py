@@ -13,17 +13,20 @@ from app.schemas.merchant_rule import (
 from app.schemas.spending import CategoryResponse, SpendingSummaryResponse
 from app.schemas.transaction import (
     AccountResponse,
+    BackfillResponse,
     CategoryUpdateRequest,
     ExchangeTokenResponse,
     LinkTokenResponse,
     PlaidItemResponse,
     PublicTokenRequest,
+    SyncResponse,
     TokenRequest,
     TransactionResponse,
 )
 
 __all__ = [
     "AccountResponse",
+    "BackfillResponse",
     "CategoryResponse",
     "CategoryUpdateRequest",
     "CheckoutRequest",
@@ -37,6 +40,7 @@ __all__ = [
     "PlaidItemResponse",
     "PublicTokenRequest",
     "SpendingSummaryResponse",
+    "SyncResponse",
     "TokenRequest",
     "TransactionResponse",
     "UserCategoryCreateRequest",

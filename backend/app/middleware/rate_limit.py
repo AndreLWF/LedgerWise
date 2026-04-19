@@ -16,7 +16,15 @@ GLOBAL_RATE_LIMIT = {"window_seconds": 60, "max_requests": 60}
 SENSITIVE_RATE_LIMIT = {"window_seconds": 60, "max_requests": 5}
 DATA_RATE_LIMIT = {"window_seconds": 60, "max_requests": 30}
 
-SENSITIVE_PATHS = {"/api/v1/teller/enroll", "/api/v1/plaid/exchange-token", "/api/v1/merchant-rules/", "/api/v1/billing/create-checkout-session", "/api/v1/billing/webhook"}
+SENSITIVE_PATHS = {
+    "/api/v1/teller/enroll",
+    "/api/v1/plaid/exchange-token",
+    "/api/v1/plaid/sync",
+    "/api/v1/plaid/backfill",
+    "/api/v1/merchant-rules/",
+    "/api/v1/billing/create-checkout-session",
+    "/api/v1/billing/webhook",
+}
 DATA_PATHS = {
     "/api/v1/teller/accounts",
     "/api/v1/teller/transactions",

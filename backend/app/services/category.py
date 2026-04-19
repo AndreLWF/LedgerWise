@@ -3,6 +3,7 @@
 import logging
 
 from sqlalchemy import delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -365,11 +366,18 @@ async def consolidate_categories(
                         color_id = candidate
                         break
 
-            cat = Category(user_id=user_id, name=normalized, color_id=color_id)
-            db.add(cat)
+            # Use ON CONFLICT DO NOTHING to avoid unique constraint errors
+            # when categories were already created in this session or a prior one
+            stmt = pg_insert(Category).values(
+                user_id=user_id,
+                name=normalized,
+                color_id=color_id,
+            ).on_conflict_do_nothing()
+            result = await db.execute(stmt)
+            if result.rowcount > 0:
+                created += 1
+                taken_ids.add(color_id)
             existing_names.append(normalized)
-            taken_ids.add(color_id)
-            created += 1
 
     if created:
         logger.info(

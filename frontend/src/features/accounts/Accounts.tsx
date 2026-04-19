@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 import { createAccountsStyles } from './styles/accounts.styles';
@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useUpgrade } from '../../contexts/UpgradeContext';
 import { useColors } from '../../contexts/ThemeContext';
 import { usePlaidLink } from '../../hooks/usePlaidLink';
+import { backfillPlaidTransactions } from '../../api/client';
 import type { Account } from '../../types/account';
 import StaggeredView from '../../components/StaggeredView';
 import AccountCard from './components/AccountCard';
@@ -35,7 +36,24 @@ export default function Accounts() {
   const colors = useColors();
   const addAccountLocked = !isPro && accounts.length >= 1;
   const [accountToRemove, setAccountToRemove] = useState<Account | null>(null);
+  const handleRequestRemove = useCallback((account: Account) => {
+    setAccountToRemove(account);
+  }, []);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSync = useCallback(async () => {
+    if (!token || syncing) return;
+    setSyncing(true);
+    try {
+      await backfillPlaidTransactions(token);
+      refresh();
+    } catch {
+      // Sync failure is non-critical — user can retry
+    } finally {
+      setSyncing(false);
+    }
+  }, [token, syncing, refresh]);
 
   const { openPlaidLink, linkLoading, enrolling, mobileLinkToken, handleMobileSuccess, handleMobileExit } = usePlaidLink(
     token,
@@ -122,7 +140,9 @@ export default function Accounts() {
                 <View key={item.account.id} style={styles.cardWrapper}>
                   <AccountCard
                     account={item.account}
-                    onRemove={() => setAccountToRemove(item.account)}
+                    onRemove={handleRequestRemove}
+                    onSync={handleSync}
+                    syncing={syncing}
                   />
                 </View>
               ) : (

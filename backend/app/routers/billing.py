@@ -47,6 +47,16 @@ async def create_checkout_session_endpoint(
             status_code=502,
             detail="Failed to create checkout session. Please try again later.",
         )
+    except Exception:
+        logger.error(
+            "Unexpected error creating checkout session for user=%s",
+            user_id,
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create checkout session. Please try again later.",
+        )
 
     return CheckoutResponse(checkout_url=checkout_url)
 

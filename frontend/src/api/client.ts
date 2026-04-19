@@ -142,10 +142,16 @@ export async function enrollAccount(
 
 // --- Plaid API functions ---
 
-export async function createPlaidLinkToken(token: string): Promise<string> {
+export async function createPlaidLinkToken(
+  token: string,
+  receivedRedirectUri?: string,
+): Promise<string> {
   const res = await fetch(`${API_URL}/api/v1/plaid/create-link-token`, {
     method: 'POST',
     headers: authHeaders(token),
+    body: receivedRedirectUri
+      ? JSON.stringify({ received_redirect_uri: receivedRedirectUri })
+      : undefined,
   });
   const data = await handleResponse<{ link_token: string }>(res);
   return data.link_token;
@@ -162,6 +168,26 @@ export async function exchangePlaidToken(
   });
   const data = await handleResponse<ExchangeTokenResponse>(res);
   clearApiCache();
+  return data;
+}
+
+export async function syncPlaidTransactions(token: string): Promise<{ synced: number }> {
+  const res = await fetch(`${API_URL}/api/v1/plaid/sync`, {
+    method: 'POST',
+    headers: authHeaders(token),
+  });
+  const data = await handleResponse<{ synced: number }>(res);
+  if (data.synced > 0) clearApiCache();
+  return data;
+}
+
+export async function backfillPlaidTransactions(token: string): Promise<{ fetched: number }> {
+  const res = await fetch(`${API_URL}/api/v1/plaid/backfill`, {
+    method: 'POST',
+    headers: authHeaders(token),
+  });
+  const data = await handleResponse<{ fetched: number }>(res);
+  if (data.fetched > 0) clearApiCache();
   return data;
 }
 
