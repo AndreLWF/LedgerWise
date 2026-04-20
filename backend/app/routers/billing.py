@@ -1,16 +1,11 @@
 import logging
-import random
-from datetime import datetime, timedelta, timezone
 
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import delete
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
 from app.middleware.auth import get_current_user_id, require_admin_user
-from app.models.processed_webhook_event import ProcessedWebhookEvent
 from app.schemas.billing import (
     CheckoutRequest,
     CheckoutResponse,
@@ -19,6 +14,7 @@ from app.schemas.billing import (
 )
 from app.services.billing import (
     ALLOWED_PRICE_IDS,
+    check_and_record_webhook_event,
     create_checkout_session,
     handle_charge_refunded,
     handle_dispute_created,
@@ -26,6 +22,7 @@ from app.services.billing import (
     handle_subscription_created,
     handle_subscription_deleted,
     handle_subscription_updated,
+    maybe_cleanup_old_events,
     reconcile_subscriptions,
     verify_webhook_signature,
 )
@@ -34,8 +31,6 @@ from app.utils.logging import log_data_access, log_security_event
 logger = logging.getLogger("ledgerwise.audit")
 
 router = APIRouter(prefix="/billing", tags=["billing"])
-
-_DEDUP_RETENTION_DAYS = 30
 
 
 @router.post("/create-checkout-session", response_model=CheckoutResponse)
@@ -111,23 +106,10 @@ async def stripe_webhook(
     event_type = event["type"]
     log_security_event("stripe_webhook", {"type": event_type, "id": event_id})
 
-    # Dedup: INSERT ... ON CONFLICT DO NOTHING — if the row already exists,
-    # the event was already processed (survives restarts + multi-instance).
-    stmt = (
-        pg_insert(ProcessedWebhookEvent)
-        .values(event_id=event_id, event_type=event_type)
-        .on_conflict_do_nothing(index_elements=["event_id"])
-        .returning(ProcessedWebhookEvent.id)
-    )
-    result = await db.execute(stmt)
-    inserted = result.scalar_one_or_none()
-
-    if inserted is None:
+    is_new = await check_and_record_webhook_event(db, event_id, event_type)
+    if not is_new:
         logger.info("STRIPE_WEBHOOK skipping duplicate event_id=%s", event_id)
-        await db.rollback()
         return WebhookResponse(status="ok")
-
-    await db.commit()
 
     data_object = event["data"]["object"]
 
@@ -144,15 +126,7 @@ async def stripe_webhook(
     elif event_type == "invoice.payment_failed":
         await handle_invoice_payment_failed(db, data_object)
 
-    # Probabilistic cleanup: ~1-in-100 chance to remove dedup records older than 30 days
-    if random.randint(1, 100) == 1:
-        cutoff = datetime.now(timezone.utc) - timedelta(days=_DEDUP_RETENTION_DAYS)
-        await db.execute(
-            delete(ProcessedWebhookEvent).where(
-                ProcessedWebhookEvent.processed_at < cutoff
-            )
-        )
-        await db.commit()
+    await maybe_cleanup_old_events(db)
 
     return WebhookResponse(status="ok")
 

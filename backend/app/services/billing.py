@@ -1,13 +1,17 @@
 """Billing service — Stripe checkout and subscription management."""
 
 import logging
+import random
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import stripe
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.models.processed_webhook_event import ProcessedWebhookEvent
 from app.models.user import User
 from app.utils.logging import log_security_event
 
@@ -311,6 +315,41 @@ async def handle_charge_refunded(
     except Exception:
         await db.rollback()
         raise
+
+
+async def check_and_record_webhook_event(
+    db: AsyncSession, event_id: str, event_type: str
+) -> bool:
+    """Record a webhook event for deduplication. Returns True if new, False if duplicate."""
+    stmt = (
+        pg_insert(ProcessedWebhookEvent)
+        .values(event_id=event_id, event_type=event_type)
+        .on_conflict_do_nothing(index_elements=["event_id"])
+        .returning(ProcessedWebhookEvent.id)
+    )
+    result = await db.execute(stmt)
+    inserted = result.scalar_one_or_none()
+
+    if inserted is None:
+        await db.rollback()
+        return False
+    await db.commit()
+    return True
+
+
+async def maybe_cleanup_old_events(
+    db: AsyncSession, retention_days: int = 30
+) -> None:
+    """Probabilistic cleanup of old dedup records (~1% chance per call)."""
+    if random.randint(1, 100) != 1:
+        return
+    cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+    await db.execute(
+        delete(ProcessedWebhookEvent).where(
+            ProcessedWebhookEvent.processed_at < cutoff
+        )
+    )
+    await db.commit()
 
 
 async def reconcile_subscriptions(db: AsyncSession) -> dict[str, Any]:

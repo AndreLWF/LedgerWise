@@ -27,7 +27,7 @@ from plaid.model.products import Products
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
 from plaid.model.transactions_sync_request import TransactionsSyncRequest
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,6 +42,49 @@ from app.utils.encryption import encrypt, decrypt
 from app.utils.logging import log_data_access, log_enrollment, log_security_event
 
 logger = logging.getLogger("ledgerwise.audit")
+
+# Columns updated on conflict during transaction upserts
+_TXN_UPDATE_COLUMNS = (
+    "amount", "date", "description", "category", "merchant_name",
+    "status", "personal_finance_category_primary",
+    "personal_finance_category_detailed", "payment_channel",
+    "pending", "authorized_date",
+)
+
+
+def _build_txn_values(txn, account_db_id: uuid.UUID) -> dict:
+    """Build a values dict for a single Plaid transaction row."""
+    pfc = txn.personal_finance_category
+    return {
+        "account_id": account_db_id,
+        "provider": "plaid",
+        "plaid_transaction_id": txn.transaction_id,
+        "amount": Decimal(str(txn.amount)),
+        "date": txn.date,
+        "description": txn.name or "",
+        "category": pfc.primary.lower() if pfc else None,
+        "merchant_name": txn.merchant_name,
+        "status": "pending" if txn.pending else "posted",
+        "personal_finance_category_primary": pfc.primary if pfc else None,
+        "personal_finance_category_detailed": pfc.detailed if pfc else None,
+        "payment_channel": txn.payment_channel if txn.payment_channel else None,
+        "pending": txn.pending,
+        "authorized_date": txn.authorized_date,
+    }
+
+
+async def _batch_upsert_transactions(
+    db: AsyncSession, values_list: list[dict]
+) -> None:
+    """Batch-upsert transactions using a single INSERT ... ON CONFLICT."""
+    if not values_list:
+        return
+    stmt = pg_insert(Transaction).values(values_list)
+    stmt = stmt.on_conflict_do_update(
+        constraint="uq_plaid_transaction_per_account",
+        set_={col: getattr(stmt.excluded, col) for col in _TXN_UPDATE_COLUMNS},
+    )
+    await db.execute(stmt)
 
 
 async def create_link_token(
@@ -278,39 +321,16 @@ async def fetch_all_transactions(
         )
         response = await asyncio.to_thread(client.transactions_get, request)
 
+        batch_values: list[dict] = []
         for txn in response.transactions:
             account_db_id = account_map.get(txn.account_id)
             if account_db_id is None:
                 continue
-
-            pfc = txn.personal_finance_category
-            values = {
-                "account_id": account_db_id,
-                "provider": "plaid",
-                "plaid_transaction_id": txn.transaction_id,
-                "amount": Decimal(str(txn.amount)),
-                "date": txn.date,
-                "description": txn.name or "",
-                "category": pfc.primary.lower() if pfc else None,
-                "merchant_name": txn.merchant_name,
-                "status": "pending" if txn.pending else "posted",
-                "personal_finance_category_primary": pfc.primary if pfc else None,
-                "personal_finance_category_detailed": pfc.detailed if pfc else None,
-                "payment_channel": txn.payment_channel if txn.payment_channel else None,
-                "pending": txn.pending,
-                "authorized_date": txn.authorized_date,
-            }
-            update_fields = {
-                k: v for k, v in values.items()
-                if k not in ("account_id", "provider", "plaid_transaction_id")
-            }
-            txn_stmt = pg_insert(Transaction).values(**values).on_conflict_do_update(
-                constraint="uq_plaid_transaction_per_account",
-                set_=update_fields,
-            )
-            await db.execute(txn_stmt)
+            batch_values.append(_build_txn_values(txn, account_db_id))
             fetched_transaction_ids.append(txn.transaction_id)
-            total_fetched += 1
+
+        await _batch_upsert_transactions(db, batch_values)
+        total_fetched += len(batch_values)
 
         offset += len(response.transactions)
         # Update total in case Plaid processed more while we were paginating
@@ -362,52 +382,28 @@ async def sync_transactions(
         )
         sync_response = await asyncio.to_thread(client.transactions_sync, sync_request)
 
-        # Process added + modified transactions (same upsert logic)
+        # Process added + modified transactions (batch upsert)
+        batch_values: list[dict] = []
         for txn in [*sync_response.added, *sync_response.modified]:
             account_db_id = accounts.get(txn.account_id)
             if account_db_id is None:
                 continue
-
-            pfc = txn.personal_finance_category
-            values = {
-                "account_id": account_db_id,
-                "provider": "plaid",
-                "plaid_transaction_id": txn.transaction_id,
-                "amount": Decimal(str(txn.amount)),
-                "date": txn.date,
-                "description": txn.name or "",
-                "category": pfc.primary.lower() if pfc else None,
-                "merchant_name": txn.merchant_name,
-                "status": "pending" if txn.pending else "posted",
-                "personal_finance_category_primary": pfc.primary if pfc else None,
-                "personal_finance_category_detailed": pfc.detailed if pfc else None,
-                "payment_channel": txn.payment_channel if txn.payment_channel else None,
-                "pending": txn.pending,
-                "authorized_date": txn.authorized_date,
-            }
-            update_fields = {k: v for k, v in values.items() if k not in ("account_id", "provider", "plaid_transaction_id")}
-            txn_stmt = pg_insert(Transaction).values(**values).on_conflict_do_update(
-                constraint="uq_plaid_transaction_per_account",
-                set_=update_fields,
-            )
-            await db.execute(txn_stmt)
+            batch_values.append(_build_txn_values(txn, account_db_id))
             synced_transaction_ids.append(txn.transaction_id)
-            total_synced += 1
 
-        # Handle removed transactions (scoped to user's accounts)
-        for removed in sync_response.removed:
-            remove_stmt = (
-                select(Transaction)
-                .join(Account)
-                .where(
-                    Transaction.plaid_transaction_id == removed.transaction_id,
-                    Account.user_id == user_id,
+        await _batch_upsert_transactions(db, batch_values)
+        total_synced += len(batch_values)
+
+        # Handle removed transactions (bulk delete, scoped to user's accounts)
+        if sync_response.removed:
+            removed_ids = [r.transaction_id for r in sync_response.removed]
+            user_acct_ids = select(Account.id).where(Account.user_id == user_id)
+            await db.execute(
+                delete(Transaction).where(
+                    Transaction.plaid_transaction_id.in_(removed_ids),
+                    Transaction.account_id.in_(user_acct_ids),
                 )
             )
-            remove_result = await db.execute(remove_stmt)
-            txn_to_remove = remove_result.scalars().first()
-            if txn_to_remove:
-                await db.delete(txn_to_remove)
 
         cursor = sync_response.next_cursor
         has_more = sync_response.has_more

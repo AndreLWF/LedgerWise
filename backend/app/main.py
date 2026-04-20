@@ -12,7 +12,7 @@ from sqlalchemy import delete
 
 from app.config import settings
 from app.dependencies import async_session
-from app.middleware.auth import get_current_user_id
+from app.middleware.auth import get_current_user_id, pre_extract_user_id
 from app.middleware.rate_limit import rate_limit_middleware
 from app.models.processed_webhook_event import ProcessedWebhookEvent
 from app.routers import banking, billing, category, merchant_rule, plaid, spending
@@ -92,7 +92,6 @@ app.add_middleware(
 
 # 2. Lightweight JWT pre-check — sets request.state.user_id for rate limiter
 # (full JWT verification happens again in the route dependency)
-from app.middleware.auth import pre_extract_user_id
 app.middleware("http")(pre_extract_user_id)
 
 # 3. Rate limiting (per-IP + per-user on sensitive endpoints)
