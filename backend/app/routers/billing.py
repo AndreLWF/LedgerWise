@@ -1,15 +1,20 @@
 import logging
+from datetime import datetime, timedelta, timezone
 
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import delete
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
-from app.middleware.auth import get_current_user_id
+from app.middleware.auth import get_current_user_id, require_admin_user
+from app.models.processed_webhook_event import ProcessedWebhookEvent
 from app.schemas.billing import CheckoutRequest, CheckoutResponse, WebhookResponse
 from app.services.billing import (
     ALLOWED_PRICE_IDS,
     create_checkout_session,
+    handle_charge_refunded,
     handle_dispute_created,
     handle_invoice_payment_failed,
     handle_subscription_created,
@@ -24,10 +29,7 @@ logger = logging.getLogger("ledgerwise.audit")
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
-# In-memory set of processed Stripe event IDs (dedup within process lifetime).
-# For multi-instance deployments, migrate to a database table or Redis.
-_processed_event_ids: set[str] = set()
-_MAX_PROCESSED_EVENTS = 10_000
+_DEDUP_RETENTION_DAYS = 30
 
 
 @router.post("/create-checkout-session", response_model=CheckoutResponse)
@@ -76,6 +78,7 @@ _HANDLED_EVENTS = {
     "customer.subscription.deleted",
     "customer.subscription.updated",
     "charge.dispute.created",
+    "charge.refunded",
     "invoice.payment_failed",
 }
 
@@ -102,10 +105,23 @@ async def stripe_webhook(
     event_type = event["type"]
     log_security_event("stripe_webhook", {"type": event_type, "id": event_id})
 
-    # Dedup: skip already-processed events (Stripe retries on failure)
-    if event_id in _processed_event_ids:
+    # Dedup: INSERT ... ON CONFLICT DO NOTHING — if the row already exists,
+    # the event was already processed (survives restarts + multi-instance).
+    stmt = (
+        pg_insert(ProcessedWebhookEvent)
+        .values(event_id=event_id, event_type=event_type)
+        .on_conflict_do_nothing(index_elements=["event_id"])
+        .returning(ProcessedWebhookEvent.id)
+    )
+    result = await db.execute(stmt)
+    inserted = result.scalar_one_or_none()
+
+    if inserted is None:
         logger.info("STRIPE_WEBHOOK skipping duplicate event_id=%s", event_id)
+        await db.rollback()
         return WebhookResponse(status="ok")
+
+    await db.commit()
 
     data_object = event["data"]["object"]
 
@@ -117,31 +133,29 @@ async def stripe_webhook(
         await handle_subscription_updated(db, data_object)
     elif event_type == "charge.dispute.created":
         await handle_dispute_created(db, data_object)
+    elif event_type == "charge.refunded":
+        await handle_charge_refunded(db, data_object)
     elif event_type == "invoice.payment_failed":
         await handle_invoice_payment_failed(db, data_object)
 
-    # Mark as processed after successful handling
-    _processed_event_ids.add(event_id)
-    # Evict oldest entries if set grows too large
-    if len(_processed_event_ids) > _MAX_PROCESSED_EVENTS:
-        # Remove roughly half the entries (oldest aren't trackable in a set,
-        # but clearing half prevents unbounded growth)
-        to_remove = len(_processed_event_ids) - _MAX_PROCESSED_EVENTS // 2
-        for _ in range(to_remove):
-            _processed_event_ids.pop()
+    # Periodic cleanup: remove dedup records older than 30 days
+    cutoff = datetime.now(timezone.utc) - timedelta(days=_DEDUP_RETENTION_DAYS)
+    await db.execute(
+        delete(ProcessedWebhookEvent).where(
+            ProcessedWebhookEvent.processed_at < cutoff
+        )
+    )
+    await db.commit()
 
     return WebhookResponse(status="ok")
 
 
 @router.post("/reconcile", response_model=dict)
 async def reconcile_endpoint(
-    user_id: str = Depends(get_current_user_id),
+    user_id: str = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """Admin endpoint: reconcile local is_pro flags against Stripe subscriptions.
-
-    Requires authentication. In production, restrict to admin users.
-    """
+    """Admin endpoint: reconcile local is_pro flags against Stripe subscriptions."""
     log_security_event("stripe_reconciliation_triggered", {"triggered_by": user_id})
 
     try:

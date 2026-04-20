@@ -1,4 +1,6 @@
-from fastapi import Depends, HTTPException, Request, status
+from collections.abc import Awaitable, Callable
+
+from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import jwt
 from jwt import PyJWKClient
@@ -84,3 +86,56 @@ async def require_pro_user(
             detail="Pro subscription required.",
         )
     return user_id
+
+
+async def require_admin_user(
+    user_id: str = Depends(get_current_user_id),
+) -> str:
+    """Verify the authenticated user has admin privileges.
+
+    Raises 403 if not admin. Uses its own DB session to avoid adding a
+    ``db`` parameter that would conflict with endpoint signatures.
+    """
+    from app.dependencies import async_session
+    from app.models.user import User
+
+    async with async_session() as session:
+        result = await session.execute(
+            select(User.is_admin).where(User.id == user_id)
+        )
+        is_admin = result.scalar()
+
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required.",
+        )
+    return user_id
+
+
+async def pre_extract_user_id(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
+    """Lightweight middleware that extracts user_id from a verified JWT.
+
+    Sets request.state.user_id for downstream middleware (rate limiter).
+    Failures are silently ignored — full auth validation happens in route deps.
+    """
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        try:
+            token = auth_header[7:]
+            signing_key = _jwks_client.get_signing_key_from_jwt(token)
+            payload = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=["ES256"],
+                audience="authenticated",
+                issuer=_expected_issuer,
+            )
+            request.state.user_id = payload.get("sub")
+        except Exception:
+            pass
+
+    return await call_next(request)

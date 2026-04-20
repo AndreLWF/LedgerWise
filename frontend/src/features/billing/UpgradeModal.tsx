@@ -31,6 +31,9 @@ export default function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
     setError(null);
     try {
       const checkoutUrl = await createCheckoutSession(token, priceId);
+      if (!checkoutUrl.startsWith('https://checkout.stripe.com/')) {
+        throw new Error('Invalid checkout URL');
+      }
       await Linking.openURL(checkoutUrl);
     } catch {
       setError('Something went wrong. Please try again.');

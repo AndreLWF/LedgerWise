@@ -101,20 +101,10 @@ async def rate_limit_middleware(
         )
     _global_hits[client_ip].append(now)
 
-    # --- extract user_id from JWT for per-user limiting (best-effort) ---
-    user_id: str | None = None
-    auth_header = request.headers.get("authorization", "")
-    if auth_header.startswith("Bearer "):
-        try:
-            import jwt as _jwt
-
-            token = auth_header[7:]
-            # Decode without verification — we only need the sub claim for
-            # rate-limit keying. Auth middleware validates the JWT separately.
-            payload = _jwt.decode(token, options={"verify_signature": False})
-            user_id = payload.get("sub")
-        except Exception:
-            pass
+    # --- extract user_id for per-user limiting (from verified auth state) ---
+    # Use request.state.user_id set by auth middleware after JWT verification.
+    # Falls back to IP-only limiting if auth hasn't run yet.
+    user_id: str | None = getattr(request.state, "user_id", None)
 
     # --- per-endpoint rate checks ---
     path = request.url.path

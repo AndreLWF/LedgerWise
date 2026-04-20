@@ -278,6 +278,41 @@ async def handle_invoice_payment_failed(
         raise
 
 
+async def handle_charge_refunded(
+    db: AsyncSession, charge: dict[str, Any]
+) -> None:
+    """Revoke Pro when a charge is fully refunded."""
+    customer_id = charge.get("customer", "")
+    if not customer_id:
+        logger.warning("STRIPE_WEBHOOK charge.refunded missing customer_id")
+        return
+
+    # Only revoke on full refund (refunded == true), not partial
+    if not charge.get("refunded", False):
+        return
+
+    log_security_event(
+        "stripe_charge_refunded",
+        {"customer_id": customer_id, "charge_id": charge.get("id")},
+    )
+
+    try:
+        result = await db.execute(
+            update(User)
+            .where(User.stripe_customer_id == customer_id)
+            .values(is_pro=False, updated_at=func.now())
+        )
+        if result.rowcount == 0:
+            logger.warning(
+                "STRIPE_WEBHOOK charge.refunded no user found for customer=%s",
+                customer_id,
+            )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+
+
 async def reconcile_subscriptions(db: AsyncSession) -> dict[str, Any]:
     """Compare local is_pro flags against Stripe's actual subscription state.
 

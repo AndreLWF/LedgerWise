@@ -105,7 +105,7 @@ export default function PlaidModal({ visible, linkToken, onSuccess, onExit }: Pl
               onMessage={handleMessage}
               javaScriptEnabled
               domStorageEnabled
-              originWhitelist={['https://*']}
+              originWhitelist={['https://cdn.plaid.com', 'https://*.plaid.com']}
               style={styles.webView}
             />
           ) : null}

@@ -5,5 +5,15 @@ from app.models.transaction import Transaction
 from app.models.plaid_item import PlaidItem
 from app.models.category import Category
 from app.models.merchant_rule import MerchantRule
+from app.models.processed_webhook_event import ProcessedWebhookEvent
 
-__all__ = ["Base", "User", "Account", "Transaction", "PlaidItem", "Category", "MerchantRule"]
+__all__ = [
+    "Base",
+    "User",
+    "Account",
+    "Transaction",
+    "PlaidItem",
+    "Category",
+    "MerchantRule",
+    "ProcessedWebhookEvent",
+]

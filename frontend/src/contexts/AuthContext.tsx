@@ -55,6 +55,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Proactive token refresh — refresh 30s before expiry to avoid 401s
+  useEffect(() => {
+    if (!session?.expires_at) return;
+
+    const expiresAtMs = session.expires_at * 1000;
+    const refreshAt = expiresAtMs - 30_000;
+    const delay = refreshAt - Date.now();
+
+    if (delay <= 0) {
+      supabase.auth.refreshSession();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      supabase.auth.refreshSession();
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [session?.expires_at]);
+
   // Fetch is_pro from the users table when session changes
   useEffect(() => {
     if (!session?.user?.id) {

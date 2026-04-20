@@ -41,14 +41,36 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-# 2. Rate limiting (per-IP + stricter on sensitive endpoints)
+# 2. Lightweight JWT pre-check — sets request.state.user_id for rate limiter
+# (full JWT verification happens again in the route dependency)
+from app.middleware.auth import pre_extract_user_id
+app.middleware("http")(pre_extract_user_id)
+
+# 3. Rate limiting (per-IP + per-user on sensitive endpoints)
 app.middleware("http")(rate_limit_middleware)
 
-# 3. Audit logging (method, path, status, duration, user)
+# 4. Audit logging (method, path, status, duration, user)
 app.middleware("http")(audit_logging_middleware)
 
 
-# 4. Security headers
+# 5. Origin validation for CSRF protection on mutating requests
+@app.middleware("http")
+async def csrf_origin_middleware(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
+    if request.method in ("POST", "PATCH", "DELETE", "PUT"):
+        origin = request.headers.get("origin")
+        # Allow requests with no Origin (e.g. server-to-server, Stripe webhooks)
+        if origin and origin not in settings.cors_origins:
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Origin not allowed."},
+            )
+    return await call_next(request)
+
+
+# 6. Security headers
 @app.middleware("http")
 async def security_headers_middleware(
     request: Request,
