@@ -1,4 +1,5 @@
 import logging
+import random
 from datetime import datetime, timedelta, timezone
 
 import stripe
@@ -10,7 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_db
 from app.middleware.auth import get_current_user_id, require_admin_user
 from app.models.processed_webhook_event import ProcessedWebhookEvent
-from app.schemas.billing import CheckoutRequest, CheckoutResponse, WebhookResponse
+from app.schemas.billing import (
+    CheckoutRequest,
+    CheckoutResponse,
+    ReconcileResponse,
+    WebhookResponse,
+)
 from app.services.billing import (
     ALLOWED_PRICE_IDS,
     create_checkout_session,
@@ -138,23 +144,24 @@ async def stripe_webhook(
     elif event_type == "invoice.payment_failed":
         await handle_invoice_payment_failed(db, data_object)
 
-    # Periodic cleanup: remove dedup records older than 30 days
-    cutoff = datetime.now(timezone.utc) - timedelta(days=_DEDUP_RETENTION_DAYS)
-    await db.execute(
-        delete(ProcessedWebhookEvent).where(
-            ProcessedWebhookEvent.processed_at < cutoff
+    # Probabilistic cleanup: ~1-in-100 chance to remove dedup records older than 30 days
+    if random.randint(1, 100) == 1:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=_DEDUP_RETENTION_DAYS)
+        await db.execute(
+            delete(ProcessedWebhookEvent).where(
+                ProcessedWebhookEvent.processed_at < cutoff
+            )
         )
-    )
-    await db.commit()
+        await db.commit()
 
     return WebhookResponse(status="ok")
 
 
-@router.post("/reconcile", response_model=dict)
+@router.post("/reconcile", response_model=ReconcileResponse)
 async def reconcile_endpoint(
     user_id: str = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> ReconcileResponse:
     """Admin endpoint: reconcile local is_pro flags against Stripe subscriptions."""
     log_security_event("stripe_reconciliation_triggered", {"triggered_by": user_id})
 
@@ -167,4 +174,4 @@ async def reconcile_endpoint(
             detail="Reconciliation failed. Check server logs.",
         )
 
-    return result
+    return ReconcileResponse(**result)

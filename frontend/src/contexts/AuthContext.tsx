@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.signInWithIdToken({ provider: 'google', token: idToken })
       .then(({ error }) => {
-        if (error) console.error('Google sign-in failed:', error.message);
+        if (error && __DEV__) console.error('Google sign-in failed:', error.message);
       });
   }, [response]);
 

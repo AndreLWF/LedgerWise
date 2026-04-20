@@ -1,20 +1,69 @@
+import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sqlalchemy import delete
 
 from app.config import settings
+from app.dependencies import async_session
 from app.middleware.auth import get_current_user_id
 from app.middleware.rate_limit import rate_limit_middleware
+from app.models.processed_webhook_event import ProcessedWebhookEvent
 from app.routers import banking, billing, category, merchant_rule, plaid, spending
+from app.services.billing import reconcile_subscriptions
 from app.utils.logging import audit_logging_middleware
 
 logger = logging.getLogger("ledgerwise.audit")
 
-app = FastAPI(title="LedgerWise API", version="0.1.0")
+_RECONCILE_INTERVAL_HOURS = 6
+_DEDUP_CLEANUP_RETENTION_DAYS = 30
+
+
+async def _periodic_reconciliation() -> None:
+    """Run subscription reconciliation and dedup cleanup every 6 hours."""
+    while True:
+        await asyncio.sleep(_RECONCILE_INTERVAL_HOURS * 3600)
+        try:
+            async with async_session() as db:
+                result = await reconcile_subscriptions(db)
+                if result["corrections"]:
+                    logger.info(
+                        "SCHEDULED_RECONCILIATION corrections=%d checked=%d",
+                        len(result["corrections"]),
+                        result["pro_users_checked"],
+                    )
+
+                # Dedup cleanup (shared with P2-4 — moved out of webhook handler)
+                cutoff = datetime.now(timezone.utc) - timedelta(
+                    days=_DEDUP_CLEANUP_RETENTION_DAYS
+                )
+                await db.execute(
+                    delete(ProcessedWebhookEvent).where(
+                        ProcessedWebhookEvent.processed_at < cutoff
+                    )
+                )
+                await db.commit()
+        except Exception:
+            logger.error("Scheduled reconciliation failed", exc_info=True)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = None
+    if settings.stripe_secret_key:
+        task = asyncio.create_task(_periodic_reconciliation())
+    yield
+    if task:
+        task.cancel()
+
+
+app = FastAPI(title="LedgerWise API", version="0.1.0", lifespan=lifespan)
 
 
 @app.exception_handler(Exception)

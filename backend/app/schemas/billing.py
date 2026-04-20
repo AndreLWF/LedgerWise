@@ -11,3 +11,14 @@ class CheckoutResponse(BaseModel):
 
 class WebhookResponse(BaseModel):
     status: str
+
+
+class ReconcileCorrection(BaseModel):
+    user_id: str
+    action: str
+    reason: str
+
+
+class ReconcileResponse(BaseModel):
+    pro_users_checked: int
+    corrections: list[ReconcileCorrection]
