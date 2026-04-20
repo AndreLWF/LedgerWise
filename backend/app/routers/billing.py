@@ -106,27 +106,37 @@ async def stripe_webhook(
     event_type = event["type"]
     log_security_event("stripe_webhook", {"type": event_type, "id": event_id})
 
+    if event_type not in _HANDLED_EVENTS:
+        return WebhookResponse(status="ok")
+
     is_new = await check_and_record_webhook_event(db, event_id, event_type)
     if not is_new:
         logger.info("STRIPE_WEBHOOK skipping duplicate event_id=%s", event_id)
         return WebhookResponse(status="ok")
 
+    # Dedup record + handler writes are committed atomically: if the handler
+    # fails, rollback removes the dedup record so Stripe can retry.
     data_object = event["data"]["object"]
 
-    if event_type == "customer.subscription.created":
-        await handle_subscription_created(db, data_object)
-    elif event_type == "customer.subscription.deleted":
-        await handle_subscription_deleted(db, data_object)
-    elif event_type == "customer.subscription.updated":
-        await handle_subscription_updated(db, data_object)
-    elif event_type == "charge.dispute.created":
-        await handle_dispute_created(db, data_object)
-    elif event_type == "charge.refunded":
-        await handle_charge_refunded(db, data_object)
-    elif event_type == "invoice.payment_failed":
-        await handle_invoice_payment_failed(db, data_object)
+    try:
+        if event_type == "customer.subscription.created":
+            await handle_subscription_created(db, data_object)
+        elif event_type == "customer.subscription.deleted":
+            await handle_subscription_deleted(db, data_object)
+        elif event_type == "customer.subscription.updated":
+            await handle_subscription_updated(db, data_object)
+        elif event_type == "charge.dispute.created":
+            await handle_dispute_created(db, data_object)
+        elif event_type == "charge.refunded":
+            await handle_charge_refunded(db, data_object)
+        elif event_type == "invoice.payment_failed":
+            await handle_invoice_payment_failed(db, data_object)
 
-    await maybe_cleanup_old_events(db)
+        await maybe_cleanup_old_events(db)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
     return WebhookResponse(status="ok")
 

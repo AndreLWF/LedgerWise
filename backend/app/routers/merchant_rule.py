@@ -60,6 +60,10 @@ async def create_rule(
             db, user_id, body.transaction_id, body.category_name
         )
     except ValueError:
+        logger.warning(
+            "Merchant rule creation failed for user=%s transaction=%s",
+            user_id, body.transaction_id, exc_info=True,
+        )
         raise HTTPException(status_code=404, detail="Transaction not found.")
     except Exception:
         logger.error(

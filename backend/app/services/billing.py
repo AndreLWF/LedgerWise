@@ -123,20 +123,15 @@ async def handle_subscription_created(
         {"user_id": user_id, "subscription_id": subscription.get("id")},
     )
 
-    try:
-        await db.execute(
-            update(User)
-            .where(User.id == user_id)
-            .values(
-                is_pro=True,
-                stripe_customer_id=customer_id,
-                updated_at=func.now(),
-            )
+    await db.execute(
+        update(User)
+        .where(User.id == user_id)
+        .values(
+            is_pro=True,
+            stripe_customer_id=customer_id,
+            updated_at=func.now(),
         )
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise
+    )
 
 
 async def handle_subscription_deleted(
@@ -159,16 +154,11 @@ async def handle_subscription_deleted(
         {"user_id": user_id, "subscription_id": subscription.get("id")},
     )
 
-    try:
-        await db.execute(
-            update(User)
-            .where(User.id == user_id)
-            .values(is_pro=False, updated_at=func.now())
-        )
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise
+    await db.execute(
+        update(User)
+        .where(User.id == user_id)
+        .values(is_pro=False, updated_at=func.now())
+    )
 
 
 async def handle_subscription_updated(
@@ -199,16 +189,11 @@ async def handle_subscription_updated(
         },
     )
 
-    try:
-        await db.execute(
-            update(User)
-            .where(User.id == user_id)
-            .values(is_pro=is_active, updated_at=func.now())
-        )
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise
+    await db.execute(
+        update(User)
+        .where(User.id == user_id)
+        .values(is_pro=is_active, updated_at=func.now())
+    )
 
 
 async def handle_dispute_created(
@@ -231,21 +216,16 @@ async def handle_dispute_created(
         {"customer_id": customer_id, "dispute_id": dispute.get("id")},
     )
 
-    try:
-        result = await db.execute(
-            update(User)
-            .where(User.stripe_customer_id == customer_id)
-            .values(is_pro=False, updated_at=func.now())
+    result = await db.execute(
+        update(User)
+        .where(User.stripe_customer_id == customer_id)
+        .values(is_pro=False, updated_at=func.now())
+    )
+    if result.rowcount == 0:
+        logger.warning(
+            "STRIPE_WEBHOOK charge.dispute.created no user found for customer=%s",
+            customer_id,
         )
-        if result.rowcount == 0:
-            logger.warning(
-                "STRIPE_WEBHOOK charge.dispute.created no user found for customer=%s",
-                customer_id,
-            )
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise
 
 
 async def handle_invoice_payment_failed(
@@ -266,21 +246,16 @@ async def handle_invoice_payment_failed(
         {"customer_id": customer_id, "invoice_id": invoice.get("id")},
     )
 
-    try:
-        result = await db.execute(
-            update(User)
-            .where(User.stripe_customer_id == customer_id)
-            .values(is_pro=False, updated_at=func.now())
+    result = await db.execute(
+        update(User)
+        .where(User.stripe_customer_id == customer_id)
+        .values(is_pro=False, updated_at=func.now())
+    )
+    if result.rowcount == 0:
+        logger.warning(
+            "STRIPE_WEBHOOK invoice.payment_failed no user found for customer=%s",
+            customer_id,
         )
-        if result.rowcount == 0:
-            logger.warning(
-                "STRIPE_WEBHOOK invoice.payment_failed no user found for customer=%s",
-                customer_id,
-            )
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise
 
 
 async def handle_charge_refunded(
@@ -301,27 +276,27 @@ async def handle_charge_refunded(
         {"customer_id": customer_id, "charge_id": charge.get("id")},
     )
 
-    try:
-        result = await db.execute(
-            update(User)
-            .where(User.stripe_customer_id == customer_id)
-            .values(is_pro=False, updated_at=func.now())
+    result = await db.execute(
+        update(User)
+        .where(User.stripe_customer_id == customer_id)
+        .values(is_pro=False, updated_at=func.now())
+    )
+    if result.rowcount == 0:
+        logger.warning(
+            "STRIPE_WEBHOOK charge.refunded no user found for customer=%s",
+            customer_id,
         )
-        if result.rowcount == 0:
-            logger.warning(
-                "STRIPE_WEBHOOK charge.refunded no user found for customer=%s",
-                customer_id,
-            )
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise
 
 
 async def check_and_record_webhook_event(
     db: AsyncSession, event_id: str, event_type: str
 ) -> bool:
-    """Record a webhook event for deduplication. Returns True if new, False if duplicate."""
+    """Record a webhook event for deduplication. Returns True if new, False if duplicate.
+
+    Does NOT commit — the caller is responsible for committing the transaction
+    so that the dedup record and event handling are atomic. If the handler fails,
+    the rollback removes the dedup record too, allowing Stripe to retry.
+    """
     stmt = (
         pg_insert(ProcessedWebhookEvent)
         .values(event_id=event_id, event_type=event_type)
@@ -330,18 +305,16 @@ async def check_and_record_webhook_event(
     )
     result = await db.execute(stmt)
     inserted = result.scalar_one_or_none()
-
-    if inserted is None:
-        await db.rollback()
-        return False
-    await db.commit()
-    return True
+    return inserted is not None
 
 
 async def maybe_cleanup_old_events(
     db: AsyncSession, retention_days: int = 30
 ) -> None:
-    """Probabilistic cleanup of old dedup records (~1% chance per call)."""
+    """Probabilistic cleanup of old dedup records (~1% chance per call).
+
+    Does NOT commit — the caller commits as part of the webhook transaction.
+    """
     if random.randint(1, 100) != 1:
         return
     cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
@@ -350,7 +323,6 @@ async def maybe_cleanup_old_events(
             ProcessedWebhookEvent.processed_at < cutoff
         )
     )
-    await db.commit()
 
 
 async def reconcile_subscriptions(db: AsyncSession) -> dict[str, Any]:
@@ -388,12 +360,12 @@ async def reconcile_subscriptions(db: AsyncSession) -> dict[str, Any]:
             )
         return None
 
-    results = await asyncio.gather(*[_check_user(u) for u in users_to_check])
+    check_results = await asyncio.gather(*[_check_user(u) for u in users_to_check])
 
     corrections = []
-    for result in results:
-        if result is not None:
-            user_id = result["user_id"]
+    for correction in check_results:
+        if correction is not None:
+            user_id = correction["user_id"]
             await db.execute(
                 update(User)
                 .where(User.id == user_id)
@@ -401,12 +373,12 @@ async def reconcile_subscriptions(db: AsyncSession) -> dict[str, Any]:
             )
             corrections.append({
                 "user_id": user_id,
-                "action": result["action"],
-                "reason": result["reason"],
+                "action": correction["action"],
+                "reason": correction["reason"],
             })
             log_security_event(
                 "stripe_reconciliation_revoke",
-                {"user_id": user_id, "customer_id": result["customer_id"]},
+                {"user_id": user_id, "customer_id": correction["customer_id"]},
             )
 
     if corrections:
